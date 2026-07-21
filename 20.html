@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+<title>さいきよ</title>
+<style>
+/* =========================================
+   3色マトリクス絶対指定ルール
+   ========================================= */
+:root {
+  --color-A: #001F3F;
+  --color-B: #F0F4F8;
+  --color-C: #DCE2E9;
+  --font-family: sans-serif;
+}
+
+[data-theme="mono"] {
+  --color-A: #000000;
+  --color-B: #FFFFFF;
+  --color-C: #E0E0E0;
+}
+
+/* 根幹：画面高さを常に100%確保し、全体のスクロールを封印 */
+html, body {
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--color-B);
+  color: var(--color-A);
+  font-family: var(--font-family);
+}
+
+/* 縦並びの骨格と、PC用の装甲（最大幅1000pxの中央配置） */
+body {
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+#app { display: flex; flex-direction: column; height: 100%; width: 100%; }
+
+/* 柱1＆3：動かないトップバーと、下に張り付く入力窓・ボタン */
+header, #console, button {
+  flex-shrink: 0;
+}
+
+header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 15px; border-bottom: 1px solid var(--color-A);
+  font-weight: bold;
+  background-color: var(--color-A); color: var(--color-B);
+}
+header button { background: none; border: none; color: var(--color-B); font-size: 1.2rem; cursor: pointer; margin-right: 15px; }
+#header-title { color: var(--color-B); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; }
+
+/* 柱2：入力窓に合わせてスクロールするタイムライン */
+#timeline-container { flex: 1; overflow-y: auto; padding: 15px; }
+
+.view-mode-wrap { display: flex; flex-direction: column; gap: 20px; }
+.view-mode-nowrap { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 20px; gap: 20px; }
+.view-mode-nowrap .item { scroll-snap-align: start; flex: 0 0 90%; max-height: 80vh; overflow-y: auto; }
+
+.item {
+  margin-bottom: 20px;
+  word-break: break-all;
+  position: relative;
+  padding-left: 0; 
+  transition: padding-left 0.2s ease;
+  cursor: pointer;
+}
+.item-content { font-size: 1.1rem; line-height: 1.8; white-space: pre-wrap; cursor: pointer; }
+.is-archive { background-color: var(--color-C); color: var(--color-A); padding: 10px; }
+.meta-data { display: none; margin-top: 10px; font-size: 0.9rem; opacity: 0.8; line-height: 1.5; }
+.item.open .meta-data { display: block; }
+
+#console {
+  background-color: var(--color-B);
+  border-top: 1px solid var(--color-A); padding: 10px; display: flex; flex-direction: column; gap: 10px;
+}
+#input-content, #input-tags {
+  width: 100%; background: var(--color-B); color: var(--color-A); box-sizing: border-box;
+  border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px;
+}
+#input-content { height: 3em; resize: none; }
+
+.buttons { display: flex; justify-content: space-between; gap: 5px; }
+.buttons button {
+  flex: 1; padding: 10px 0; font-weight: bold;
+  background: var(--color-A); color: var(--color-B); border: 1px solid var(--color-A);
+  transition: opacity 0.3s ease; cursor: pointer; font-size: 14px;
+}
+.buttons button:disabled { background: var(--color-C); color: var(--color-A); border-color: var(--color-C); pointer-events: none; }
+.buttons button.active-btn { background: var(--color-A); color: var(--color-B); }
+
+.selection-marker {
+  display: none;
+  position: absolute;
+  left: 0px; 
+  top: 10px;
+  font-size: 1.2rem;
+  color: var(--color-A);
+}
+
+.item.selecting, #timeline-container.select-mode .item { padding-left: 35px; }
+.item.selecting .selection-marker, #timeline-container.select-mode .selection-marker { display: block; }
+.selection-marker::before { content: "□"; }
+.item.selected .selection-marker::before { content: "☑"; }
+
+/* 全画面パネル */
+.panel {
+  display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--color-B); z-index: 200; overflow-y: auto; padding: 20px; box-sizing: border-box;
+}
+.panel.active { display: block; }
+.panel h2 { margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px; color: var(--color-A); }
+.panel button.close-btn { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--color-A); font-size: 1.5rem; cursor: pointer; }
+.panel-btn {
+  display: block; width: 100%; padding: 15px; margin-bottom: 10px; box-sizing: border-box;
+  background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A);
+  font-size: 1.1rem; font-weight: bold; text-align: left; cursor: pointer;
+}
+.panel-btn.inverted { background: var(--color-B); color: var(--color-A); text-align: center; }
+
+.radio-group { margin-bottom: 20px; color: var(--color-A); }
+.radio-group label { display: block; margin-bottom: 10px; font-size: 1.1rem; }
+select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; }
+
+.preview-area {
+  background: var(--color-A); color: var(--color-B); padding: 15px; margin-bottom: 20px;
+  max-height: 25vh; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap;
+}
+
+/* リスト制作机 */
+#panel-list-editor { display: none; flex-direction: column; }
+#panel-list-editor.active { display: flex; }
+#panel-list-editor input, #panel-list-editor textarea {
+  width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;
+  background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 16px;
+}
+#panel-list-editor textarea { resize: none; }
+#list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; }
+.list-item-edit { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px; }
+.list-item-edit button { background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 5px 10px; cursor: pointer; font-weight: bold; }
+.list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 14px; }
+.desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
+.desk-ctrls button { flex: 1; padding: 12px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <button id="btn-menu">≡</button>
+      <button id="btn-fullscreen">⛶</button>
+    </div>
+    <div id="header-title" onclick="renameTitle()">さいきよ</div>
+  </header>
+
+  <div id="timeline-container" class="view-mode-wrap"></div>
+
+  <div id="console">
+    <textarea id="input-content" placeholder="・・・" spellcheck="false"></textarea>
+    <input type="text" id="input-tags" placeholder="タグは空白区切り" autocomplete="off" spellcheck="false">
+    <div class="buttons">
+      <button id="btn-escape">脱出</button>
+      <button id="btn-amu" disabled>取消</button>
+      <button id="btn-send">送る</button>
+      <button id="btn-search">検索</button>
+      <button id="btn-tweet" disabled>呟く</button>
+    </div>
+  </div>
+</div>
+
+<!-- メニューパネル -->
+<div id="panel-menu" class="panel">
+  <button class="close-btn" onclick="closePanels()">×</button>
+  <h2>設定</h2>
+  <div class="radio-group">
+    <h3>月別フィルター</h3>
+    <select id="month-select" class="dropdown" onchange="config.month=this.value; applyConfig();">
+      <option value="all">すべて</option>
+    </select>
+  </div>
+  <div class="radio-group">
+    <h3>タイムライン表示切替</h3>
+    <label><input type="radio" name="view-mode" value="wrap" checked> 折り返しあり</label>
+    <label><input type="radio" name="view-mode" value="nowrap"> 折り返しなし</label>
+  </div>
+  <div class="radio-group">
+    <h3>データ表示フィルター</h3>
+    <label><input type="radio" name="filter-mode" value="work" checked> 作品のみ</label>
+    <label><input type="radio" name="filter-mode" value="all"> 作品とアーカイブ</label>
+    <label><input type="radio" name="filter-mode" value="archive"> アーカイブのみ</label>
+  </div>
+  <div class="radio-group">
+    <h3>書体変更</h3>
+    <label><input type="radio" name="font-mode" value="sans-serif" checked> ゴシック体</label>
+    <label><input type="radio" name="font-mode" value="serif"> 明朝体</label>
+  </div>
+  <div class="radio-group">
+    <h3>テーマカラー</h3>
+    <label><input type="radio" name="color-mode" value="default" checked> 紺</label>
+    <label><input type="radio" name="color-mode" value="mono"> 白黒灰</label>
+  </div>
+</div>
+
+<!-- 編集室パネル -->
+<div id="panel-amu-actions" class="panel">
+  <h2>編集室</h2>
+  <div id="amu-preview" class="preview-area"></div>
+  <button class="panel-btn" onclick="bulkAction('archive')">アーカイブに送る</button>
+  <button class="panel-btn" onclick="bulkAction('work')">作品に送る</button>
+  <button class="panel-btn" onclick="bulkAction('published')">既発表にする</button>
+  <button class="panel-btn" onclick="bulkAction('unpublished')">未発表にする</button>
+  <button class="panel-btn" onclick="bulkAction('tag')">共通のタグをつける</button>
+  <button class="panel-btn" onclick="bulkAction('copy')">クリップボードに送る</button>
+  <button class="panel-btn" onclick="bulkAction('create_list')">新しいリストを編む</button>
+  <p style="margin-top:30px; font-size:0.9rem; color:var(--color-A);">※選択を解除するときはコンソールの「取消」を押してください</p>
+  <button class="panel-btn" onclick="closePanels()" style="text-align:center; background:var(--color-A); color:var(--color-B);">タイムラインへ戻る</button>
+</div>
+
+<!-- 脱出ターミナル -->
+<div id="panel-escape" class="panel">
+  <button class="close-btn" onclick="closePanels()">×</button>
+  <h2>脱出ターミナル</h2>
+  <button class="panel-btn" onclick="escapeAction('mail')">簡易脱出</button>
+  <button class="panel-btn" onclick="escapeAction('download')">完全脱出</button>
+  <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
+  <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
+</div>
+
+<!-- リスト制作机 -->
+<div id="panel-list-editor" class="panel">
+  <h2>リスト制作机</h2>
+  <input type="text" id="list-name" placeholder="無題" autocomplete="off" spellcheck="false">
+  <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReader()">広げて読む</button>
+  <div id="list-items"></div>
+  <textarea id="list-memo" rows="2" placeholder="締め切りなど" spellcheck="false"></textarea>
+  <input type="text" id="list-tags" placeholder="タグ（空白区切り）" autocomplete="off" spellcheck="false">
+  <button class="panel-btn inverted" id="btn-copy-list" onclick="copyListItems()">クリップボードにコピー</button>
+  <div class="desk-ctrls">
+    <button onclick="closeListEditor()">戻る(保存)</button>
+    <button onclick="saveListAndClose()">決定(保存)</button>
+  </div>
+</div>
+
+<!-- 新設：鑑賞パネル（広げて読む） -->
+<div id="panel-reader" class="panel" style="z-index: 300;">
+  <button class="close-btn" onclick="document.getElementById('panel-reader').classList.remove('active')">×</button>
+  <h2>鑑賞モード</h2>
+  <div id="reader-content" style="font-size: 1.2rem; line-height: 2.0; white-space: pre-wrap; padding-bottom: 50px;"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'saikiyo_data';
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+let mode = 'normal'; 
+let selectedIds = new Set();
+let currentListId = null; 
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', month: 'all' };
+
+let appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
+document.getElementById('header-title').innerText = appTitle;
+
+window.renameTitle = function() {
+  let newTitle = prompt('新しい艦名（タイトル）を入力:', appTitle);
+  if (newTitle !== null && newTitle.trim() !== '') {
+    appTitle = newTitle.trim();
+    localStorage.setItem('saikiyo_title', appTitle);
+    document.getElementById('header-title').innerText = appTitle;
+  }
+}
+
+function updateMonthOptions() {
+  const select = document.getElementById('month-select');
+  if(!select) return;
+  const currentVal = select.value;
+  const months = new Set();
+  data.forEach(d => {
+    const date = new Date(d.id);
+    months.add(`${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`);
+  });
+  let html = `<option value="all">すべて</option>`;
+  Array.from(months).sort().reverse().forEach(m => {
+    html += `<option value="${m}">${m.replace('-','年')}月</option>`;
+  });
+  select.innerHTML = html;
+  if (Array.from(months).includes(currentVal)) select.value = currentVal;
+}
+
+function saveData() { 
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+  updateMonthOptions();
+}
+
+const tlContainer = document.getElementById('timeline-container');
+const btnSend = document.getElementById('btn-send');
+const btnAmu = document.getElementById('btn-amu');
+const btnSearch = document.getElementById('btn-search');
+const btnEscape = document.getElementById('btn-escape');
+const btnTweet = document.getElementById('btn-tweet');
+const inputContentNode = document.getElementById('input-content');
+const inputTagsNode = document.getElementById('input-tags');
+
+function renderTimeline() {
+  const scrollPos = tlContainer.scrollTop;
+  tlContainer.innerHTML = '';
+  
+  let filtered = data.filter(d => {
+    if (config.filter === 'work' && d.status !== '作品') return false;
+    if (config.filter === 'archive' && d.status !== 'アーカイブ') return false;
+    if (config.month && config.month !== 'all') {
+      const date = new Date(d.id);
+      const yyyymm = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
+      if (yyyymm !== config.month) return false;
+    }
+    return true; 
+  });
+  
+  filtered.sort((a,b) => a.id - b.id).forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.dataset.id = item.id;
+    if (item.status === 'アーカイブ') div.classList.add('is-archive');
+    if (selectedIds.has(item.id)) div.classList.add('selected', 'selecting');
+    
+    let innerHTML = `<span class="selection-marker"></span>`;
+    let text = item.type === 'list' ? `【リスト】${item.content} (${(item.items||[]).length}首)` : item.content;
+    innerHTML += `<div class="item-content">${escapeHTML(text)}</div>`;
+    
+    const dateStr = formatTime(item.id);
+    const tagsStr = item.tags ? item.tags.map(t=>`#${t}`).join(' ') : '';
+    const listNames = data.filter(d => d.type === 'list' && d.items && d.items.includes(item.id)).map(d => d.content).join(', ');
+    
+    innerHTML += `<div class="meta-data">${dateStr}<br>${item.status}<br>${item.publish_status}<br>${tagsStr}<br>${item.memo ? `メモ: ${item.memo}<br>` : ''}${listNames ? `収録リスト：${listNames}<br>` : ''}</div>`;
+    div.innerHTML = innerHTML;
+    tlContainer.appendChild(div);
+  });
+  
+  tlContainer.scrollTop = scrollPos;
+  updateButtonsState();
+}
+
+function escapeHTML(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function formatTime(ms) {
+  const d = new Date(ms); const pad = n => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function tapItem(id) {
+  const item = data.find(d => d.id === id);
+  if (item && item.type === 'list') { openListEditor(id); return; }
+  const els = tlContainer.querySelectorAll('.item');
+  const index = Array.from(els).findIndex(el => Number(el.dataset.id) === id);
+  if(index !== -1 && els[index]) els[index].classList.toggle('open');
+}
+
+function applyConfig() {
+  if (config.theme === 'mono') { document.documentElement.setAttribute('data-theme', 'mono'); } 
+  else { document.documentElement.removeAttribute('data-theme'); }
+  document.documentElement.style.setProperty('--font-family', config.font);
+  tlContainer.className = config.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
+  renderTimeline();
+}
+
+function togglePoemSelection(itemElement, itemId) {
+  itemElement.classList.toggle('selected');
+  itemElement.classList.add('selecting'); 
+  if (itemElement.classList.contains('selected')) { selectedIds.add(itemId); } 
+  else {
+    selectedIds.delete(itemId);
+    if(selectedIds.size === 0) itemElement.classList.remove('selecting');
+  }
+  updateButtonsState();
+}
+
+function updateButtonsState() {
+  const hasSelection = selectedIds.size > 0;
+  const isGlobalSelectMode = document.getElementById('timeline-container').classList.contains('select-mode');
+
+  if (mode === 'normal') {
+    if (hasSelection) {
+      btnSend.innerText = '労働'; btnSend.classList.add('active-btn'); btnSend.disabled = false;
+      btnAmu.innerText = '編む'; btnAmu.classList.add('active-btn'); btnAmu.disabled = false; 
+      btnTweet.disabled = false; btnTweet.classList.add('active-btn');
+      btnSearch.disabled = true; btnEscape.disabled = true;
+    } else {
+      btnSend.innerText = '送る'; btnSend.classList.remove('active-btn'); btnSend.disabled = false;
+      btnAmu.innerText = '編む'; 
+      if (isGlobalSelectMode) { btnAmu.classList.add('active-btn'); } else { btnAmu.classList.remove('active-btn'); }
+      btnAmu.disabled = false; 
+      btnTweet.disabled = false; btnTweet.classList.remove('active-btn');
+      btnSearch.disabled = false; btnEscape.disabled = false;
+    }
+  }
+}
+
+let isSearchLinked = true; 
+
+function executeUnifiedSearch() {
+  const items = document.querySelectorAll('#timeline-container .item');
+  if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
+  
+  const keyword = inputContentNode.value.toLowerCase();
+  const tagKeyword = inputTagsNode.value.toLowerCase();
+  
+  items.forEach(item => {
+    const id = Number(item.dataset.id);
+    const targetData = data.find(d => d.id === id);
+    if (!targetData) return;
+    const content = (targetData.content || '').toLowerCase();
+    const tags = (targetData.tags ? targetData.tags.join(' ') : '').toLowerCase();
+    
+    if ((keyword === '' || content.includes(keyword)) && (tagKeyword === '' || tags.includes(tagKeyword))) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+inputContentNode.addEventListener('input', executeUnifiedSearch);
+inputTagsNode.addEventListener('input', executeUnifiedSearch);
+
+btnSearch.addEventListener('click', () => {
+  isSearchLinked = !isSearchLinked;
+  if (isSearchLinked) { btnSearch.innerText = '検索ON'; btnSearch.style.opacity = '1'; executeUnifiedSearch(); } 
+  else { btnSearch.innerText = '検索OFF'; btnSearch.style.opacity = '0.5'; executeUnifiedSearch(); }
+});
+
+btnSend.addEventListener('click', () => {
+  const hasSelection = selectedIds.size > 0;
+  if (mode === 'normal' && !hasSelection) {
+    const content = inputContentNode.value.trim();
+    if (!content) return;
+    const tags = inputTagsNode.value.trim().split(/\s+/).filter(Boolean);
+    data.push({ id: Date.now(), type: 'tanka', content: content, status: '作品', publish_status: '未発表', tags: tags });
+    inputContentNode.value = ''; inputTagsNode.value = '';
+    saveData(); renderTimeline(); executeUnifiedSearch(); 
+    setTimeout(() => { tlContainer.scrollTop = tlContainer.scrollHeight; }, 50);
+  } else if (mode === 'normal' && hasSelection) {
+    const previewArea = document.getElementById('amu-preview');
+    previewArea.innerText = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n---\n');
+    document.getElementById('panel-amu-actions').classList.add('active');
+  }
+});
+
+btnAmu.addEventListener('click', () => {
+  const tl = document.getElementById('timeline-container');
+  if (selectedIds.size > 0) { exitSelectionMode(); } 
+  else { tl.classList.toggle('select-mode'); updateButtonsState(); }
+});
+btnEscape.addEventListener('click', () => { document.getElementById('panel-escape').classList.add('active'); });
+document.getElementById('btn-menu').addEventListener('click', () => { document.getElementById('panel-menu').classList.add('active'); });
+
+btnTweet.addEventListener('click', () => {
+  let content = '';
+  if (selectedIds.size === 0) {
+    const tankas = data.filter(d => d.type !== 'list');
+    if (tankas.length === 0) return alert('呟くデータがありません');
+    content = tankas[Math.floor(Math.random() * tankas.length)].content;
+  } else {
+    content = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
+  }
+  const textToTweet = content + '\n#短歌 #tanka';
+  if (textToTweet.length > 140) return alert('字数的に無理です');
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
+});
+
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+});
+
+function exitSelectionMode() {
+  mode = 'normal'; selectedIds.clear(); currentListId = null;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  renderTimeline();
+}
+
+window.closePanels = function() { document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); }
+
+window.bulkAction = function(action) {
+  if (action === 'archive') { data.forEach(d => { if(selectedIds.has(d.id)) d.status = 'アーカイブ'; }); }
+  else if (action === 'work') { data.forEach(d => { if(selectedIds.has(d.id)) d.status = '作品'; }); }
+  else if (action === 'published') { data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = '既発表'; }); }
+  else if (action === 'unpublished') { data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = '未発表'; }); }
+  else if (action === 'tag') {
+    const t = prompt('共通で付与するタグを入力（空白なし）');
+    if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
+  }
+  else if (action === 'copy') {
+    let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
+    physicalCopy(txt);
+  }
+  else if (action === 'create_list') {
+    let expandedIds = [];
+    selectedIds.forEach(id => { const target = data.find(d => d.id === id); if (target) { if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } else { expandedIds.push(id); } } });
+    openListEditor(null, [...new Set(expandedIds)]); return;
+  }
+  saveData(); closePanels(); exitSelectionMode();
+}
+
+// 物理コピペロジック（エラー回避）
+function physicalCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); alert('コピーしました'); } 
+  catch(e) { alert('コピー失敗'); }
+  document.body.removeChild(ta);
+}
+
+function openListEditor(listId, initialItemIds = []) {
+  closePanels(); mode = 'list_edit';
+  document.getElementById('panel-list-editor').classList.add('active');
+  
+  if (listId) {
+    currentListId = listId;
+    const l = data.find(d => d.id === listId);
+    document.getElementById('list-name').value = l.content === '無題のリスト' ? '' : l.content;
+    document.getElementById('list-memo').value = l.memo || '';
+    document.getElementById('list-tags').value = l.tags ? l.tags.join(' ') : '';
+    renderListItems(l.items || []);
+  } else {
+    currentListId = Date.now();
+    document.getElementById('list-name').value = '';
+    document.getElementById('list-memo').value = '';
+    document.getElementById('list-tags').value = '';
+    renderListItems(initialItemIds);
+  }
+}
+
+function renderListItems(itemIds) {
+  const container = document.getElementById('list-items');
+  container.innerHTML = ''; container.dataset.items = JSON.stringify(itemIds);
+  
+  itemIds.forEach((id, index) => {
+    const tanka = data.find(d => d.id === id);
+    if(!tanka) return;
+    const div = document.createElement('div'); div.className = 'list-item-edit';
+    div.innerHTML = `
+      <div style="width:20px; text-align:center;">${index+1}</div>
+      <button onclick="moveListItem(${index}, -1)">↑</button>
+      <button onclick="moveListItem(${index}, 1)">↓</button>
+      <span>${escapeHTML(tanka.content)}</span>
+      <button onclick="removeListItem(${index})">✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+window.moveListItem = function(index, dir) {
+  let items = JSON.parse(document.getElementById('list-items').dataset.items);
+  if (index + dir < 0 || index + dir >= items.length) return;
+  const temp = items[index]; items[index] = items[index + dir]; items[index + dir] = temp;
+  renderListItems(items);
+}
+window.removeListItem = function(index) {
+  let items = JSON.parse(document.getElementById('list-items').dataset.items);
+  items.splice(index, 1); renderListItems(items);
+}
+
+// 新設：広げて読む（完全独立パネル）
+window.openExpandedReader = function() {
+  const items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  if (items.length === 0) return alert('リストが空です');
+  const txt = items.map(id => { let t = data.find(d => d.id === id); return t ? t.content : ''; }).filter(Boolean).join('\n\n');
+  document.getElementById('reader-content').innerText = txt;
+  document.getElementById('panel-reader').classList.add('active');
+}
+
+window.saveListAndClose = function() {
+  const name = document.getElementById('list-name').value.trim() || '無題のリスト';
+  const memo = document.getElementById('list-memo').value.trim();
+  const tagsStr = document.getElementById('list-tags').value.trim();
+  const tags = tagsStr ? tagsStr.split(/\s+/) : [];
+  const items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  
+  if (items.length > 0) {
+    let l = data.find(d => d.id === currentListId);
+    if (l) { l.content = name; l.memo = memo; l.tags = tags; l.items = items; } 
+    else { data.push({ id: currentListId, type: 'list', content: name, status: '作品', publish_status: '未発表', memo: memo, tags: tags, items: items }); }
+    saveData();
+  }
+  closeListEditor();
+}
+
+window.copyListItems = function() {
+  const d = new Date(), p = n => n.toString().padStart(2, '0');
+  const title = document.getElementById('list-name').value.trim();
+  const memo = document.getElementById('list-memo').value.trim();
+  const tagStr = document.getElementById('list-tags').value.trim();
+  let items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  let txt = items.map(id => { let t = data.find(d => d.id === id); return t ? t.content : ''; }).filter(Boolean).join('\n\n');
+  const res = `${title ? '【'+title+'】\n' : ''}[${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}]\n\n${txt}\n\n${memo ? '【メモ】'+memo+'\n' : ''}${tagStr ? '【タグ】'+tagStr : ''}`;
+  
+  physicalCopy(res.trim());
+  
+  const btn = document.getElementById('btn-copy-list');
+  const orig = btn.innerText; btn.innerText = 'コピー完了';
+  setTimeout(() => btn.innerText = orig, 2000);
+}
+
+window.closeListEditor = function() { document.getElementById('panel-list-editor').classList.remove('active'); exitSelectionMode(); }
+
+window.escapeAction = function(type, e) {
+  if (type === 'mail') {
+    const recent = [...data].sort((a,b) => a.id - b.id).slice(-50);
+    const txt = encodeURIComponent(recent.map(d => (d.type==='list'?'・':'')+d.content).join('\n\n'));
+    window.location.href = `mailto:?subject=saikiyo_backup&body=${txt}`;
+  } else if (type === 'download') {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `saikiyo_backup_${Date.now()}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  } else if (type === 'import') {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (Array.isArray(imported)) {
+          const existingIds = new Set(data.map(d => d.id));
+          imported.forEach(d => { if (!existingIds.has(d.id)) data.push(d); });
+          saveData(); renderTimeline(); alert('救出完了');
+        }
+      } catch(e) { alert('不正なファイルです'); }
+    };
+    reader.readAsText(file);
+  }
+  closePanels();
+}
+
+document.querySelectorAll('input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    const name = e.target.name; const val = e.target.value;
+    if (name === 'view-mode') config.view = val;
+    if (name === 'filter-mode') config.filter = val;
+    if (name === 'font-mode') config.font = val;
+    if (name === 'color-mode') config.theme = val;
+    applyConfig();
+  });
+});
+
+updateMonthOptions();
+applyConfig();
+
+let lastTapTime = 0; 
+const doubleTapThreshold = 300; 
+
+tlContainer.addEventListener('click', (event) => {
+  const itemElement = event.target.closest('.item');
+  if (!itemElement) return;
+
+  const itemId = Number(itemElement.dataset.id);
+  const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
+  
+  if (isGlobalSelectMode || itemElement.classList.contains('selecting')) {
+      event.preventDefault();
+      togglePoemSelection(itemElement, itemId);
+      return;
+  }
+
+  const currentTime = new Date().getTime();
+  const tapInterval = currentTime - lastTapTime;
+  
+  if (tapInterval < doubleTapThreshold && tapInterval > 0) {
+    event.preventDefault(); 
+    togglePoemSelection(itemElement, itemId); 
+    lastTapTime = 0;
+  } else {
+    lastTapTime = currentTime; 
+    tapItem(itemId);
+  }
+});
+
+const originalExitSelectionMode = exitSelectionMode;
+exitSelectionMode = function() {
+  document.getElementById('timeline-container').classList.remove('select-mode');
+  originalExitSelectionMode();
+};
+</script>
+</body>
+</html>
