@@ -163,8 +163,9 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
   <div id="timeline-container" class="view-mode-wrap"></div>
 
   <div id="console">
-<textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
-<input type="text" id="input-tags" placeholder="タグは空白区切り" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true">
+    <!-- Androidサジェスト・補完機能を完全封印 -->
+    <textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
+    <input type="text" id="input-tags" placeholder="タグは空白区切り" autocomplete="nope" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true">
 
     <div class="buttons">
       <button id="btn-escape">脱出</button>
@@ -237,12 +238,13 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
 
 <!-- リスト制作机 -->
 <div id="panel-list-editor" class="panel">
-  <h2>リスト制作机</h2>
-  <input type="text" id="list-name" placeholder="無題" autocomplete="off" spellcheck="false">
+   <h2>リスト制作机</h2>
+  <input type="text" id="list-name" placeholder="無題" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
   <div id="list-items"></div>
-  <textarea id="list-memo" rows="2" placeholder="締め切りなど" spellcheck="false"></textarea>
-  <input type="text" id="list-tags" placeholder="タグ（空白区切り）" autocomplete="off" spellcheck="false">
+  <textarea id="list-memo" rows="2" placeholder="締め切りなど" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
+  <input type="text" id="list-tags" placeholder="タグ（空白区切り）" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
+
   <button class="panel-btn inverted" id="btn-copy-list" onclick="copyListItems()">クリップボードにコピー</button>
   <div class="desk-ctrls">
     <button onclick="closeListEditor()">戻る(保存)</button>
