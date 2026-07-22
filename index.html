@@ -449,5 +449,261 @@ btnSend.addEventListener('click', () => {
     });
     
     const previewArea = document.getElementById('amu-preview');
-    const previewSet = new Set(expa
+    const previewSet = new Set(expandedIds);
+    
+    previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
+    
+    document.getElementById('panel-amu-actions').classList.add('active');
+  }
+});
 
+btnAmu.addEventListener('click', () => {
+  const tl = document.getElementById('timeline-container');
+  if (selectedIds.size > 0) { exitSelectionMode(); } 
+  else { tl.classList.toggle('select-mode'); updateButtonsState(); }
+});
+btnEscape.addEventListener('click', () => { document.getElementById('panel-escape').classList.add('active'); });
+document.getElementById('btn-menu').addEventListener('click', () => { document.getElementById('panel-menu').classList.add('active'); });
+
+btnTweet.addEventListener('click', () => {
+  let content = '';
+  if (selectedIds.size === 0) {
+    const tankas = data.filter(d => d.type !== 'list');
+    if (tankas.length === 0) return alert('呟くデータがありません');
+    content = tankas[Math.floor(Math.random() * tankas.length)].content;
+  } else {
+    content = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
+  }
+  const textToTweet = content + '\n#短歌 #tanka';
+  if (textToTweet.length > 140) return alert('字数的に無理です');
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
+});
+
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+});
+
+function exitSelectionMode() {
+  mode = 'normal'; selectedIds.clear(); currentListId = null;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  renderTimeline();
+}
+
+window.closePanels = function() { document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); }
+
+window.bulkAction = function(action) {
+  if (action === 'archive') { data.forEach(d => { if(selectedIds.has(d.id)) d.status = 'アーカイブ'; }); }
+  else if (action === 'work') { data.forEach(d => { if(selectedIds.has(d.id)) d.status = '作品'; }); }
+  else if (action === 'published') { data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = '既発表'; }); }
+  else if (action === 'unpublished') { data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = '未発表'; }); }
+  else if (action === 'tag') {
+    const t = prompt('共通で付与するタグを入力（空白なし）');
+    if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
+  }
+  else if (action === 'copy') {
+    let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
+    physicalCopy(txt);
+  }
+  else if (action === 'create_list') {
+    let expandedIds = [];
+    selectedIds.forEach(id => { const target = data.find(d => d.id === id); if (target) { if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } else { expandedIds.push(id); } } });
+    openListEditor(null, [...new Set(expandedIds)]); return;
+  }
+  saveData(); closePanels(); exitSelectionMode();
+}
+
+function physicalCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); alert('コピーしました'); } 
+  catch(e) { alert('コピー失敗'); }
+  document.body.removeChild(ta);
+}
+
+function openListEditor(listId, initialItemIds = []) {
+  closePanels(); mode = 'list_edit';
+  document.getElementById('panel-list-editor').classList.add('active');
+  
+  if (listId) {
+    currentListId = listId;
+    const l = data.find(d => d.id === listId);
+    document.getElementById('list-name').value = l.content === '無題のリスト' ? '' : l.content;
+    document.getElementById('list-memo').value = l.memo || '';
+    document.getElementById('list-tags').value = l.tags ? l.tags.join(' ') : '';
+    renderListItems(l.items || []);
+  } else {
+    currentListId = Date.now();
+    document.getElementById('list-name').value = '';
+    document.getElementById('list-memo').value = '';
+    document.getElementById('list-tags').value = '';
+    renderListItems(initialItemIds);
+  }
+}
+
+function renderListItems(itemIds) {
+  const container = document.getElementById('list-items');
+  container.innerHTML = ''; container.dataset.items = JSON.stringify(itemIds);
+  
+  itemIds.forEach((id, index) => {
+    const tanka = data.find(d => d.id === id);
+    if(!tanka) return;
+    const div = document.createElement('div'); div.className = 'list-item-edit';
+    div.innerHTML = `
+      <div style="width:20px; text-align:center;">${index+1}</div>
+      <button onclick="moveListItem(${index}, -1)">↑</button>
+      <button onclick="moveListItem(${index}, 1)">↓</button>
+      <span>${escapeHTML(tanka.content)}</span>
+      <button onclick="removeListItem(${index})">✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+window.moveListItem = function(index, dir) {
+  let items = JSON.parse(document.getElementById('list-items').dataset.items);
+  if (index + dir < 0 || index + dir >= items.length) return;
+  const temp = items[index]; items[index] = items[index + dir]; items[index + dir] = temp;
+  renderListItems(items);
+}
+window.removeListItem = function(index) {
+  let items = JSON.parse(document.getElementById('list-items').dataset.items);
+  items.splice(index, 1); renderListItems(items);
+}
+
+window.openExpandedReader = function(title, text) {
+  document.getElementById('reader-title').innerText = title || '無題';
+  document.getElementById('reader-content').innerText = text;
+  document.getElementById('panel-reader').classList.add('active');
+}
+
+window.openExpandedReaderFromList = function() {
+  const title = document.getElementById('list-name').value.trim() || '無題';
+  const items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  if (items.length === 0) return alert('リストが空です');
+  const txt = items.map(id => { let t = data.find(d => d.id === id); return t ? t.content : ''; }).filter(Boolean).join('\n\n');
+  openExpandedReader(title, txt);
+}
+
+window.openExpandedReaderFromAmu = function() {
+  const txt = document.getElementById('amu-preview').innerText;
+  if (!txt) return alert('展開するデータがありません');
+  openExpandedReader('編集室プレビュー', txt);
+}
+
+window.saveListAndClose = function() {
+  const name = document.getElementById('list-name').value.trim() || '無題のリスト';
+  const memo = document.getElementById('list-memo').value.trim();
+  const tagsStr = document.getElementById('list-tags').value.trim();
+  const tags = tagsStr ? tagsStr.split(/\s+/) : [];
+  const items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  
+  if (items.length > 0) {
+    let l = data.find(d => d.id === currentListId);
+    if (l) { l.content = name; l.memo = memo; l.tags = tags; l.items = items; } 
+    else { data.push({ id: currentListId, type: 'list', content: name, status: '作品', publish_status: '未発表', memo: memo, tags: tags, items: items }); }
+    saveData();
+  }
+  closeListEditor();
+}
+
+window.copyListItems = function() {
+  const d = new Date(), p = n => n.toString().padStart(2, '0');
+  const title = document.getElementById('list-name').value.trim();
+  const memo = document.getElementById('list-memo').value.trim();
+  const tagStr = document.getElementById('list-tags').value.trim();
+  let items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  let txt = items.map(id => { let t = data.find(d => d.id === id); return t ? t.content : ''; }).filter(Boolean).join('\n\n');
+  const res = `${title ? '【'+title+'】\n' : ''}[${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}]\n\n${txt}\n\n${memo ? '【メモ】'+memo+'\n' : ''}${tagStr ? '【タグ】'+tagStr : ''}`;
+  
+  physicalCopy(res.trim());
+  
+  const btn = document.getElementById('btn-copy-list');
+  const orig = btn.innerText; btn.innerText = 'コピー完了';
+  setTimeout(() => btn.innerText = orig, 2000);
+}
+
+window.closeListEditor = function() { document.getElementById('panel-list-editor').classList.remove('active'); exitSelectionMode(); }
+
+window.escapeAction = function(type, e) {
+  if (type === 'mail') {
+    const recent = [...data].sort((a,b) => a.id - b.id).slice(-50);
+    const txt = encodeURIComponent(recent.map(d => (d.type==='list'?'・':'')+d.content).join('\n\n'));
+    window.location.href = `mailto:?subject=saikiyo_backup&body=${txt}`;
+  } else if (type === 'download') {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `saikiyo_backup_${Date.now()}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  } else if (type === 'import') {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (Array.isArray(imported)) {
+          const existingIds = new Set(data.map(d => d.id));
+          imported.forEach(d => { if (!existingIds.has(d.id)) data.push(d); });
+          saveData(); renderTimeline(); alert('救出完了');
+        }
+      } catch(e) { alert('不正なファイルです'); }
+    };
+    reader.readAsText(file);
+  }
+  closePanels();
+}
+
+document.querySelectorAll('input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    const name = e.target.name; const val = e.target.value;
+    if (name === 'view-mode') config.view = val;
+    if (name === 'filter-mode') config.filter = val;
+    if (name === 'font-mode') config.font = val;
+    if (name === 'color-mode') config.theme = val;
+    applyConfig();
+  });
+});
+
+updateMonthOptions();
+applyConfig();
+
+let lastTapTime = 0; 
+const doubleTapThreshold = 300; 
+
+tlContainer.addEventListener('click', (event) => {
+  const itemElement = event.target.closest('.item');
+  if (!itemElement) return;
+
+  const itemId = Number(itemElement.dataset.id);
+  const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
+  
+  if (isGlobalSelectMode || itemElement.classList.contains('selecting')) {
+      event.preventDefault();
+      togglePoemSelection(itemElement, itemId);
+      return;
+  }
+
+  const currentTime = new Date().getTime();
+  const tapInterval = currentTime - lastTapTime;
+  
+  if (tapInterval < doubleTapThreshold && tapInterval > 0) {
+    event.preventDefault(); 
+    togglePoemSelection(itemElement, itemId); 
+    lastTapTime = 0;
+  } else {
+    lastTapTime = currentTime; 
+    tapItem(itemId);
+  }
+});
+
+const originalExitSelectionMode = exitSelectionMode;
+exitSelectionMode = function() {
+  document.getElementById('timeline-container').classList.remove('select-mode');
+  originalExitSelectionMode();
+};
+</script>
+</body>
+</html>
