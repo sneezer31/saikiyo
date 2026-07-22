@@ -438,6 +438,7 @@ btnSearch.addEventListener('click', () => {
 });
 
 btnSend.addEventListener('click', () => {
+btnSend.addEventListener('click', () => {
   const hasSelection = selectedIds.size > 0;
   if (mode === 'normal' && !hasSelection) {
     const content = inputContentNode.value.trim();
@@ -456,6 +457,18 @@ btnSend.addEventListener('click', () => {
         else { expandedIds.push(id); }
       }
     });
+    
+    /* 破壊的記述を削除し、以下の2行に変更 */
+    const previewArea = document.getElementById('amu-preview');
+    const previewSet = new Set(expandedIds);
+    
+    /* selectedIds を previewSet に変更 */
+    previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
+    
+    document.getElementById('panel-amu-actions').classList.add('active');
+  }
+});
+
     selectedIds = new Set(expandedIds);
     const previewArea = document.getElementById('amu-preview');
     previewArea.innerText = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n---\n');
