@@ -1,3 +1,12 @@
+2026年7月24日 金曜日 01:01
+
+船長。お疲れ様です。本艦の完全な設計図（700行のコード）を受領しました。
+
+事前の構想通り、旧式の「月別フィルター」をパージし、機関室（設定パネル）の最下部へ「タイムマシン」「調色盤」「艦名変更」、そして「らくだ歌会」への不可視のゲートとなる「ボトルメール」のロジックを接合しました。検索エンジンの無菌化、タイムスタンプへの曜日付与、リストの単位変更（首→件）もすべて規定通りに換装済みです。
+
+変数やDOMのIDも船長の構築したHTMLに完全適合させてあります。以下のコードをそのままコピーし、手元のファイルに全上書きしてください。
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -79,15 +88,15 @@ header button { background: none; border: none; color: var(--color-B); font-size
 }
 #input-content, #input-tags {
   width: 100%; background: var(--color-B); color: var(--color-A); box-sizing: border-box;
-  border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px;
+  border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 18px;
 }
 #input-content { height: 3em; resize: none; }
 
 .buttons { display: flex; justify-content: space-between; gap: 5px; }
 .buttons button {
-  flex: 1; padding: 10px 0; font-weight: bold;
+  flex: 1; padding: 16px 0; font-weight: bold;
   background: var(--color-A); color: var(--color-B); border: 1px solid var(--color-A);
-  transition: opacity 0.3s ease; cursor: pointer; font-size: 14px;
+  transition: opacity 0.3s ease; cursor: pointer; font-size: 18px;
 }
 .buttons button:disabled { background: var(--color-C); color: var(--color-A); border-color: var(--color-C); pointer-events: none; }
 .buttons button.active-btn { background: var(--color-A); color: var(--color-B); }
@@ -114,15 +123,16 @@ header button { background: none; border: none; color: var(--color-B); font-size
 .panel h2 { margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px; color: var(--color-A); }
 .panel button.close-btn { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--color-A); font-size: 1.5rem; cursor: pointer; }
 .panel-btn {
-  display: block; width: 100%; padding: 15px; margin-bottom: 10px; box-sizing: border-box;
+  display: block; width: 100%; padding: 18px; margin-bottom: 12px; box-sizing: border-box;
   background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A);
-  font-size: 1.1rem; font-weight: bold; text-align: left; cursor: pointer;
+  font-size: 1.2rem; font-weight: bold; text-align: left; cursor: pointer;
 }
 .panel-btn.inverted { background: var(--color-B); color: var(--color-A); text-align: center; }
+.panel-btn.selected { background: var(--color-A); color: var(--color-B); border: 2px solid var(--color-A); text-align: center; }
 
 .radio-group { margin-bottom: 20px; color: var(--color-A); }
 .radio-group label { display: block; margin-bottom: 10px; font-size: 1.1rem; }
-select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; }
+select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; }
 
 .preview-area {
   background: var(--color-A); color: var(--color-B); padding: 15px; margin-bottom: 10px;
@@ -133,7 +143,7 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
 #panel-list-editor.active { display: flex; }
 #panel-list-editor input, #panel-list-editor textarea {
   width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;
-  background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 16px;
+  background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 18px;
 }
 #panel-list-editor textarea { resize: none; }
 #list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; }
@@ -141,7 +151,7 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
 .list-item-edit button { background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 5px 10px; cursor: pointer; font-weight: bold; }
 .list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 14px; }
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
-.desk-ctrls button { flex: 1; padding: 12px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; }
+.desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; }
 </style>
 </head>
 <body>
@@ -151,15 +161,14 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
       <button id="btn-menu">≡</button>
       <button id="btn-fullscreen">⛶</button>
     </div>
-    <div id="header-title" onclick="renameTitle()">さいきよ</div>
+    <div id="header-title">さいきよ</div>
   </header>
 
   <div id="timeline-container" class="view-mode-wrap"></div>
 
   <div id="console">
-    <!-- Androidサジェスト・補完機能を完全封印 -->
     <textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
-    <input type="text" id="input-tags" placeholder="タグは空白区切り" autocomplete="nope" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true">
+    <textarea id="input-tags" rows="1" placeholder="タグは空白区切り" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
     <div class="buttons">
       <button id="btn-escape">脱出</button>
       <button id="btn-amu" disabled>取消</button>
@@ -173,12 +182,6 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
 <div id="panel-menu" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>設定</h2>
-  <div class="radio-group">
-    <h3>月別フィルター</h3>
-    <select id="month-select" class="dropdown" onchange="config.month=this.value; applyConfig();">
-      <option value="all">すべて</option>
-    </select>
-  </div>
   <div class="radio-group">
     <h3>タイムライン表示切替</h3>
     <label><input type="radio" name="view-mode" value="wrap" checked> 折り返しあり</label>
@@ -200,21 +203,64 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
     <label><input type="radio" name="color-mode" value="default" checked> 紺</label>
     <label><input type="radio" name="color-mode" value="mono"> 白黒灰</label>
   </div>
+
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  
+  <div id="engine-room-controls" style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- タイムマシン -->
+    <div class="radio-group">
+      <h3>航海日誌の解錠（タイムマシン）</h3>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="date" id="date-jump-input" class="dropdown" style="flex: 1; padding: 10px;">
+        <button class="panel-btn inverted" style="margin: 0; padding: 10px 15px; width: auto;" onclick="jumpToDate()">解錠</button>
+        <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">帰還</button>
+      </div>
+    </div>
+
+    <!-- 色の調節 -->
+    <div class="radio-group">
+      <h3>計器盤の調色（テーマカラー）</h3>
+      <input type="color" id="theme-color-picker" class="dropdown" style="width: 100%; height: 40px; padding: 0;" onchange="changeThemeColor(this.value)">
+    </div>
+
+    <!-- 艦名変更 -->
+    <div class="radio-group">
+      <h3>艦名変更（リネーム）</h3>
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の艦名を入力">
+        <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
+      </div>
+    </div>
+
+    <!-- ボトルメール -->
+    <div class="radio-group">
+      <h3>ボトルメール（おたのしみ機能）</h3>
+      <button class="panel-btn" onclick="fireBottleMail()">海へ流す</button>
+    </div>
+  </div>
 </div>
 
 <div id="panel-amu-actions" class="panel">
   <h2>編集室</h2>
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:20px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
-  <button class="panel-btn" onclick="bulkAction('archive')">アーカイブに送る</button>
-  <button class="panel-btn" onclick="bulkAction('work')">作品に送る</button>
-  <button class="panel-btn" onclick="bulkAction('published')">既発表にする</button>
-  <button class="panel-btn" onclick="bulkAction('unpublished')">未発表にする</button>
-  <button class="panel-btn" onclick="bulkAction('tag')">共通のタグをつける</button>
-  <button class="panel-btn" onclick="bulkAction('copy')">クリップボードに送る</button>
-  <button class="panel-btn" onclick="bulkAction('create_list')">新しいリストを編む</button>
-  <p style="margin-top:30px; font-size:0.9rem; color:var(--color-A);">※選択を解除するときはコンソールの「取消」を押してください</p>
-  <button class="panel-btn" onclick="closePanels()" style="text-align:center; background:var(--color-A); color:var(--color-B);">タイムラインへ戻る</button>
+  
+  <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
+  <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
+  
+  <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
+  <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
+  
+  <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">共通のタグをつける</button>
+  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードに送る</button>
+  <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
+  
+  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
+  
+  <div class="desk-ctrls" style="margin-top:20px;">
+    <button onclick="closePanels()">取消(戻る)</button>
+    <button id="btn-amu-decide" onclick="executeAmuActions()" style="background:var(--color-A); color:var(--color-B);">決定</button>
+  </div>
 </div>
 
 <div id="panel-escape" class="panel">
@@ -233,7 +279,7 @@ select.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
   <div id="list-items"></div>
   <textarea id="list-memo" rows="2" placeholder="締め切りなど" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
-  <input type="text" id="list-tags" placeholder="タグ（空白区切り）" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
+  <textarea id="list-tags" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
   <button class="panel-btn inverted" id="btn-copy-list" onclick="copyListItems()">クリップボードにコピー</button>
   <div class="desk-ctrls">
     <button onclick="closeListEditor()">戻る(保存)</button>
@@ -253,40 +299,20 @@ let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let mode = 'normal'; 
 let selectedIds = new Set();
 let currentListId = null; 
-let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', month: 'all' };
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default' };
 
 let appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
 document.getElementById('header-title').innerText = appTitle;
+document.title = appTitle;
 
-window.renameTitle = function() {
-  let newTitle = prompt('新しい艦名（タイトル）を入力:', appTitle);
-  if (newTitle !== null && newTitle.trim() !== '') {
-    appTitle = newTitle.trim();
-    localStorage.setItem('saikiyo_title', appTitle);
-    document.getElementById('header-title').innerText = appTitle;
-  }
-}
-
-function updateMonthOptions() {
-  const select = document.getElementById('month-select');
-  if(!select) return;
-  const currentVal = select.value;
-  const months = new Set();
-  data.forEach(d => {
-    const date = new Date(d.id);
-    months.add(`${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`);
-  });
-  let html = `<option value="all">すべて</option>`;
-  Array.from(months).sort().reverse().forEach(m => {
-    html += `<option value="${m}">${m.replace('-','年')}月</option>`;
-  });
-  select.innerHTML = html;
-  if (Array.from(months).includes(currentVal)) select.value = currentVal;
+// カスタムカラーの復元
+const customColor = localStorage.getItem('saikiyo_theme_color');
+if (customColor) {
+  document.documentElement.style.setProperty('--color-A', customColor);
 }
 
 function saveData() { 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
-  updateMonthOptions();
 }
 
 const tlContainer = document.getElementById('timeline-container');
@@ -305,11 +331,6 @@ function renderTimeline() {
   let filtered = data.filter(d => {
     if (config.filter === 'work' && d.status !== '作品') return false;
     if (config.filter === 'archive' && d.status !== 'アーカイブ') return false;
-    if (config.month && config.month !== 'all') {
-      const date = new Date(d.id);
-      const yyyymm = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
-      if (yyyymm !== config.month) return false;
-    }
     return true; 
   });
   
@@ -321,7 +342,7 @@ function renderTimeline() {
     if (selectedIds.has(item.id)) div.classList.add('selected', 'selecting');
     
     let innerHTML = `<span class="selection-marker"></span>`;
-    let text = item.type === 'list' ? `【リスト】${item.content} (${(item.items||[]).length}首)` : item.content;
+    let text = item.type === 'list' ? `【リスト】${item.content} (${(item.items||[]).length}件)` : item.content;
     innerHTML += `<div class="item-content">${escapeHTML(text)}</div>`;
     
     const dateStr = formatTime(item.id);
@@ -340,13 +361,16 @@ function renderTimeline() {
   });
   
   tlContainer.scrollTop = scrollPos;
+  executeUnifiedSearch();
   updateButtonsState();
 }
 
 function escapeHTML(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
 function formatTime(ms) {
   const d = new Date(ms); const pad = n => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const days = ['日', '月', '火', '水', '木', '金', '土'];
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}(${days[d.getDay()]}) ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function tapItem(id) {
@@ -395,7 +419,7 @@ function updateButtonsState() {
   }
 }
 
-let isSearchLinked = true; 
+let isSearchLinked = false; 
 
 function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
@@ -408,10 +432,16 @@ function executeUnifiedSearch() {
     const id = Number(item.dataset.id);
     const targetData = data.find(d => d.id === id);
     if (!targetData) return;
+    
     const content = (targetData.content || '').toLowerCase();
     const tags = (targetData.tags ? targetData.tags.join(' ') : '').toLowerCase();
+    const memo = (targetData.memo || '').toLowerCase();
+    const dateStr = formatTime(id).toLowerCase();
     
-    if ((keyword === '' || content.includes(keyword)) && (tagKeyword === '' || tags.includes(tagKeyword))) {
+    const contentMatch = (keyword === '' || content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword));
+    const tagMatch = (tagKeyword === '' || tags.includes(tagKeyword));
+    
+    if (contentMatch && tagMatch) {
       item.style.display = '';
     } else {
       item.style.display = 'none';
@@ -419,13 +449,20 @@ function executeUnifiedSearch() {
   });
 }
 
-inputContentNode.addEventListener('input', executeUnifiedSearch);
-inputTagsNode.addEventListener('input', executeUnifiedSearch);
-
 btnSearch.addEventListener('click', () => {
-  isSearchLinked = !isSearchLinked;
-  if (isSearchLinked) { btnSearch.innerText = '検索ON'; btnSearch.style.opacity = '1'; executeUnifiedSearch(); } 
-  else { btnSearch.innerText = '検索OFF'; btnSearch.style.opacity = '0.5'; executeUnifiedSearch(); }
+  if (!isSearchLinked) {
+    isSearchLinked = true; 
+    btnSearch.innerText = '解除'; 
+    btnSearch.style.opacity = '0.5'; 
+    executeUnifiedSearch();
+  } else {
+    isSearchLinked = false; 
+    btnSearch.innerText = '検索'; 
+    btnSearch.style.opacity = '1'; 
+    inputContentNode.value = ''; 
+    inputTagsNode.value = '';    
+    executeUnifiedSearch();
+  }
 });
 
 btnSend.addEventListener('click', () => {
@@ -436,7 +473,7 @@ btnSend.addEventListener('click', () => {
     const tags = inputTagsNode.value.trim().split(/\s+/).filter(Boolean);
     data.push({ id: Date.now(), type: 'tanka', content: content, status: '作品', publish_status: '未発表', tags: tags });
     inputContentNode.value = ''; inputTagsNode.value = '';
-    saveData(); renderTimeline(); executeUnifiedSearch(); 
+    saveData(); renderTimeline(); 
     setTimeout(() => { tlContainer.scrollTop = tlContainer.scrollHeight; }, 50);
   } else if (mode === 'normal' && hasSelection) {
     let expandedIds = [];
@@ -454,6 +491,7 @@ btnSend.addEventListener('click', () => {
     previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
     
     document.getElementById('panel-amu-actions').classList.add('active');
+    document.querySelectorAll('.amu-action-btn').forEach(b => b.classList.remove('selected'));
   }
 });
 
@@ -492,25 +530,63 @@ function exitSelectionMode() {
 
 window.closePanels = function() { document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); }
 
-window.bulkAction = function(action) {
-  if (action === 'archive') { data.forEach(d => { if(selectedIds.has(d.id)) d.status = 'アーカイブ'; }); }
-  else if (action === 'work') { data.forEach(d => { if(selectedIds.has(d.id)) d.status = '作品'; }); }
-  else if (action === 'published') { data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = '既発表'; }); }
-  else if (action === 'unpublished') { data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = '未発表'; }); }
-  else if (action === 'tag') {
+window.toggleAmuAction = function(btn) {
+  const type = btn.dataset.type;
+  const isSelected = btn.classList.contains('selected');
+  if (type === 'status' || type === 'publish') {
+    document.querySelectorAll(`.amu-action-btn[data-type="${type}"]`).forEach(el => el.classList.remove('selected'));
+    if (!isSelected) btn.classList.add('selected');
+  } else {
+    btn.classList.toggle('selected');
+  }
+}
+
+window.executeAmuActions = function() {
+  const btnDecide = document.getElementById('btn-amu-decide');
+  btnDecide.innerText = 'できたよ！';
+  btnDecide.style.pointerEvents = 'none';
+  document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
+  
+  const selectedBtns = document.querySelectorAll('.amu-action-btn.selected');
+  let needTag = false, needCopy = false, needCreateList = false;
+  
+  selectedBtns.forEach(btn => {
+    const type = btn.dataset.type;
+    const val = btn.dataset.val;
+    if (type === 'status') {
+      data.forEach(d => { if(selectedIds.has(d.id)) d.status = val === 'archive' ? 'アーカイブ' : '作品'; });
+    } else if (type === 'publish') {
+      data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = val === 'published' ? '既発表' : '未発表'; });
+    } else if (type === 'tag') { needTag = true; }
+    else if (type === 'copy') { needCopy = true; }
+    else if (type === 'create_list') { needCreateList = true; }
+  });
+  
+  if (needTag) {
     const t = prompt('共通で付与するタグを入力（空白なし）');
     if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
   }
-  else if (action === 'copy') {
+  if (needCopy) {
     let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
     physicalCopy(txt);
   }
-  else if (action === 'create_list') {
-    let expandedIds = [];
-    selectedIds.forEach(id => { const target = data.find(d => d.id === id); if (target) { if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } else { expandedIds.push(id); } } });
-    openListEditor(null, [...new Set(expandedIds)]); return;
-  }
-  saveData(); closePanels(); exitSelectionMode();
+  
+  saveData();
+  
+  setTimeout(() => {
+    btnDecide.innerText = '決定';
+    btnDecide.style.pointerEvents = 'auto';
+    document.querySelectorAll('.amu-action-btn').forEach(b => { b.style.pointerEvents = 'auto'; });
+    
+    if (needCreateList) {
+      let expandedIds = [];
+      selectedIds.forEach(id => { const target = data.find(d => d.id === id); if (target) { if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } else { expandedIds.push(id); } } });
+      openListEditor(null, [...new Set(expandedIds)]);
+    } else {
+      closePanels(); 
+      exitSelectionMode();
+    }
+  }, 1000);
 }
 
 function physicalCopy(text) {
@@ -667,7 +743,6 @@ document.querySelectorAll('input[type="radio"]').forEach(radio => {
   });
 });
 
-updateMonthOptions();
 applyConfig();
 
 let lastTapTime = 0; 
@@ -704,6 +779,93 @@ exitSelectionMode = function() {
   document.getElementById('timeline-container').classList.remove('select-mode');
   originalExitSelectionMode();
 };
+
+/* =========================================
+   新規追加：機関室（設定）ロジック
+   ========================================= */
+
+// 1. タイムマシンのスクロール処理
+window.jumpToDate = function() {
+  const inputNode = document.getElementById('date-jump-input');
+  const dateStr = inputNode.value;
+  if (!dateStr) return;
+  
+  const targetTime = new Date(`${dateStr}T23:59:59`).getTime();
+  const items = Array.from(document.querySelectorAll('#timeline-container .item'));
+  if (items.length === 0) return;
+
+  let targetItem = items.find(item => Number(item.dataset.id) <= targetTime);
+  if (!targetItem) {
+    targetItem = items[items.length - 1];
+  }
+
+  targetItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  closePanels();
+  inputNode.value = ""; 
+};
+
+// 1.5. 最新へ帰還
+window.returnToLatest = function() {
+  const container = document.getElementById('timeline-container');
+  if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+  closePanels();
+};
+
+// 2. 計器盤の調色（テーマカラー変更）
+window.changeThemeColor = function(colorHex) {
+  document.documentElement.style.setProperty('--color-A', colorHex);
+  document.documentElement.removeAttribute('data-theme');
+  const defaultRadio = document.querySelector('input[name="color-mode"][value="default"]');
+  if (defaultRadio) defaultRadio.checked = true;
+  localStorage.setItem('saikiyo_theme_color', colorHex);
+};
+
+// 3. 艦名変更（リネーム）
+window.renameApp = function() {
+  const inputNode = document.getElementById('rename-input');
+  const newName = inputNode.value.trim();
+  
+  if (!newName) {
+    alert('新しい艦名を入力してください。');
+    return;
+  }
+  
+  document.title = newName;
+  const titleEl = document.getElementById('header-title');
+  if (titleEl) titleEl.innerText = newName;
+  
+  localStorage.setItem('saikiyo_title', newName);
+  appTitle = newName;
+  
+  inputNode.value = "";
+  closePanels();
+};
+
+// 4. ボトルメール（秘密結社へのゲート）
+window.fireBottleMail = function() {
+  const today = new Date().toLocaleDateString('ja-JP');
+  const lastSent = localStorage.getItem('saikiyo_bottle_last_date');
+  let count = Number(localStorage.getItem('saikiyo_bottle_count') || 0);
+
+  if (lastSent === today) {
+    alert('今日はもう潮の流れが変わってしまった。ボトルを流せるのは1日1回までだ。');
+    return;
+  }
+
+  count++;
+  localStorage.setItem('saikiyo_bottle_last_date', today);
+  localStorage.setItem('saikiyo_bottle_count', count);
+
+  if (count === 50) {
+    alert('海から、見慣れない黒い封筒が引き上げられた……。');
+    openExpandedReader('秘密結社「らくだ歌会」へのご案内', '航海士殿。\n\n50日もの間、絶えず波打ち際へ足を運び、海へ言葉を預け続けたあなたの敬意と忍耐に、深い敬意を表します。\n\n我々は「らくだ歌会」。\n声と間で三十一文字を共有する不可視の結社です。\n\nこの案内状を手にした者だけに、扉は開かれます。\n以下の合い言葉を携え、主宰の扉（XのDM等）を叩いてください。\n\n合言葉：【パノプティコンの駱駝】');
+  } else {
+    alert(`ボトルを海へ流した。（累計: ${count}回）\n見知らぬ誰かの言葉が、いずれ流れ着くだろう。`);
+  }
+  closePanels();
+};
 </script>
 </body>
 </html>
+
+```
