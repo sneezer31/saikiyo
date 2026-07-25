@@ -255,7 +255,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 <div id="panel-amu-actions" class="panel">
   <h2>編集室</h2>
   <div id="amu-preview" class="preview-area"></div>
-  <button class="panel-btn inverted" style="margin-bottom:20px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
+  <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
+  
+  <!-- 追加：メモ編集窓 -->
+  <textarea id="amu-memo-input" rows="2" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
   
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
