@@ -498,7 +498,6 @@ btnSearch.addEventListener('click', () => {
     executeUnifiedSearch();
   }
 });
-
 btnSend.addEventListener('click', () => {
   const hasSelection = selectedIds.size > 0;
   if (mode === 'normal' && !hasSelection) {
@@ -511,6 +510,8 @@ btnSend.addEventListener('click', () => {
     setTimeout(() => { tlContainer.scrollTop = tlContainer.scrollHeight; }, 50);
   } else if (mode === 'normal' && hasSelection) {
     let expandedIds = [];
+    let singleMemo = ''; // 追加
+    
     selectedIds.forEach(id => {
       const target = data.find(d => d.id === id);
       if (target) {
@@ -519,10 +520,22 @@ btnSend.addEventListener('click', () => {
       }
     });
     
+    // 追加：1件のみ選択時は既存のメモを窓に読み込む
+    const memoInputNode = document.getElementById('amu-memo-input');
+    if (selectedIds.size === 1) {
+      const singleId = Array.from(selectedIds)[0];
+      const singleTarget = data.find(d => d.id === singleId);
+      if (singleTarget && singleTarget.memo) singleMemo = singleTarget.memo;
+      memoInputNode.placeholder = "メモを編集（空欄で消去）";
+    } else {
+      memoInputNode.placeholder = "複数選択時：入力すると全件のメモを一括上書きします";
+    }
+    
     const previewArea = document.getElementById('amu-preview');
     const previewSet = new Set(expandedIds);
     
     previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
+    memoInputNode.value = singleMemo; // 窓にセット
     
     document.getElementById('panel-amu-actions').classList.add('active');
     document.querySelectorAll('.amu-action-btn').forEach(b => b.classList.remove('selected'));
