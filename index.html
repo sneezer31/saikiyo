@@ -8,29 +8,24 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   2026/07/25
+   3色マトリクス絶対指定ルール
    ========================================= */
 :root {
   --color-A: #001F3F;
   --color-B: #F0F4F8;
   --color-C: #DCE2E9;
   --font-family: sans-serif;
---global-radius: 0px; 
-}
-
-/* 角張っているすべての要素をここに列挙し、共通の変数を適用する */
-.buttons button,
-textarea,
-input,
-.panel,
-.modal {
-  border-radius: var(--global-radius);}
+  --border-radius: 0px;
 }
 
 [data-theme="mono"] {
   --color-A: #000000;
   --color-B: #FFFFFF;
   --color-C: #E0E0E0;
+}
+
+[data-radius="round"] {
+  --border-radius: 8px;
 }
 
 html, body {
@@ -77,10 +72,11 @@ header button { background: none; border: none; color: var(--color-B); font-size
   padding-left: 0; 
   transition: padding-left 0.2s ease;
   cursor: pointer;
+  border-radius: var(--border-radius);
 }
-.item-content { font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap; cursor: pointer; }
+.item-content { font-size: 1.1rem; line-height: 1.8; white-space: pre-wrap; cursor: pointer; }
 .is-archive { background-color: var(--color-C); color: var(--color-A); padding: 10px; }
-.meta-data { display: none; margin-top: 10px; font-size: 0.9rem; opacity: 0.8; line-height: 1.3; }
+.meta-data { display: none; margin-top: 10px; font-size: 0.9rem; opacity: 0.8; line-height: 1.5; }
 .item.open .meta-data { display: block; }
 
 #console {
@@ -90,23 +86,17 @@ header button { background: none; border: none; color: var(--color-B); font-size
 #input-content, #input-tags {
   width: 100%; background: var(--color-B); color: var(--color-A); box-sizing: border-box;
   border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 18px;
+  border-radius: var(--border-radius);
 }
 #input-content { height: 3em; resize: none; }
 
+.buttons { display: flex; justify-content: space-between; gap: 5px; }
 .buttons button {
-  flex: 1;
-  padding: 10px 0;
-  font-weight: bold;
-  background: var(--color-A);
-  color: var(--color-B);
-  border: 1px solid var(--color-A);
-  box-sizing: border-box;
-  transition: opacity 0.3s ease;
-  cursor: pointer;
-  font-size: 18px;
-  border-radius: 8px; /* 角を削るプロパティ */
-.buttons button {
-  border-radius: var(--btn-radius); }
+  flex: 1; padding: 12px 0; font-weight: bold;
+  background: var(--color-A); color: var(--color-B); border: 1px solid var(--color-A);
+  transition: opacity 0.3s ease; cursor: pointer; font-size: 18px;
+  white-space: nowrap;
+  border-radius: var(--border-radius);
 }
 .buttons button:disabled { background: var(--color-C); color: var(--color-A); border-color: var(--color-C); pointer-events: none; }
 .buttons button.active-btn { background: var(--color-A); color: var(--color-B); }
@@ -136,17 +126,19 @@ header button { background: none; border: none; color: var(--color-B); font-size
   display: block; width: 100%; padding: 18px; margin-bottom: 12px; box-sizing: border-box;
   background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A);
   font-size: 1.2rem; font-weight: bold; text-align: left; cursor: pointer;
+  border-radius: var(--border-radius);
 }
 .panel-btn.inverted { background: var(--color-B); color: var(--color-A); text-align: center; }
 .panel-btn.selected { background: var(--color-A); color: var(--color-B); border: 2px solid var(--color-A); text-align: center; }
 
 .radio-group { margin-bottom: 20px; color: var(--color-A); }
 .radio-group label { display: block; margin-bottom: 10px; font-size: 1.1rem; }
-select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; }
+select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; border-radius: var(--border-radius); }
 
 .preview-area {
   background: var(--color-A); color: var(--color-B); padding: 15px; margin-bottom: 10px;
   max-height: 25vh; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap;
+  border-radius: var(--border-radius);
 }
 
 #panel-list-editor { display: none; flex-direction: column; }
@@ -154,14 +146,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 #panel-list-editor input, #panel-list-editor textarea {
   width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;
   background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 18px;
+  border-radius: var(--border-radius);
 }
 #panel-list-editor textarea { resize: none; }
-#list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; }
+#list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; border-radius: var(--border-radius); }
 .list-item-edit { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px; }
-.list-item-edit button { background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 5px 10px; cursor: pointer; font-weight: bold; }
+.list-item-edit button { background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 5px 10px; cursor: pointer; font-weight: bold; border-radius: var(--border-radius); }
 .list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 14px; }
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
-.desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; }
+.desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; border-radius: var(--border-radius); }
 </style>
 </head>
 <body>
@@ -192,6 +185,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 <div id="panel-menu" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>設定</h2>
+  <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="resetSettings()">設定を初期値に戻す</button>
+
   <div class="radio-group">
     <h3>タイムライン表示切替</h3>
     <label><input type="radio" name="view-mode" value="wrap" checked> 折り返しあり</label>
@@ -217,40 +212,42 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <hr style="border-color: var(--color-A); margin: 30px 0;">
   
   <div id="engine-room-controls" style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- 角の丸み -->
+    <div class="radio-group">
+      <h3>角の丸み（UIデザイン）</h3>
+      <label><input type="radio" name="radius-mode" value="square" checked> 四角</label>
+      <label><input type="radio" name="radius-mode" value="round"> 丸</label>
+    </div>
+
     <!-- タイムマシン -->
     <div class="radio-group">
-      <h3>
-
-       <!-- <h3>タイムマシン </h3
-         >  -->
-         <div style="display: flex; gap: 10px; align-items: center;">
+      <h3>航海日誌の解錠（タイムマシン）</h3>
+      <div style="display: flex; gap: 10px; align-items: center;">
         <input type="date" id="date-jump-input" class="dropdown" style="flex: 1; padding: 10px;">
-        <button class="panel-btn inverted" style="margin: 0; padding: 10px 15px; width: auto;" onclick="jumpToDate()">わーぷ！</button>
-        <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">帰ってくる</button>
+        <button class="panel-btn inverted" style="margin: 0; padding: 10px 15px; width: auto;" onclick="jumpToDate()">解錠</button>
+        <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">帰還</button>
       </div>
     </div>
 
-     <h3>ひみつぼたん</h3>
-<button onclick="toggleButtonShape()">ひみつ/button>
     <!-- 色の調節 -->
     <div class="radio-group">
-      <h3>ひみつぼたん</h3>
+      <h3>計器盤の調色（テーマカラー）</h3>
       <input type="color" id="theme-color-picker" class="dropdown" style="width: 100%; height: 40px; padding: 0;" onchange="changeThemeColor(this.value)">
     </div>
+
+    <!-- 艦名変更 -->
     <div class="radio-group">
-      <h3>ひみつぼたん</h3>
+      <h3>艦名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
-        <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="好きな名前にする">
+        <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の艦名を入力">
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
       </div>
     </div>
 
-   <button onclick="resetUISettings()">初期設定に戻す</button>
-   
     <!-- ボトルメール -->
     <div class="radio-group">
       <h3>ボトルメール（おたのしみ機能）</h3>
-      <button class="panel-btn" onclick="fireBottleMail()">工事中</button>
+      <button class="panel-btn" onclick="fireBottleMail()">海へ流す</button>
     </div>
   </div>
 </div>
@@ -266,9 +263,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
   
-  <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">タグをつける</button>
+  <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">共通のタグをつける</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードに送る</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
+  
+  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
   
   <div class="desk-ctrls" style="margin-top:20px;">
     <button onclick="closePanels()">取消(戻る)</button>
@@ -283,6 +282,24 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn" onclick="escapeAction('download')">完全脱出</button>
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
+  
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  <button class="panel-btn inverted" onclick="openMitsuyuPanel()">みつゆルート（表計算から密輸）</button>
+</div>
+
+<!-- みつゆルート用パネル -->
+<div id="panel-mitsuyu" class="panel">
+  <button class="close-btn" onclick="closePanels()">×</button>
+  <h2>みつゆルート</h2>
+  <p style="font-size: 0.95rem; line-height: 1.5; color: var(--color-A); margin-bottom: 15px;">
+    スプレッドシートからコピーしたデータをそのまま貼り付けてください。<br>
+    ※E列を短歌本文、D・H・I列、およびB列(作成日)をメモとして自動結合します。
+  </p>
+  <textarea id="mitsuyu-input" placeholder="ここにペースト..." spellcheck="false" style="width: 100%; height: 40vh; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 14px; border-radius: var(--border-radius); resize: none;"></textarea>
+  <div class="desk-ctrls" style="margin-top:20px;">
+    <button onclick="closePanels()">やめる</button>
+    <button onclick="executeMitsuyu()" style="background:var(--color-A); color:var(--color-B);">密輸する</button>
+  </div>
 </div>
 
 <div id="panel-list-editor" class="panel">
@@ -312,37 +329,17 @@ let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let mode = 'normal'; 
 let selectedIds = new Set();
 let currentListId = null; 
-let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default' };
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
 
 let appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
 document.getElementById('header-title').innerText = appTitle;
 document.title = appTitle;
 
-function toggleGlobalShape() {
-  const root = document.documentElement;
-  let currentRadius = getComputedStyle(root).getPropertyValue('--global-radius').trim();
-  
-  // 0px（直角）と 8px（角丸）をシステム全体で一斉に反転させる
-  if (currentRadius === '8px') {
-    root.style.setProperty('--global-radius', '0px');
-    localStorage.setItem('ui_preference_radius', '0px');
-  } else {
-    root.style.setProperty('--global-radius', '8px');
-    localStorage.setItem('ui_preference_radius', '8px');
-  }
+// カスタムカラーの復元
+const customColor = localStorage.getItem('saikiyo_theme_color');
+if (customColor) {
+  document.documentElement.style.setProperty('--color-A', customColor);
 }
-function resetUISettings() {
-  const root = document.documentElement;
-
-  // 1. 端末の記憶（LocalStorage）からUI設定を破棄
-  localStorage.removeItem('ui_preference_radius');
-  localStorage.removeItem('ui_preference_color');
-
-  // 2. 画面上の変数を初期値（0px）に強制上書き
-  root.style.setProperty('--global-radius', '0px');
-  root.style.setProperty('--color-A', '#初期値のカラーコード');
-}   
-
 
 function saveData() { 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
@@ -385,7 +382,7 @@ function renderTimeline() {
     innerHTML += `<div class="meta-data">${dateStr}<br>${item.status}<br>${item.publish_status}<br>${tagsStr}<br>${item.memo ? `メモ: ${item.memo}<br>` : ''}${listNames ? `収録リスト：${listNames}<br>` : ''}`;
     
     if (item.type === 'list') {
-      innerHTML += `<br><button onclick="event.stopPropagation(); openListEditor(${item.id})" style="margin-top:8px; padding:6px 12px; background:var(--color-A); color:var(--color-B); border:none; cursor:pointer; font-weight:bold; font-size:0.9rem;">リストを再編集する</button>`;
+      innerHTML += `<br><button onclick="event.stopPropagation(); openListEditor(${item.id})" style="margin-top:8px; padding:6px 12px; background:var(--color-A); color:var(--color-B); border:none; cursor:pointer; font-weight:bold; font-size:0.9rem; border-radius:var(--border-radius);">リストを再編集する</button>`;
     }
     
     innerHTML += `</div>`;
@@ -416,6 +413,7 @@ function applyConfig() {
   if (config.theme === 'mono') { document.documentElement.setAttribute('data-theme', 'mono'); } 
   else { document.documentElement.removeAttribute('data-theme'); }
   document.documentElement.style.setProperty('--font-family', config.font);
+  document.documentElement.setAttribute('data-radius', config.radius);
   tlContainer.className = config.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
   renderTimeline();
 }
@@ -493,7 +491,7 @@ btnSearch.addEventListener('click', () => {
     btnSearch.innerText = '検索'; 
     btnSearch.style.opacity = '1'; 
     inputContentNode.value = ''; 
-    inputTagsNode.value = '';    
+    inputTagsNode.value = '';   
     executeUnifiedSearch();
   }
 });
@@ -772,6 +770,7 @@ document.querySelectorAll('input[type="radio"]').forEach(radio => {
     if (name === 'filter-mode') config.filter = val;
     if (name === 'font-mode') config.font = val;
     if (name === 'color-mode') config.theme = val;
+    if (name === 'radius-mode') config.radius = val;
     applyConfig();
   });
 });
@@ -779,6 +778,7 @@ document.querySelectorAll('input[type="radio"]').forEach(radio => {
 applyConfig();
 
 let lastTapTime = 0; 
+let tapTimeout = null;
 const doubleTapThreshold = 300; 
 
 tlContainer.addEventListener('click', (event) => {
@@ -799,11 +799,15 @@ tlContainer.addEventListener('click', (event) => {
   
   if (tapInterval < doubleTapThreshold && tapInterval > 0) {
     event.preventDefault(); 
+    clearTimeout(tapTimeout); 
     togglePoemSelection(itemElement, itemId); 
-    lastTapTime = 0;
+    lastTapTime = 0; 
   } else {
     lastTapTime = currentTime; 
-    tapItem(itemId);
+    tapTimeout = setTimeout(() => {
+      tapItem(itemId); 
+      lastTapTime = 0;
+    }, doubleTapThreshold);
   }
 });
 
@@ -814,8 +818,36 @@ exitSelectionMode = function() {
 };
 
 /* =========================================
-   新規追加：機関室（設定）ロジック
+   機関室（設定）ロジック
    ========================================= */
+
+// 0. 初期化ロジック
+window.resetSettings = function() {
+  if (!confirm('艦名やテーマカラーを含め、全ての設定を初期状態に戻しますか？')) return;
+  
+  localStorage.removeItem('saikiyo_theme_color');
+  localStorage.removeItem('saikiyo_title');
+
+  appTitle = 'さいきよ';
+  document.getElementById('header-title').innerText = appTitle;
+  document.title = appTitle;
+  document.getElementById('rename-input').value = '';
+
+  document.documentElement.style.removeProperty('--color-A');
+  document.getElementById('theme-color-picker').value = '#001F3F';
+
+  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
+
+  document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
+  document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
+  document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
+  document.querySelector('input[name="color-mode"][value="default"]').checked = true;
+  document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
+
+  applyConfig();
+  closePanels();
+  alert('設定を初期化しました。');
+};
 
 // 1. タイムマシンのスクロール処理
 window.jumpToDate = function() {
@@ -897,6 +929,73 @@ window.fireBottleMail = function() {
   }
   closePanels();
 };
+
+// 5. みつゆルート（データ密輸ロジック）
+window.openMitsuyuPanel = function() {
+  closePanels();
+  document.getElementById('mitsuyu-input').value = '';
+  document.getElementById('panel-mitsuyu').classList.add('active');
+}
+
+window.executeMitsuyu = function() {
+  const text = document.getElementById('mitsuyu-input').value;
+  if (!text.trim()) return;
+
+  const lines = text.split('\n');
+  let importedCount = 0;
+  let baseTime = Date.now();
+
+  lines.forEach(line => {
+    const cols = line.split('\t');
+    if (cols.length >= 5) {
+      let content = cols[4].trim();
+      if (!content || content === '推敲用') return;
+
+      let memoArr = [];
+      
+      if (cols[1] && cols[1].trim()) memoArr.push('作成日: ' + cols[1].trim());
+      if (cols[3] && cols[3].trim()) memoArr.push(cols[3].trim());
+      if (cols.length > 7 && cols[7] && cols[7].trim()) memoArr.push('公募: ' + cols[7].trim());
+      if (cols.length > 8 && cols[8] && cols[8].trim()) memoArr.push('結果: ' + cols[8].trim());
+      
+      let memo = memoArr.join(' / ');
+      let tags = [];
+      if (cols[2] && cols[2].trim()) tags.push('Lv:' + cols[2].trim());
+
+      let dateStrA = cols[0].trim();
+      let dateStrB = cols[1].trim();
+      let idTime = baseTime;
+      
+      if (dateStrA) {
+        let parsed = new Date(dateStrA).getTime();
+        if (!isNaN(parsed)) idTime = parsed;
+      } else if (dateStrB) {
+        let parsed = new Date(dateStrB).getTime();
+        if (!isNaN(parsed)) idTime = parsed;
+      }
+      
+      data.push({
+        id: idTime + importedCount, 
+        type: 'tanka',
+        content: content,
+        status: '作品',
+        publish_status: (cols.length > 7 && cols[7] && cols[7].trim()) ? '既発表' : '未発表',
+        tags: tags,
+        memo: memo
+      });
+      importedCount++;
+    }
+  });
+
+  if (importedCount > 0) {
+    saveData();
+    renderTimeline();
+    alert(`${importedCount}首の密輸に成功しました。`);
+    closePanels();
+  } else {
+    alert('読み込めるデータが見つかりませんでした。スプレッドシートから正しくコピーされているか確認してください。');
+  }
+}
 </script>
 </body>
 </html>
