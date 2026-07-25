@@ -276,6 +276,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button id="btn-amu-decide" onclick="executeAmuActions()" style="background:var(--color-A); color:var(--color-B);">決定</button>
   </div>
 </div>
+
 <div id="panel-escape" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>脱出ターミナル</h2>
@@ -288,13 +289,12 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn inverted" onclick="openMitsuyuPanel()">みつゆルート（表計算から密輸）</button>
 </div>
 
-<!-- みつゆルート用パネル -->
 <div id="panel-mitsuyu" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>みつゆルート</h2>
   <p style="font-size: 0.95rem; line-height: 1.5; color: var(--color-A); margin-bottom: 15px;">
     スプレッドシートからコピーしたデータをそのまま貼り付けてください。<br>
-    ※E列を短歌本文、D・H・I列、およびB列(作成日)をメモとして自動結合します。
+    ※E列を短歌本文、D・H・I列および作成日をメモとして自動結合します。
   </p>
   <textarea id="mitsuyu-input" placeholder="ここにペースト..." spellcheck="false" style="width: 100%; height: 40vh; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 14px; border-radius: var(--border-radius); resize: none;"></textarea>
   <div class="desk-ctrls" style="margin-top:20px;">
@@ -496,6 +496,7 @@ btnSearch.addEventListener('click', () => {
     executeUnifiedSearch();
   }
 });
+
 btnSend.addEventListener('click', () => {
   const hasSelection = selectedIds.size > 0;
   if (mode === 'normal' && !hasSelection) {
@@ -508,7 +509,7 @@ btnSend.addEventListener('click', () => {
     setTimeout(() => { tlContainer.scrollTop = tlContainer.scrollHeight; }, 50);
   } else if (mode === 'normal' && hasSelection) {
     let expandedIds = [];
-    let singleMemo = ''; // 追加
+    let singleMemo = ''; 
     
     selectedIds.forEach(id => {
       const target = data.find(d => d.id === id);
@@ -518,7 +519,6 @@ btnSend.addEventListener('click', () => {
       }
     });
     
-    // 追加：1件のみ選択時は既存のメモを窓に読み込む
     const memoInputNode = document.getElementById('amu-memo-input');
     if (selectedIds.size === 1) {
       const singleId = Array.from(selectedIds)[0];
@@ -533,7 +533,7 @@ btnSend.addEventListener('click', () => {
     const previewSet = new Set(expandedIds);
     
     previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
-    memoInputNode.value = singleMemo; // 窓にセット
+    memoInputNode.value = singleMemo; 
     
     document.getElementById('panel-amu-actions').classList.add('active');
     document.querySelectorAll('.amu-action-btn').forEach(b => b.classList.remove('selected'));
@@ -592,13 +592,11 @@ window.executeAmuActions = function() {
   btnDecide.style.pointerEvents = 'none';
   document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
   
-  // メモの保存・上書き処理
   const memoInputValue = document.getElementById('amu-memo-input').value.trim();
   const isMemoEdited = memoInputValue !== "" || selectedIds.size === 1; 
   if (isMemoEdited) {
     data.forEach(d => {
       if (selectedIds.has(d.id)) {
-        // 複数選択時に窓が空欄だった場合は、既存のメモを消去せずに保持する
         if (selectedIds.size > 1 && memoInputValue === "") return;
         d.memo = memoInputValue;
       }
@@ -620,33 +618,6 @@ window.executeAmuActions = function() {
     else if (type === 'create_list') { needCreateList = true; }
   });
   
-  if (needTag) {
-    const t = prompt('共通で付与するタグを入力（空白なし）');
-    if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
-  }
-  if (needCopy) {
-    let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
-    physicalCopy(txt);
-  }
-  
-  // データの永続化処理
-  saveData();
-  
-  setTimeout(() => {
-    btnDecide.innerText = '決定';
-    btnDecide.style.pointerEvents = 'auto';
-    document.querySelectorAll('.amu-action-btn').forEach(b => { b.style.pointerEvents = 'auto'; });
-    
-    if (needCreateList) {
-      let expandedIds = [];
-      selectedIds.forEach(id => { const target = data.find(d => d.id === id); if (target) { if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } else { expandedIds.push(id); } } });
-      openListEditor(null, [...new Set(expandedIds)]);
-    } else {
-      closePanels(); 
-      exitSelectionMode();
-    }
-  }, 1000);
-}  
   if (needTag) {
     const t = prompt('共通で付与するタグを入力（空白なし）');
     if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
@@ -832,7 +803,7 @@ document.querySelectorAll('input[type="radio"]').forEach(radio => {
 applyConfig();
 
 let lastTapTime = 0; 
-let tapTimeout = null;
+let tapTimeout = null; 
 const doubleTapThreshold = 300; 
 
 tlContainer.addEventListener('click', (event) => {
@@ -855,7 +826,7 @@ tlContainer.addEventListener('click', (event) => {
     event.preventDefault(); 
     clearTimeout(tapTimeout); 
     togglePoemSelection(itemElement, itemId); 
-    lastTapTime = 0; 
+    lastTapTime = 0;
   } else {
     lastTapTime = currentTime; 
     tapTimeout = setTimeout(() => {
@@ -875,7 +846,6 @@ exitSelectionMode = function() {
    機関室（設定）ロジック
    ========================================= */
 
-// 0. 初期化ロジック
 window.resetSettings = function() {
   if (!confirm('艦名やテーマカラーを含め、全ての設定を初期状態に戻しますか？')) return;
   
@@ -903,7 +873,6 @@ window.resetSettings = function() {
   alert('設定を初期化しました。');
 };
 
-// 1. タイムマシンのスクロール処理
 window.jumpToDate = function() {
   const inputNode = document.getElementById('date-jump-input');
   const dateStr = inputNode.value;
@@ -923,14 +892,12 @@ window.jumpToDate = function() {
   inputNode.value = ""; 
 };
 
-// 1.5. 最新へ帰還
 window.returnToLatest = function() {
   const container = document.getElementById('timeline-container');
   if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
   closePanels();
 };
 
-// 2. 計器盤の調色（テーマカラー変更）
 window.changeThemeColor = function(colorHex) {
   document.documentElement.style.setProperty('--color-A', colorHex);
   document.documentElement.removeAttribute('data-theme');
@@ -939,7 +906,6 @@ window.changeThemeColor = function(colorHex) {
   localStorage.setItem('saikiyo_theme_color', colorHex);
 };
 
-// 3. 艦名変更（リネーム）
 window.renameApp = function() {
   const inputNode = document.getElementById('rename-input');
   const newName = inputNode.value.trim();
@@ -960,7 +926,6 @@ window.renameApp = function() {
   closePanels();
 };
 
-// 4. ボトルメール（秘密結社へのゲート）
 window.fireBottleMail = function() {
   const today = new Date().toLocaleDateString('ja-JP');
   const lastSent = localStorage.getItem('saikiyo_bottle_last_date');
@@ -984,7 +949,6 @@ window.fireBottleMail = function() {
   closePanels();
 };
 
-// 5. みつゆルート（データ密輸ロジック）
 window.openMitsuyuPanel = function() {
   closePanels();
   document.getElementById('mitsuyu-input').value = '';
@@ -1006,8 +970,7 @@ window.executeMitsuyu = function() {
       if (!content || content === '推敲用') return;
 
       let memoArr = [];
-      
-      if (cols[1] && cols[1].trim()) memoArr.push('作成日: ' + cols[1].trim());
+      if (cols[0] && cols[0].trim() && cols[1] && cols[1].trim()) memoArr.push('作成日: ' + cols[1].trim());
       if (cols[3] && cols[3].trim()) memoArr.push(cols[3].trim());
       if (cols.length > 7 && cols[7] && cols[7].trim()) memoArr.push('公募: ' + cols[7].trim());
       if (cols.length > 8 && cols[8] && cols[8].trim()) memoArr.push('結果: ' + cols[8].trim());
@@ -1016,15 +979,10 @@ window.executeMitsuyu = function() {
       let tags = [];
       if (cols[2] && cols[2].trim()) tags.push('Lv:' + cols[2].trim());
 
-      let dateStrA = cols[0].trim();
-      let dateStrB = cols[1].trim();
+      let dateStr = cols[0].trim() || cols[1].trim();
       let idTime = baseTime;
-      
-      if (dateStrA) {
-        let parsed = new Date(dateStrA).getTime();
-        if (!isNaN(parsed)) idTime = parsed;
-      } else if (dateStrB) {
-        let parsed = new Date(dateStrB).getTime();
+      if (dateStr) {
+        let parsed = new Date(dateStr).getTime();
         if (!isNaN(parsed)) idTime = parsed;
       }
       
