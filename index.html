@@ -257,8 +257,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
   
-  <!-- 追加：メモ編集窓 -->
-  <textarea id="amu-memo-input" rows="2" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+  <textarea id="amu-memo-input" rows="2" placeholder="メモを編集（空欄で消去）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
   
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
@@ -277,7 +276,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button id="btn-amu-decide" onclick="executeAmuActions()" style="background:var(--color-A); color:var(--color-B);">決定</button>
   </div>
 </div>
-
 <div id="panel-escape" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>脱出ターミナル</h2>
@@ -594,6 +592,19 @@ window.executeAmuActions = function() {
   btnDecide.style.pointerEvents = 'none';
   document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
   
+  // メモの保存・上書き処理
+  const memoInputValue = document.getElementById('amu-memo-input').value.trim();
+  const isMemoEdited = memoInputValue !== "" || selectedIds.size === 1; 
+  if (isMemoEdited) {
+    data.forEach(d => {
+      if (selectedIds.has(d.id)) {
+        // 複数選択時に窓が空欄だった場合は、既存のメモを消去せずに保持する
+        if (selectedIds.size > 1 && memoInputValue === "") return;
+        d.memo = memoInputValue;
+      }
+    });
+  }
+  
   const selectedBtns = document.querySelectorAll('.amu-action-btn.selected');
   let needTag = false, needCopy = false, needCreateList = false;
   
@@ -609,6 +620,33 @@ window.executeAmuActions = function() {
     else if (type === 'create_list') { needCreateList = true; }
   });
   
+  if (needTag) {
+    const t = prompt('共通で付与するタグを入力（空白なし）');
+    if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
+  }
+  if (needCopy) {
+    let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
+    physicalCopy(txt);
+  }
+  
+  // データの永続化処理
+  saveData();
+  
+  setTimeout(() => {
+    btnDecide.innerText = '決定';
+    btnDecide.style.pointerEvents = 'auto';
+    document.querySelectorAll('.amu-action-btn').forEach(b => { b.style.pointerEvents = 'auto'; });
+    
+    if (needCreateList) {
+      let expandedIds = [];
+      selectedIds.forEach(id => { const target = data.find(d => d.id === id); if (target) { if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } else { expandedIds.push(id); } } });
+      openListEditor(null, [...new Set(expandedIds)]);
+    } else {
+      closePanels(); 
+      exitSelectionMode();
+    }
+  }, 1000);
+}  
   if (needTag) {
     const t = prompt('共通で付与するタグを入力（空白なし）');
     if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
