@@ -243,12 +243,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
       </div>
     </div>
-
-    <!-- ボトルメール -->
-    <div class="radio-group">
-      <h3>ボトルメール（おたのしみ機能）</h3>
-      <button class="panel-btn" onclick="fireBottleMail()">海へ流す</button>
-    </div>
   </div>
 </div>
 
@@ -284,28 +278,12 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn" onclick="escapeAction('download')">完全脱出</button>
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
-  
-  <hr style="border-color: var(--color-A); margin: 30px 0;">
-  <button class="panel-btn inverted" onclick="openMitsuyuPanel()">みつゆルート（表計算から密輸）</button>
-</div>
 
-<div id="panel-mitsuyu" class="panel">
-  <button class="close-btn" onclick="closePanels()">×</button>
-  <h2>みつゆルート</h2>
-  <p style="font-size: 0.95rem; line-height: 1.5; color: var(--color-A); margin-bottom: 15px;">
-    スプレッドシートからコピーしたデータをそのまま貼り付けてください。<br>
-    ※E列を短歌本文、D・H・I列および作成日をメモとして自動結合します。
-  </p>
-  <textarea id="mitsuyu-input" placeholder="ここにペースト..." spellcheck="false" style="width: 100%; height: 40vh; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 14px; border-radius: var(--border-radius); resize: none;"></textarea>
-  <div class="desk-ctrls" style="margin-top:20px;">
-    <button onclick="closePanels()">やめる</button>
-    <button onclick="executeMitsuyu()" style="background:var(--color-A); color:var(--color-B);">密輸する</button>
-  </div>
 </div>
 
 <div id="panel-list-editor" class="panel">
   <button class="close-btn" onclick="closeListEditor()">×</button>
-  <h2>リスト制作机</h2>
+  <h2>リストをつくる机</h2>
   <input type="text" id="list-name" placeholder="無題" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
   <div id="list-items"></div>
@@ -557,7 +535,7 @@ btnTweet.addEventListener('click', () => {
   } else {
     content = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
   }
-  const textToTweet = content + '\n#短歌 #tanka';
+  const textToTweet = content + '\n#短歌 #tanka #さいきよ';
   if (textToTweet.length > 140) return alert('字数的に無理です');
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
 });
@@ -619,7 +597,7 @@ window.executeAmuActions = function() {
   });
   
   if (needTag) {
-    const t = prompt('共通で付与するタグを入力（空白なし）');
+    const t = prompt('付与するタグを入力（空白なし）');
     if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
   }
   if (needCopy) {
@@ -926,88 +904,6 @@ window.renameApp = function() {
   closePanels();
 };
 
-window.fireBottleMail = function() {
-  const today = new Date().toLocaleDateString('ja-JP');
-  const lastSent = localStorage.getItem('saikiyo_bottle_last_date');
-  let count = Number(localStorage.getItem('saikiyo_bottle_count') || 0);
-
-  if (lastSent === today) {
-    alert('今日はもう潮の流れが変わってしまった。ボトルを流せるのは1日1回までだ。');
-    return;
-  }
-
-  count++;
-  localStorage.setItem('saikiyo_bottle_last_date', today);
-  localStorage.setItem('saikiyo_bottle_count', count);
-
-  if (count === 50) {
-    alert('海から、見慣れない黒い封筒が引き上げられた……。');
-    openExpandedReader('秘密結社「らくだ歌会」へのご案内', '航海士殿。\n\n50日もの間、絶えず波打ち際へ足を運び、海へ言葉を預け続けたあなたの敬意と忍耐に、深い敬意を表します。\n\n我々は「らくだ歌会」。\n声と間で三十一文字を共有する不可視の結社です。\n\nこの案内状を手にした者だけに、扉は開かれます。\n以下の合い言葉を携え、主宰の扉（XのDM等）を叩いてください。\n\n合言葉：【パノプティコンの駱駝】');
-  } else {
-    alert(`ボトルを海へ流した。（累計: ${count}回）\n見知らぬ誰かの言葉が、いずれ流れ着くだろう。`);
-  }
-  closePanels();
-};
-
-window.openMitsuyuPanel = function() {
-  closePanels();
-  document.getElementById('mitsuyu-input').value = '';
-  document.getElementById('panel-mitsuyu').classList.add('active');
-}
-
-window.executeMitsuyu = function() {
-  const text = document.getElementById('mitsuyu-input').value;
-  if (!text.trim()) return;
-
-  const lines = text.split('\n');
-  let importedCount = 0;
-  let baseTime = Date.now();
-
-  lines.forEach(line => {
-    const cols = line.split('\t');
-    if (cols.length >= 5) {
-      let content = cols[4].trim();
-      if (!content || content === '推敲用') return;
-
-      let memoArr = [];
-      if (cols[0] && cols[0].trim() && cols[1] && cols[1].trim()) memoArr.push('作成日: ' + cols[1].trim());
-      if (cols[3] && cols[3].trim()) memoArr.push(cols[3].trim());
-      if (cols.length > 7 && cols[7] && cols[7].trim()) memoArr.push('公募: ' + cols[7].trim());
-      if (cols.length > 8 && cols[8] && cols[8].trim()) memoArr.push('結果: ' + cols[8].trim());
-      
-      let memo = memoArr.join(' / ');
-      let tags = [];
-      if (cols[2] && cols[2].trim()) tags.push('Lv:' + cols[2].trim());
-
-      let dateStr = cols[0].trim() || cols[1].trim();
-      let idTime = baseTime;
-      if (dateStr) {
-        let parsed = new Date(dateStr).getTime();
-        if (!isNaN(parsed)) idTime = parsed;
-      }
-      
-      data.push({
-        id: idTime + importedCount, 
-        type: 'tanka',
-        content: content,
-        status: '作品',
-        publish_status: (cols.length > 7 && cols[7] && cols[7].trim()) ? '既発表' : '未発表',
-        tags: tags,
-        memo: memo
-      });
-      importedCount++;
-    }
-  });
-
-  if (importedCount > 0) {
-    saveData();
-    renderTimeline();
-    alert(`${importedCount}首の密輸に成功しました。`);
-    closePanels();
-  } else {
-    alert('読み込めるデータが見つかりませんでした。スプレッドシートから正しくコピーされているか確認してください。');
-  }
-}
 </script>
 </body>
 </html>
