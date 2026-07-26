@@ -864,6 +864,29 @@ exitSelectionMode = function() {
   originalExitSelectionMode();
 };
 
+// ====== スクロール位置の保存と復元（まとめて配置） ======
+
+// 【保存】スクロールするたびに、tlContainerの位置を保存する
+tlContainer.addEventListener('scroll', () => {
+    localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
+});
+
+// 【復元】初回ロード時（描画完了後）にスクロール位置を復元する
+window.addEventListener('load', () => {
+    const savedPos = localStorage.getItem('saikiyo_scroll_pos');
+    
+    // tlContainerのレンダリングが確実に終わるのを待つ
+    setTimeout(() => {
+        if (savedPos !== null) {
+            // 記憶がある場合はその位置へ
+            tlContainer.scrollTop = parseInt(savedPos, 10);
+        } else {
+            // 記憶がない場合は一番下（最新）へ
+            tlContainer.scrollTop = tlContainer.scrollHeight;
+        }
+    }, 100); 
+});
+
 /* =========================================
    機関室（設定）ロジック
    ========================================= */
