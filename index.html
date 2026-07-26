@@ -278,9 +278,12 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn" onclick="escapeAction('download')">完全脱出</button>
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
-　<!-- 脱出ターミナル内に追記 -->
-　<button class="panel-btn inverted" onclick="openTextImportPanel()">みつゆルート</button>
-<!-- パネル群の並びに追記 -->
+  
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  <button class="panel-btn inverted" onclick="openTextImportPanel()">一括取り込み（テキスト）</button>
+</div>
+
+<!-- 新設：一括取り込みパネル -->
 <div id="panel-import-text" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>一括取り込み</h2>
@@ -294,11 +297,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
   </div>
 </div>
-</div>
 
 <div id="panel-list-editor" class="panel">
   <button class="close-btn" onclick="closeListEditor()">×</button>
-  <h2>リストをつくる机</h2>
+  <h2>リスト制作机</h2>
   <input type="text" id="list-name" placeholder="無題" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
   <div id="list-items"></div>
@@ -550,7 +552,7 @@ btnTweet.addEventListener('click', () => {
   } else {
     content = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
   }
-  const textToTweet = content + '\n#短歌 #tanka #さいきよ';
+  const textToTweet = content + '\n#短歌 #tanka';
   if (textToTweet.length > 140) return alert('字数的に無理です');
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
 });
@@ -612,7 +614,7 @@ window.executeAmuActions = function() {
   });
   
   if (needTag) {
-    const t = prompt('付与するタグを入力（空白なし）');
+    const t = prompt('共通で付与するタグを入力（空白なし）');
     if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
   }
   if (needCopy) {
@@ -915,9 +917,6 @@ window.renameApp = function() {
   localStorage.setItem('saikiyo_title', newName);
   appTitle = newName;
   
-localStorage.setItem('saikiyo_title', newName);
-  appTitle = newName;
-  
   inputNode.value = "";
   closePanels();
 };
@@ -959,7 +958,6 @@ window.executeTextImport = function() {
     closePanels();
   }
 }
-
 </script>
 </body>
 </html>
