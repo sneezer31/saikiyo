@@ -278,7 +278,22 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn" onclick="escapeAction('download')">完全脱出</button>
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
-
+　<!-- 脱出ターミナル内に追記 -->
+　<button class="panel-btn inverted" onclick="openTextImportPanel()">みつゆルート</button>
+<!-- パネル群の並びに追記 -->
+<div id="panel-import-text" class="panel">
+  <button class="close-btn" onclick="closePanels()">×</button>
+  <h2>一括取り込み</h2>
+  <p style="font-size: 0.95rem; line-height: 1.5; color: var(--color-A); margin-bottom: 15px;">
+    複数のテキストを一度に読み込みます。<br>
+    ※空行（改行2回）で自動的に別々のデータとして分割されます。
+  </p>
+  <textarea id="import-text-input" placeholder="ここにペースト..." spellcheck="false" style="width: 100%; height: 40vh; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 14px; border-radius: var(--border-radius); resize: none;"></textarea>
+  <div class="desk-ctrls" style="margin-top:20px;">
+    <button onclick="closePanels()">取消(戻る)</button>
+    <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
+  </div>
+</div>
 </div>
 
 <div id="panel-list-editor" class="panel">
@@ -900,9 +915,50 @@ window.renameApp = function() {
   localStorage.setItem('saikiyo_title', newName);
   appTitle = newName;
   
+localStorage.setItem('saikiyo_title', newName);
+  appTitle = newName;
+  
   inputNode.value = "";
   closePanels();
 };
+
+window.openTextImportPanel = function() {
+  closePanels();
+  document.getElementById('import-text-input').value = '';
+  document.getElementById('panel-import-text').classList.add('active');
+}
+
+window.executeTextImport = function() {
+  const text = document.getElementById('import-text-input').value;
+  if (!text.trim()) return;
+
+  const blocks = text.split(/\n\s*\n/);
+  let importedCount = 0;
+  let baseTime = Date.now();
+
+  blocks.forEach(block => {
+    let content = block.trim();
+    if (!content) return;
+    
+    data.push({
+      id: baseTime + importedCount,
+      type: 'tanka',
+      content: content,
+      status: '作品',
+      publish_status: '未発表',
+      tags: [],
+      memo: ''
+    });
+    importedCount++;
+  });
+
+  if (importedCount > 0) {
+    saveData();
+    renderTimeline();
+    alert(`${importedCount}件のデータを取り込みました。`);
+    closePanels();
+  }
+}
 
 </script>
 </body>
