@@ -811,6 +811,14 @@ function attachEventListeners() {
       tlContainer.scrollTop = tlContainer.scrollHeight;
     }
   });  
+
+  // リアルタイムフィルタリング（インクリメンタルサーチ）
+  inputContentNode.addEventListener('input', () => {
+    if (isSearchLinked) executeUnifiedSearch();
+  });
+  inputTagsNode.addEventListener('input', () => {
+    if (isSearchLinked) executeUnifiedSearch();
+  });
   
   // 送信・編集ボタン
   btnSend.addEventListener('click', () => {
