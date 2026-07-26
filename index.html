@@ -331,7 +331,7 @@ let currentListId = null;
 let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
-let preSearchScrollPos = null; // 追加：検索前のスクロール位置退避用
+
 // タップ判定用変数
 let lastTapTime = 0; 
 let tapTimeout = null; 
@@ -807,8 +807,11 @@ function attachEventListeners() {
       inputContentNode.value = ''; 
       inputTagsNode.value = '';   
       executeUnifiedSearch();
+      // 変更：検索解除時は問答無用で最新の短歌（一番下）へ張り付く
+      tlContainer.scrollTop = tlContainer.scrollHeight;
     }
-  });
+  });  
+  
   // 送信・編集ボタン
   btnSend.addEventListener('click', () => {
     const hasSelection = selectedIds.size > 0;
