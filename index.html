@@ -183,9 +183,13 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <div id="panel-menu" class="panel">
-  <button class="close-btn" onclick="closePanels()">×</button>
-  <h2>設定</h2>
-  <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="resetSettings()">設定を初期値に戻す</button>
+  <!-- 見出しと戻るボタンを左右に配置 -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+    <h2 style="margin: 0; border: none; padding: 0;">設定</h2>
+    <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
+  </div>
+  <!-- invertedクラスを外し、文言を変更 -->
+  <button class="panel-btn" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
 
   <div class="radio-group">
     <h3>タイムライン表示切替</h3>
@@ -746,6 +750,28 @@ window.escapeAction = function(type, e) {
     a.download = `saikiyo_backup_${Date.now()}.json`;
     a.click(); 
     URL.revokeObjectURL(url);
+window.resetSettings = function() {
+  if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
+
+  // 1. 内部設定をデフォルト状態にリセット
+  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
+  
+  // 2. パネル上のラジオボタンの選択状態を同期
+  document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
+  document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
+  document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
+  document.querySelector('input[name="color-mode"][value="default"]').checked = true;
+  document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
+
+  // 3. カスタムテーマカラーを削除し、カラーピッカーも初期色へ
+  localStorage.removeItem('saikiyo_theme_color');
+  document.documentElement.style.removeProperty('--color-A');
+  const colorPicker = document.getElementById('theme-color-picker');
+  if(colorPicker) colorPicker.value = '#001F3F';
+
+  // 4. 画面に反映
+  applyConfig();
+}    
 
     // --- 【真の脱出】カプセルに収めた後、母港を完全に焼き払う ---
     if (window.confirm('すべてのデータをファイルに逃がしました。\nこの端末の母港を空っぽにして脱出を完了しますか？')) {
