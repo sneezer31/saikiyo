@@ -320,6 +320,33 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <script>
+
+// 1. スクロール位置（または表示位置）を保存する処理
+window.addEventListener('beforeunload', () => {
+    const scrollPos = window.scrollY; // またはタイムラインのコンテナ要素の scrollTop
+    localStorage.setItem('saikiyo_scroll_pos', scrollPos);
+});
+
+// もしくは、スクロールするたびに細かく保存する場合（負荷に注意しつつdebounce等を使う）
+// const container = document.getElementById('timeline');
+// container.addEventListener('scroll', () => {
+//     localStorage.setItem('saikiyo_scroll_pos', container.scrollTop);
+// });
+
+// 2. アプリ起動時の復元処理
+window.addEventListener('DOMContentLoaded', () => {
+    const savedPos = localStorage.getItem('saikiyo_scroll_pos');
+    const container = document.getElementById('timeline'); // タイムライン要素
+
+    if (savedPos !== null) {
+        // 記憶がある場合はその位置へ復元
+        container.scrollTop = parseInt(savedPos, 10);
+    } else {
+        // 記憶がない（初回・初期化後）の場合は、一番下（最新）へ飛ばす
+        container.scrollTop = container.scrollHeight;
+    }
+});
+
 const STORAGE_KEY = 'saikiyo_data';
 let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let mode = 'normal'; 
