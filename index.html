@@ -729,6 +729,7 @@ window.closeListEditor = function() {
   document.getElementById('panel-list-editor').classList.remove('active'); 
   exitSelectionMode(); 
 }
+
 window.escapeAction = function(type, e) {
   if (type === 'mail') {
     const recent = [...data].sort((a,b) => a.id - b.id).slice(-50);
