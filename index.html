@@ -331,7 +331,7 @@ let currentListId = null;
 let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
-
+let preSearchScrollPos = null; // 追加：検索前のスクロール位置退避用
 // タップ判定用変数
 let lastTapTime = 0; 
 let tapTimeout = null; 
@@ -398,8 +398,10 @@ function applyConfig() {
   renderTimeline();
 }
 
-function renderTimeline() {
-  const scrollPos = tlContainer.scrollTop;
+ffunction renderTimeline() {
+  // 変更：上からではなく、下（最新）からの距離を錨として保存
+  const distanceFromBottom = tlContainer.scrollHeight - tlContainer.scrollTop;
+  
   tlContainer.innerHTML = '';
   
   let filtered = data.filter(d => {
@@ -434,7 +436,8 @@ function renderTimeline() {
     tlContainer.appendChild(div);
   });
   
-  tlContainer.scrollTop = scrollPos;
+  // 変更：総高が変わっても、下からの距離を維持して復元
+  tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
   executeUnifiedSearch();
   updateButtonsState();
 }
@@ -790,7 +793,7 @@ function attachEventListeners() {
     else document.exitFullscreen();
   });
 
-  // 検索ボタン
+// 検索ボタン
   btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
@@ -806,7 +809,6 @@ function attachEventListeners() {
       executeUnifiedSearch();
     }
   });
-
   // 送信・編集ボタン
   btnSend.addEventListener('click', () => {
     const hasSelection = selectedIds.size > 0;
