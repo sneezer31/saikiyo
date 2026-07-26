@@ -321,32 +321,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
 <script>
 
-// 1. スクロール位置（または表示位置）を保存する処理
-window.addEventListener('beforeunload', () => {
-    const scrollPos = window.scrollY; // またはタイムラインのコンテナ要素の scrollTop
-    localStorage.setItem('saikiyo_scroll_pos', scrollPos);
-});
-
-// もしくは、スクロールするたびに細かく保存する場合（負荷に注意しつつdebounce等を使う）
-// const container = document.getElementById('timeline');
-// container.addEventListener('scroll', () => {
-//     localStorage.setItem('saikiyo_scroll_pos', container.scrollTop);
-// });
-
-// 2. アプリ起動時の復元処理
-window.addEventListener('DOMContentLoaded', () => {
-    const savedPos = localStorage.getItem('saikiyo_scroll_pos');
-    const container = document.getElementById('timeline'); // タイムライン要素
-
-    if (savedPos !== null) {
-        // 記憶がある場合はその位置へ復元
-        container.scrollTop = parseInt(savedPos, 10);
-    } else {
-        // 記憶がない（初回・初期化後）の場合は、一番下（最新）へ飛ばす
-        container.scrollTop = container.scrollHeight;
-    }
-});
-
 const STORAGE_KEY = 'saikiyo_data';
 let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let mode = 'normal'; 
@@ -864,29 +838,28 @@ exitSelectionMode = function() {
   originalExitSelectionMode();
 };
 
-// ====== スクロール位置の保存と復元（まとめて配置） ======
+// ====== スクロール位置の保存と復元（改修版） ======
 
-// 【保存】スクロールするたびに、tlContainerの位置を保存する
-tlContainer.addEventListener('scroll', () => {
-    localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
-});
-
-// 【復元】初回ロード時（描画完了後）にスクロール位置を復元する
-window.addEventListener('load', () => {
+// すでに applyConfig() で描画処理は走っているため、即座に復元プロセスへ入る
+setTimeout(() => {
+    // 【1】まず、記憶を読み込んで復元する
     const savedPos = localStorage.getItem('saikiyo_scroll_pos');
     
-    // tlContainerのレンダリングが確実に終わるのを待つ
-    setTimeout(() => {
-        if (savedPos !== null) {
-            // 記憶がある場合はその位置へ
-            tlContainer.scrollTop = parseInt(savedPos, 10);
-        } else {
-            // 記憶がない場合は一番下（最新）へ
-            tlContainer.scrollTop = tlContainer.scrollHeight;
-        }
-    }, 100); 
-});
+    if (savedPos !== null) {
+        tlContainer.scrollTop = parseInt(savedPos, 10);
+    } else {
+        // 記憶がない場合は一番下（最新）へ
+        tlContainer.scrollTop = tlContainer.scrollHeight;
+    }
 
+    // 【2】復元のスクロールが完全に落ち着いた【後】に、保存センサーを起動する（初期化時の上書き防止）
+    setTimeout(() => {
+        tlContainer.addEventListener('scroll', () => {
+            localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
+        });
+    }, 100); 
+
+}, 100); // 描画直後のDOMの安定を待つ
 /* =========================================
    機関室（設定）ロジック
    ========================================= */
