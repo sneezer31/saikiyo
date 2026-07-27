@@ -183,12 +183,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <div id="panel-menu" class="panel">
-  <!-- 見出しと戻るボタンを左右に配置 -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">設定</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
-  <!-- invertedクラスを外し、文言を変更 -->
   <button class="panel-btn" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
 
   <div class="radio-group">
@@ -403,7 +401,7 @@ function applyConfig() {
 }
 
 function renderTimeline() {
-  // 変更：上からではなく、下（最新）からの距離を錨として保存
+  // 変更：上からではなく、下からの距離を維持するように記録
   const distanceFromBottom = tlContainer.scrollHeight - tlContainer.scrollTop;
   
   tlContainer.innerHTML = '';
@@ -440,7 +438,7 @@ function renderTimeline() {
     tlContainer.appendChild(div);
   });
   
-  // 変更：総高が変わっても、下からの距離を維持して復元
+  // 変更：下からの距離を維持してスクロール位置を復元
   tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
   executeUnifiedSearch();
   updateButtonsState();
@@ -548,15 +546,14 @@ function tapItem(id) {
   if(index !== -1 && els[index]) els[index].classList.toggle('open');
 }
 
-// ※継ぎ接ぎだったパッチを正規の処理として統合
 function exitSelectionMode() {
   mode = 'normal'; 
   selectedIds.clear(); 
   currentListId = null;
   tlContainer.classList.remove('select-mode');
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-
-
+  renderTimeline();
+}
 
 // ==========================================
 // 5. グローバル露出関数（HTMLからの呼び出し用）
@@ -799,14 +796,9 @@ window.resetSettings = function() {
 
   // 4. 画面に反映
   applyConfig();
-}  
-
-  // 4. 画面に反映
-  applyConfig();
 }
 
-
-//======================================
+// ==========================================
 // 6. イベントリスナーの登録（初期化の最後に実行）
 // ==========================================
 function attachEventListeners() {
@@ -825,7 +817,7 @@ function attachEventListeners() {
     else document.exitFullscreen();
   });
 
-// 検索ボタン
+  // 検索ボタン
   btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
@@ -842,16 +834,8 @@ function attachEventListeners() {
       // 変更：検索解除時は問答無用で最新の短歌（一番下）へ張り付く
       tlContainer.scrollTop = tlContainer.scrollHeight;
     }
-  });  
+  });
 
-  // リアルタイムフィルタリング（インクリメンタルサーチ）
-  inputContentNode.addEventListener('input', () => {
-    if (isSearchLinked) executeUnifiedSearch();
-  });
-  inputTagsNode.addEventListener('input', () => {
-    if (isSearchLinked) executeUnifiedSearch();
-  });
-  
   // 送信・編集ボタン
   btnSend.addEventListener('click', () => {
     const hasSelection = selectedIds.size > 0;
