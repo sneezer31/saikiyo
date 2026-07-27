@@ -155,6 +155,35 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 .list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 14px; }
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
 .desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; border-radius: var(--border-radius); }
+
+/* 新設：脱出ターミナル用サブメニュー */
+.escape-submenu {
+  display: none;
+  background: var(--color-C);
+  padding: 15px;
+  margin-bottom: 12px;
+  border-radius: var(--border-radius);
+  color: var(--color-A);
+  border: 1px solid var(--color-A);
+}
+.escape-submenu.open {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.escape-sub-left { display: flex; flex-direction: column; gap: 10px; font-size: 1.1rem; }
+.escape-sub-right { display: flex; justify-content: flex-end; }
+.escape-sub-right button {
+  padding: 10px 20px;
+  background: var(--color-A);
+  color: var(--color-B);
+  border: none;
+  font-weight: bold;
+  font-size: 1.1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
 </style>
 </head>
 <body>
@@ -272,6 +301,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button id="btn-amu-decide" onclick="executeAmuActions()" style="background:var(--color-A); color:var(--color-B);">決定</button>
   </div>
 </div>
+
 <div id="panel-escape" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>脱出ターミナル</h2>
@@ -279,7 +309,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <!-- 射出 -->
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-shashutsu')">射出</button>
   <div id="menu-shashutsu" class="escape-submenu">
-    <div class="escape-sub-left">メールで20通送ります</div>
+    <div class="escape-sub-left">最新の20件をメールで送ります</div>
     <div class="escape-sub-right"><button onclick="executeEscape('shashutsu')">決定</button></div>
   </div>
 
@@ -289,8 +319,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunsan')">分散</button>
   <div id="menu-bunsan" class="escape-submenu">
     <div class="escape-sub-left">
-      <label><input type="radio" name="bunsan-target" value="archive"> アーカイブ</label>
-      <label><input type="radio" name="bunsan-target" value="work"> 作品</label>
+      <label><input type="radio" name="bunsan-target" value="archive"> アーカイブのみ</label>
+      <label><input type="radio" name="bunsan-target" value="work"> 作品のみ</label>
       <label><input type="radio" name="bunsan-target" value="all" checked> アーカイブと作品</label>
     </div>
     <div class="escape-sub-right"><button onclick="executeEscape('bunsan')">決定</button></div>
@@ -300,8 +330,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-tesshu')">撤収</button>
   <div id="menu-tesshu" class="escape-submenu">
     <div class="escape-sub-left">
-      <label><input type="radio" name="tesshu-target" value="archive"> アーカイブ</label>
-      <label><input type="radio" name="tesshu-target" value="work"> 作品</label>
+      <label><input type="radio" name="tesshu-target" value="archive"> アーカイブのみ</label>
+      <label><input type="radio" name="tesshu-target" value="work"> 作品のみ</label>
       <label><input type="radio" name="tesshu-target" value="all" checked> アーカイブと作品</label>
     </div>
     <div class="escape-sub-right"><button onclick="executeEscape('tesshu')">決定</button></div>
@@ -309,10 +339,12 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
+  <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
   
   <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">みつゆルート（テキスト）</button>
+</div>  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  <button class="panel-btn inverted" onclick="openTextImportPanel()"style="text-align: left;">みつゆルート（テキスト）</button>
 </div>
 
 <!-- 新設：一括取り込みパネル -->
@@ -454,38 +486,25 @@ function renderTimeline() {
     innerHTML += `<div class="item-content">${escapeHTML(text)}</div>`;
     
     const dateStr = formatTime(item.id);
-        const dateStr = formatTime(item.id);
-    const tagsStr = item.tags ? item.tags.map(t=>`#${t}`).join(' ') : '';
-    const listNames = data.filter(d => d.type === 'list' && d.items && d.items.includes(item.id)).map(d => d.content).join(', ');
-    
-    innerHTML += `<div class="meta-data">
-      <div class="meta-inner" onclick="event.stopPropagation()">
-        <div class="meta-controls">
-          <label><input type="radio" name="inline-status-${item.id}" value="work" ${item.status === '作品' ? 'checked' : ''}> 作品</label>
-          <label><input type="radio" name="inline-status-${item.id}" value="archive" ${item.status === 'アーカイブ' ? 'checked' : ''}> アーカイブ</label>
-          <label><input type="radio" name="inline-status-${item.id}" value="delete"> 削除</label>
-          <button onclick="executeInlineAction(${item.id})">決定</button>
-        </div>
-        <div class="meta-info">
-          <span>${dateStr} / ${item.status} / ${item.publish_status}</span>
-          <span>${tagsStr}</span>
-          ${item.memo ? `<span>メモ: ${item.memo}</span>` : ''}
-          ${listNames ? `<span>収録リスト：${listNames}</span>` : ''}\`;
-    
-    if (item.type === 'list') {
-      innerHTML += `<button onclick="event.stopPropagation(); openListEditor(${item.id})" style="margin-top:8px; padding:6px 12px; background:var(--color-A); color:var(--color-B); border:none; cursor:pointer; font-weight:bold; font-size:0.9rem; border-radius:var(--border-radius);">リストを再編集する</button>`;
-    }
-    
-    innerHTML += `</div></div></div>`;
-
+    const tagsStr = item.tags ? item.tags.map(t=>`#${t}`).join(' ') : '';
+    const listNames = data.filter(d => d.type === 'list' && d.items && d.items.includes(item.id)).map(d => d.content).join(', ');
+    
+    innerHTML += `<div class="meta-data">${dateStr}<br>${item.status}<br>${item.publish_status}<br>${tagsStr}<br>${item.memo ? `メモ: ${item.memo}<br>` : ''}${listNames ? `収録リスト：${listNames}<br>` : ''}`;
+    
+    if (item.type === 'list') {
+      innerHTML += `<br><button onclick="event.stopPropagation(); openListEditor(${item.id})" style="margin-top:8px; padding:6px 12px; background:var(--color-A); color:var(--color-B); border:none; cursor:pointer; font-weight:bold; font-size:0.9rem; border-radius:var(--border-radius);">リストを再編集する</button>`;
+    }
+    
+    innerHTML += `</div>`;
+    div.innerHTML = innerHTML;
+    tlContainer.appendChild(div);
+  });
   
-  executeUnifiedSearch(); // 先に検索（要素の非表示）を処理して高さを確定させる
-  // 変更：確定した高さをもとに、下からの距離を維持してスクロール位置を復元
-  tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
-  updateButtonsState();
+    executeUnifiedSearch(); // 先に検索（要素の非表示）を処理して高さを確定させる
+  // 変更：確定した高さをもとに、下からの距離を維持してスクロール位置を復元
+  tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
+  updateButtonsState();
 }
-
-
 function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
   if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
@@ -777,19 +796,23 @@ window.closeListEditor = function() {
 }
 
 window.toggleEscapeMenu = function(menuId) {
+  // 開いている他のメニューを閉じる
   document.querySelectorAll('.escape-submenu').forEach(el => {
     if (el.id !== menuId) el.classList.remove('open');
   });
+  // 指定されたメニューの開閉を切り替え
   document.getElementById(menuId).classList.toggle('open');
 }
 
 window.executeEscape = function(type) {
   if (type === 'shashutsu') {
+    // 射出：最新20件をメール送信
     const recent = [...data].sort((a,b) => a.id - b.id).slice(-20);
     const txt = encodeURIComponent(recent.map(d => (d.type === 'list' ? '・' : '') + d.content).join('\n\n'));
     window.location.href = `mailto:?subject=saikiyo_shashutsu&body=${txt}`;
   } 
   else if (type === 'bunsan' || type === 'tesshu') {
+    // 分散・撤収：ラジオボタンで指定された対象を抽出
     const targetVal = document.querySelector(`input[name="${type}-target"]:checked`).value;
     const targetData = data.filter(d => {
       if (targetVal === 'work' && d.status !== '作品') return false;
@@ -802,6 +825,7 @@ window.executeEscape = function(type) {
       return;
     }
 
+    // ダウンロード実行
     const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); 
@@ -810,10 +834,15 @@ window.executeEscape = function(type) {
     a.click(); 
     URL.revokeObjectURL(url);
 
+    // 撤収の場合のみ、消去プロセスを連動
     if (type === 'tesshu') {
-      if (window.confirm('対象データをファイルに退避しました。\n母港からこのデータを完全に消去し、撤収を完了しますか？')) {
+      const msg = targetVal === 'all'
+        ? 'すべてのデータをファイルに退避しました。\n母港から全データを完全に消去し、撤収を完了しますか？'
+        : `対象データ（${targetData.length}件）をファイルに退避しました。\n母港からこのデータだけを消去しますか？`;
+
+      if (window.confirm(msg)) {
         const targetIds = new Set(targetData.map(d => d.id));
-        data = data.filter(d => !targetIds.has(d.id));
+        data = data.filter(d => !targetIds.has(d.id)); // 退避したデータ以外を残す
         saveData(); 
         if (typeof renderTimeline === 'function') renderTimeline(); 
       }
@@ -822,6 +851,7 @@ window.executeEscape = function(type) {
   window.closePanels();
 }
 
+// 救出（インポート）専用として再定義
 window.escapeAction = function(type, e) {
   if (type === 'import') {
     const file = e.target.files[0]; 
@@ -843,40 +873,6 @@ window.escapeAction = function(type, e) {
   }
   window.closePanels();
 }
-
-    // 抽出したデータのみを母港から消去
-    const msg = config.filter === 'all' 
-      ? 'すべてのデータをファイルに逃がしました。\n母港を空っぽにして脱出を完了しますか？'
-      : `表示中のデータ（${targetData.length}件）を逃がしました。\n逃がした分だけを母港から消去しますか？`;
-
-    if (window.confirm(msg)) {
-      const targetIds = new Set(targetData.map(d => d.id));
-      data = data.filter(d => !targetIds.has(d.id)); // 逃がしたデータ以外を残す
-      saveData(); 
-      if (typeof renderTimeline === 'function') renderTimeline(); 
-    }
-
-  } else if (type === 'import') {
-    const file = e.target.files[0]; 
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const imported = JSON.parse(event.target.result);
-        if (Array.isArray(imported)) {
-          const existingIds = new Set(data.map(d => d.id));
-          imported.forEach(d => { if (!existingIds.has(d.id)) data.push(d); });
-          saveData(); 
-          renderTimeline(); 
-          alert('救出完了');
-        }
-      } catch(e) { alert('不正なファイルです'); }
-    };
-    reader.readAsText(file);
-  }
-  window.closePanels();
-}
-
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
 
@@ -905,12 +901,10 @@ window.resetSettings = function() {
 // ==========================================
 function attachEventListeners() {
   
-  // 【保存】スクロール位置の監視（下からの距離を記録するよう変更）
-  tlContainer.addEventListener('scroll', () => {
-    const dist = tlContainer.scrollHeight - tlContainer.scrollTop;
-    localStorage.setItem('saikiyo_scroll_bottom', dist);
-  });
-
+  // 【保存】スクロール位置の監視
+  tlContainer.addEventListener('scroll', () => {
+    localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
+  });
 
   // UI制御系ボタン
   btnEscape.addEventListener('click', () => { document.getElementById('panel-escape').classList.add('active'); });
@@ -920,14 +914,12 @@ function attachEventListeners() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
     else document.exitFullscreen();
   });
+  // ヌルヌル検索（文字入力ごとのリアルタイム絞り込み）
+  inputContentNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
+  inputTagsNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
 
-   // ヌルヌル検索（文字入力ごとのリアルタイム絞り込み）
-  inputContentNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
-  inputTagsNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
-
-  // 検索ボタン
-  btnSearch.addEventListener('click', () => {
-
+  // 検索ボタン
+  btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
       btnSearch.innerText = '解除'; 
@@ -1084,14 +1076,13 @@ function initApp() {
   // C. 初回レンダリング（内部で renderTimeline() が実行される）
   applyConfig();
 
-   // D. スクロール状態の復元（古いバグ設定を捨て、下からの距離で復元）
-  const savedBottom = localStorage.getItem('saikiyo_scroll_bottom');
-  if (savedBottom !== null) {
-      tlContainer.scrollTop = tlContainer.scrollHeight - parseInt(savedBottom, 10);
-  } else {
-      tlContainer.scrollTop = tlContainer.scrollHeight;
-  }
-
+  // D. スクロール状態の復元（DOM構築直後に同期実行）
+  const savedPos = localStorage.getItem('saikiyo_scroll_pos');
+  if (savedPos !== null) {
+      tlContainer.scrollTop = parseInt(savedPos, 10);
+  } else {
+      tlContainer.scrollTop = tlContainer.scrollHeight;
+  }
 
   // E. 監視網の展開（すべて完了後にリスナーを登録）
   attachEventListeners();
