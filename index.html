@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -819,10 +820,12 @@ window.resetSettings = function() {
 // ==========================================
 function attachEventListeners() {
   
-  // 【保存】スクロール位置の監視
-  tlContainer.addEventListener('scroll', () => {
-    localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
-  });
+  // 【保存】スクロール位置の監視（下からの距離を記録するよう変更）
+  tlContainer.addEventListener('scroll', () => {
+    const dist = tlContainer.scrollHeight - tlContainer.scrollTop;
+    localStorage.setItem('saikiyo_scroll_bottom', dist);
+  });
+
 
   // UI制御系ボタン
   btnEscape.addEventListener('click', () => { document.getElementById('panel-escape').classList.add('active'); });
@@ -996,13 +999,14 @@ function initApp() {
   // C. 初回レンダリング（内部で renderTimeline() が実行される）
   applyConfig();
 
-  // D. スクロール状態の復元（DOM構築直後に同期実行）
-  const savedPos = localStorage.getItem('saikiyo_scroll_pos');
-  if (savedPos !== null) {
-      tlContainer.scrollTop = parseInt(savedPos, 10);
-  } else {
-      tlContainer.scrollTop = tlContainer.scrollHeight;
-  }
+   // D. スクロール状態の復元（古いバグ設定を捨て、下からの距離で復元）
+  const savedBottom = localStorage.getItem('saikiyo_scroll_bottom');
+  if (savedBottom !== null) {
+      tlContainer.scrollTop = tlContainer.scrollHeight - parseInt(savedBottom, 10);
+  } else {
+      tlContainer.scrollTop = tlContainer.scrollHeight;
+  }
+
 
   // E. 監視網の展開（すべて完了後にリスナーを登録）
   attachEventListeners();
