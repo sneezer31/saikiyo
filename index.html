@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -767,7 +766,6 @@ window.closeListEditor = function() {
 }
 
 window.toggleEscapeMenu = function(menuId) {
-  // 他の開いているメニューを閉じて、対象のメニューを開閉する
   document.querySelectorAll('.escape-submenu').forEach(el => {
     if (el.id !== menuId) el.classList.remove('open');
   });
