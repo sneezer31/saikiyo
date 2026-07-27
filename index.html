@@ -438,11 +438,12 @@ function renderTimeline() {
     tlContainer.appendChild(div);
   });
   
-  // 変更：下からの距離を維持してスクロール位置を復元
-  tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
-  executeUnifiedSearch();
-  updateButtonsState();
+  executeUnifiedSearch(); // 先に検索（要素の非表示）を処理して高さを確定させる
+  // 変更：確定した高さをもとに、下からの距離を維持してスクロール位置を復元
+  tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
+  updateButtonsState();
 }
+
 
 function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
@@ -817,8 +818,13 @@ function attachEventListeners() {
     else document.exitFullscreen();
   });
 
-  // 検索ボタン
-  btnSearch.addEventListener('click', () => {
+   // ヌルヌル検索（文字入力ごとのリアルタイム絞り込み）
+  inputContentNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
+  inputTagsNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
+
+  // 検索ボタン
+  btnSearch.addEventListener('click', () => {
+
     if (!isSearchLinked) {
       isSearchLinked = true; 
       btnSearch.innerText = '解除'; 
