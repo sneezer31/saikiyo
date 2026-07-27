@@ -454,19 +454,30 @@ function renderTimeline() {
     innerHTML += `<div class="item-content">${escapeHTML(text)}</div>`;
     
     const dateStr = formatTime(item.id);
-    const tagsStr = item.tags ? item.tags.map(t=>`#${t}`).join(' ') : '';
-    const listNames = data.filter(d => d.type === 'list' && d.items && d.items.includes(item.id)).map(d => d.content).join(', ');
-    
-    innerHTML += `<div class="meta-data">${dateStr}<br>${item.status}<br>${item.publish_status}<br>${tagsStr}<br>${item.memo ? `メモ: ${item.memo}<br>` : ''}${listNames ? `収録リスト：${listNames}<br>` : ''}`;
-    
-    if (item.type === 'list') {
-      innerHTML += `<br><button onclick="event.stopPropagation(); openListEditor(${item.id})" style="margin-top:8px; padding:6px 12px; background:var(--color-A); color:var(--color-B); border:none; cursor:pointer; font-weight:bold; font-size:0.9rem; border-radius:var(--border-radius);">リストを再編集する</button>`;
-    }
-    
-    innerHTML += `</div>`;
-    div.innerHTML = innerHTML;
-    tlContainer.appendChild(div);
-  });
+        const dateStr = formatTime(item.id);
+    const tagsStr = item.tags ? item.tags.map(t=>`#${t}`).join(' ') : '';
+    const listNames = data.filter(d => d.type === 'list' && d.items && d.items.includes(item.id)).map(d => d.content).join(', ');
+    
+    innerHTML += `<div class="meta-data">
+      <div class="meta-inner" onclick="event.stopPropagation()">
+        <div class="meta-controls">
+          <label><input type="radio" name="inline-status-${item.id}" value="work" ${item.status === '作品' ? 'checked' : ''}> 作品</label>
+          <label><input type="radio" name="inline-status-${item.id}" value="archive" ${item.status === 'アーカイブ' ? 'checked' : ''}> アーカイブ</label>
+          <label><input type="radio" name="inline-status-${item.id}" value="delete"> 削除</label>
+          <button onclick="executeInlineAction(${item.id})">決定</button>
+        </div>
+        <div class="meta-info">
+          <span>${dateStr} / ${item.status} / ${item.publish_status}</span>
+          <span>${tagsStr}</span>
+          ${item.memo ? `<span>メモ: ${item.memo}</span>` : ''}
+          ${listNames ? `<span>収録リスト：${listNames}</span>` : ''}\`;
+    
+    if (item.type === 'list') {
+      innerHTML += `<button onclick="event.stopPropagation(); openListEditor(${item.id})" style="margin-top:8px; padding:6px 12px; background:var(--color-A); color:var(--color-B); border:none; cursor:pointer; font-weight:bold; font-size:0.9rem; border-radius:var(--border-radius);">リストを再編集する</button>`;
+    }
+    
+    innerHTML += `</div></div></div>`;
+
   
   executeUnifiedSearch(); // 先に検索（要素の非表示）を処理して高さを確定させる
   // 変更：確定した高さをもとに、下からの距離を維持してスクロール位置を復元
