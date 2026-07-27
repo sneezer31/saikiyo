@@ -273,17 +273,47 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button id="btn-amu-decide" onclick="executeAmuActions()" style="background:var(--color-A); color:var(--color-B);">決定</button>
   </div>
 </div>
-
 <div id="panel-escape" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>脱出ターミナル</h2>
-  <button class="panel-btn" onclick="escapeAction('mail')">簡易脱出</button>
-  <button class="panel-btn" onclick="escapeAction('download')">完全脱出</button>
-  <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
+
+  <!-- 射出 -->
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-shashutsu')">射出</button>
+  <div id="menu-shashutsu" class="escape-submenu">
+    <div class="escape-sub-left">メールで20通送ります</div>
+    <div class="escape-sub-right"><button onclick="executeEscape('shashutsu')">決定</button></div>
+  </div>
+
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+
+  <!-- 分散 -->
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunsan')">分散</button>
+  <div id="menu-bunsan" class="escape-submenu">
+    <div class="escape-sub-left">
+      <label><input type="radio" name="bunsan-target" value="archive"> アーカイブ</label>
+      <label><input type="radio" name="bunsan-target" value="work"> 作品</label>
+      <label><input type="radio" name="bunsan-target" value="all" checked> アーカイブと作品</label>
+    </div>
+    <div class="escape-sub-right"><button onclick="executeEscape('bunsan')">決定</button></div>
+  </div>
+
+  <!-- 撤収 -->
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-tesshu')">撤収</button>
+  <div id="menu-tesshu" class="escape-submenu">
+    <div class="escape-sub-left">
+      <label><input type="radio" name="tesshu-target" value="archive"> アーカイブ</label>
+      <label><input type="radio" name="tesshu-target" value="work"> 作品</label>
+      <label><input type="radio" name="tesshu-target" value="all" checked> アーカイブと作品</label>
+    </div>
+    <div class="escape-sub-right"><button onclick="executeEscape('tesshu')">決定</button></div>
+  </div>
+
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+
+  <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
   
-  <hr style="border-color: var(--color-A); margin: 30px 0;">
-  <button class="panel-btn inverted" onclick="openTextImportPanel()"style="text-align: left;">みつゆルート（テキスト）</button>
+  <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">みつゆルート（テキスト）</button>
 </div>
 
 <!-- 新設：一括取り込みパネル -->
@@ -736,28 +766,74 @@ window.closeListEditor = function() {
   exitSelectionMode(); 
 }
 
+window.toggleEscapeMenu = function(menuId) {
+  // 他の開いているメニューを閉じて、対象のメニューを開閉する
+  document.querySelectorAll('.escape-submenu').forEach(el => {
+    if (el.id !== menuId) el.classList.remove('open');
+  });
+  document.getElementById(menuId).classList.toggle('open');
+}
+
+window.executeEscape = function(type) {
+  if (type === 'shashutsu') {
+    const recent = [...data].sort((a,b) => a.id - b.id).slice(-20);
+    const txt = encodeURIComponent(recent.map(d => (d.type === 'list' ? '・' : '') + d.content).join('\n\n'));
+    window.location.href = `mailto:?subject=saikiyo_shashutsu&body=${txt}`;
+  } 
+  else if (type === 'bunsan' || type === 'tesshu') {
+    const targetVal = document.querySelector(`input[name="${type}-target"]:checked`).value;
+    const targetData = data.filter(d => {
+      if (targetVal === 'work' && d.status !== '作品') return false;
+      if (targetVal === 'archive' && d.status !== 'アーカイブ') return false;
+      return true;
+    });
+
+    if (targetData.length === 0) {
+      alert('対象データがありません');
+      return;
+    }
+
+    const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = `saikiyo_${targetVal}_${Date.now()}.json`;
+    a.click(); 
+    URL.revokeObjectURL(url);
+
+    if (type === 'tesshu') {
+      if (window.confirm('対象データをファイルに退避しました。\n母港からこのデータを完全に消去し、撤収を完了しますか？')) {
+        const targetIds = new Set(targetData.map(d => d.id));
+        data = data.filter(d => !targetIds.has(d.id));
+        saveData(); 
+        if (typeof renderTimeline === 'function') renderTimeline(); 
+      }
+    }
+  }
+  window.closePanels();
+}
+
 window.escapeAction = function(type, e) {
-  if (type === 'mail') {
-    const recent = [...data].sort((a,b) => a.id - b.id).slice(-50);
-    const txt = encodeURIComponent(recent.map(d => (d.type==='list'?'・':'')+d.content).join('\n\n'));
-    window.location.href = `mailto:?subject=saikiyo_backup&body=${txt}`;
-  } else if (type === 'download') {
-    // 表示中のフィルター設定を基準に抽出
-    const targetData = data.filter(d => {
-      if (config.filter === 'work' && d.status !== '作品') return false;
-      if (config.filter === 'archive' && d.status !== 'アーカイブ') return false;
-      return true;
-    });
-
-    if (targetData.length === 0) return alert('脱出させるデータがありません。');
-
-    const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); 
-    a.href = url; 
-    a.download = `saikiyo_${config.filter}_${Date.now()}.json`;
-    a.click(); 
-    URL.revokeObjectURL(url);
+  if (type === 'import') {
+    const file = e.target.files[0]; 
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (Array.isArray(imported)) {
+          const existingIds = new Set(data.map(d => d.id));
+          imported.forEach(d => { if (!existingIds.has(d.id)) data.push(d); });
+          saveData(); 
+          renderTimeline(); 
+          alert('救出完了');
+        }
+      } catch(err) { alert('不正なファイルです'); }
+    };
+    reader.readAsText(file);
+  }
+  window.closePanels();
+}
 
     // 抽出したデータのみを母港から消去
     const msg = config.filter === 'all' 
