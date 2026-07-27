@@ -1088,6 +1088,48 @@ function initApp() {
   attachEventListeners();
 }
 
+
+
+
+// みつゆルート（テキスト一括取り込み）用関数
+window.openTextImportPanel = function() {
+  window.closePanels();
+  document.getElementById('import-text-input').value = '';
+  document.getElementById('panel-import-text').classList.add('active');
+}
+
+window.executeTextImport = function() {
+  const text = document.getElementById('import-text-input').value;
+  if (!text.trim()) return;
+  
+  // 空行（改行2回以上）を区切りとしてテキストを分割
+  const blocks = text.split(/\n\s*\n/);
+  let count = 0;
+  
+  blocks.forEach(block => {
+    const content = block.trim();
+    if (content) {
+      // 連続処理でもIDが重複しないようcountを加算
+      data.push({ 
+        id: Date.now() + count, 
+        type: 'tanka', 
+        content: content, 
+        status: '作品', 
+        publish_status: '未発表', 
+        tags: [] 
+      });
+      count++;
+    }
+  });
+  
+  if (count > 0) { 
+    saveData(); 
+    if (typeof renderTimeline === 'function') renderTimeline(); 
+    alert(`${count}件のデータを取り込みました。`); 
+  }
+  window.closePanels();
+}
+
 // ==========================================
 // 唯一の起動トリガー
 // ==========================================
