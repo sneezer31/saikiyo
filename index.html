@@ -740,21 +740,36 @@ window.escapeAction = function(type, e) {
     const recent = [...data].sort((a,b) => a.id - b.id).slice(-50);
     const txt = encodeURIComponent(recent.map(d => (d.type==='list'?'・':'')+d.content).join('\n\n'));
     window.location.href = `mailto:?subject=saikiyo_backup&body=${txt}`;
-  } else if (type === 'download') {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); 
-    a.href = url; 
-    a.download = `saikiyo_backup_${Date.now()}.json`;
-    a.click(); 
-    URL.revokeObjectURL(url);
+  } else if (type === 'download') {
+    // 表示中のフィルター設定を基準に抽出
+    const targetData = data.filter(d => {
+      if (config.filter === 'work' && d.status !== '作品') return false;
+      if (config.filter === 'archive' && d.status !== 'アーカイブ') return false;
+      return true;
+    });
 
-    // --- 【真の脱出】カプセルに収めた後、母港を完全に焼き払う ---
-    if (window.confirm('すべてのデータをファイルに逃がしました。\nこの端末の母港を空っぽにして脱出を完了しますか？')) {
-      data = [];            // メモリ上の配列を空に
-      saveData();           // 空の状態でストレージを上書き（完全消去）
-      if (typeof renderTimeline === 'function') renderTimeline(); // 画面を初期状態に描画し直す
-    }
+    if (targetData.length === 0) return alert('脱出させるデータがありません。');
+
+    const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = `saikiyo_${config.filter}_${Date.now()}.json`;
+    a.click(); 
+    URL.revokeObjectURL(url);
+
+    // 抽出したデータのみを母港から消去
+    const msg = config.filter === 'all' 
+      ? 'すべてのデータをファイルに逃がしました。\n母港を空っぽにして脱出を完了しますか？'
+      : `表示中のデータ（${targetData.length}件）を逃がしました。\n逃がした分だけを母港から消去しますか？`;
+
+    if (window.confirm(msg)) {
+      const targetIds = new Set(targetData.map(d => d.id));
+      data = data.filter(d => !targetIds.has(d.id)); // 逃がしたデータ以外を残す
+      saveData(); 
+      if (typeof renderTimeline === 'function') renderTimeline(); 
+    }
+
   } else if (type === 'import') {
     const file = e.target.files[0]; 
     if(!file) return;
