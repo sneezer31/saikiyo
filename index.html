@@ -558,36 +558,6 @@ function renderListItems(itemIds) {
 // 4. UI状態制御関数
 // ==========================================
 function updateButtonsState() {
-  const hasSelection = selectedIds.size > 0;
-  const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
-
-  if (mode === 'normal') {
-    if (hasSelection) {
-      btnSend.innerText = '編集'; 
-      btnSend.classList.add('active-btn'); 
-      btnSend.disabled = false;
-      btnAmu.innerText = '全取消'; 
-      btnAmu.classList.add('active-btn'); 
-      btnAmu.disabled = false; 
-      btnTweet.disabled = false; 
-      btnTweet.classList.add('active-btn');
-      btnSearch.disabled = true; 
-      btnEscape.disabled = true;
-    } else {
-      btnSend.innerText = '送る'; 
-      btnSend.classList.remove('active-btn'); 
-      btnSend.disabled = false;
-      btnAmu.innerText = '編む'; 
-      if (isGlobalSelectMode) { btnAmu.classList.add('active-btn'); } 
-      else { btnAmu.classList.remove('active-btn'); }
-      btnAmu.disabled = false; 
-      btnTweet.disabled = false; 
-      btnTweet.classList.remove('active-btn');
-      btnSearch.disabled = false; 
-      btnEscape.disabled = false;
-    }
-  }
-}
 
 function togglePoemSelection(itemElement, itemId) {
   itemElement.classList.toggle('selected');
@@ -907,13 +877,26 @@ function attachEventListeners() {
   });
 
   // UI制御系ボタン
-  btnEscape.addEventListener('click', () => { document.getElementById('panel-escape').classList.add('active'); });
-  document.getElementById('btn-menu').addEventListener('click', () => { document.getElementById('panel-menu').classList.add('active'); });
-
-  document.getElementById('btn-fullscreen').addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
-    else document.exitFullscreen();
+  
+  btnEscape.addEventListener('click', () => {
+    if (btnEscape.innerText === '全選択') {
+      // 画面に表示されているアイテムをすべて選択
+      const items = document.querySelectorAll('#timeline-container .item');
+      items.forEach(item => {
+        if (item.style.display !== 'none') {
+          const id = Number(item.dataset.id);
+          selectedIds.add(id);
+          item.classList.add('selected', 'selecting');
+        }
+      });
+      updateButtonsState();
+    } else {
+      // 通常の脱出ターミナル呼び出し
+      document.getElementById('panel-escape').classList.add('active');
+    }
   });
+  
+  
   // ヌルヌル検索（文字入力ごとのリアルタイム絞り込み）
   inputContentNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
   inputTagsNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
