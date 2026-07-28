@@ -156,7 +156,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
 .desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; border-radius: var(--border-radius); }
 
-/* 新設：脱出ターミナル用サブメニュー */
+/* 脱出ターミナル用サブメニュー */
 .escape-submenu {
   display: none;
   background: var(--color-C);
@@ -183,7 +183,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   border-radius: var(--border-radius);
   cursor: pointer;
 }
-
 </style>
 </head>
 <body>
@@ -202,7 +201,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
     <textarea id="input-tags" rows="1" placeholder="タグは空白区切り" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
     <div class="buttons">
-      <button id="btn-escape">脱出</button>
+      <button id="btn-escape" data-action="escape">脱出</button>
       <button id="btn-amu" disabled>取消</button>
       <button id="btn-send">送る</button>
       <button id="btn-search">検索</button>
@@ -243,14 +242,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <hr style="border-color: var(--color-A); margin: 30px 0;">
   
   <div id="engine-room-controls" style="display: flex; flex-direction: column; gap: 20px;">
-    <!-- 角の丸み -->
     <div class="radio-group">
       <h3>角の丸み（UIデザイン）</h3>
       <label><input type="radio" name="radius-mode" value="square" checked> 四角</label>
       <label><input type="radio" name="radius-mode" value="round"> 丸</label>
     </div>
-
-    <!-- タイムマシン -->
     <div class="radio-group">
       <h3>タイムマシンのボタン</h3>
       <div style="display: flex; gap: 10px; align-items: center;">
@@ -259,14 +255,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">かえる</button>
       </div>
     </div>
-
-    <!-- 色の調節 -->
     <div class="radio-group">
       <h3>計器盤の調色（テーマカラー）</h3>
       <input type="color" id="theme-color-picker" class="dropdown" style="width: 100%; height: 40px; padding: 0;" onchange="changeThemeColor(this.value)">
     </div>
-
-    <!-- 艦名変更 -->
     <div class="radio-group">
       <h3>基地名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
@@ -306,7 +298,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>脱出ターミナル</h2>
 
-  <!-- 射出 -->
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-shashutsu')">射出</button>
   <div id="menu-shashutsu" class="escape-submenu">
     <div class="escape-sub-left">最新の20件をメールで送ります</div>
@@ -315,7 +306,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <!-- 分散 -->
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunsan')">分散</button>
   <div id="menu-bunsan" class="escape-submenu">
     <div class="escape-sub-left">
@@ -326,7 +316,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <div class="escape-sub-right"><button onclick="executeEscape('bunsan')">決定</button></div>
   </div>
 
-  <!-- 撤収 -->
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-tesshu')">撤収</button>
   <div id="menu-tesshu" class="escape-submenu">
     <div class="escape-sub-left">
@@ -343,11 +332,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
   
   <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">みつゆルート（テキスト）</button>
-</div>  <hr style="border-color: var(--color-A); margin: 30px 0;">
-  <button class="panel-btn inverted" onclick="openTextImportPanel()"style="text-align: left;">みつゆルート（テキスト）</button>
 </div>
 
-<!-- 新設：一括取り込みパネル -->
 <div id="panel-import-text" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2 style="text-align: left;">みつゆルート</h2>
@@ -396,12 +382,10 @@ let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
 
-// タップ判定用変数
 let lastTapTime = 0; 
 let tapTimeout = null; 
 const doubleTapThreshold = 300; 
 
-// DOM要素（initAppで一括取得）
 let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNode, inputTagsNode;
 
 // ==========================================
@@ -463,7 +447,6 @@ function applyConfig() {
 }
 
 function renderTimeline() {
-  // 変更：上からではなく、下からの距離を維持するように記録
   const distanceFromBottom = tlContainer.scrollHeight - tlContainer.scrollTop;
   
   tlContainer.innerHTML = '';
@@ -500,8 +483,7 @@ function renderTimeline() {
     tlContainer.appendChild(div);
   });
   
-    executeUnifiedSearch(); // 先に検索（要素の非表示）を処理して高さを確定させる
-  // 変更：確定した高さをもとに、下からの距離を維持してスクロール位置を復元
+  executeUnifiedSearch();
   tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
   updateButtonsState();
 }
@@ -555,9 +537,53 @@ function renderListItems(itemIds) {
 }
 
 // ==========================================
-// 4. UI状態制御関数
+// 4. UI状態制御関数（全選択ロジック統合）
 // ==========================================
 function updateButtonsState() {
+  const hasSelection = selectedIds.size > 0;
+  const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
+
+  if (isGlobalSelectMode || hasSelection) {
+    btnSend.innerText = '編集'; 
+    btnSend.classList.toggle('active-btn', hasSelection); 
+    btnSend.disabled = !hasSelection;
+    
+    btnAmu.innerText = '全取消'; 
+    btnAmu.classList.add('active-btn'); 
+    btnAmu.disabled = false; 
+    
+    btnTweet.disabled = !hasSelection; 
+    btnTweet.classList.toggle('active-btn', hasSelection);
+    
+    btnSearch.disabled = true; 
+    
+    // 脱出ボタンを全選択に変形
+    btnEscape.innerText = '全選択';
+    btnEscape.disabled = false;
+    btnEscape.classList.add('active-btn');
+    btnEscape.dataset.action = 'selectAll'; // クリック処理の分岐用標識
+
+  } else {
+    btnSend.innerText = '送る'; 
+    btnSend.classList.remove('active-btn'); 
+    btnSend.disabled = false;
+    
+    btnAmu.innerText = '編む'; 
+    btnAmu.classList.remove('active-btn'); 
+    btnAmu.disabled = false; 
+    
+    btnTweet.disabled = false; 
+    btnTweet.classList.remove('active-btn');
+    
+    btnSearch.disabled = false; 
+    
+    // 脱出ボタンに復元
+    btnEscape.innerText = '脱出';
+    btnEscape.disabled = false;
+    btnEscape.classList.remove('active-btn');
+    btnEscape.dataset.action = 'escape'; // クリック処理の分岐用標識
+  }
+}
 
 function togglePoemSelection(itemElement, itemId) {
   itemElement.classList.toggle('selected');
@@ -766,23 +792,19 @@ window.closeListEditor = function() {
 }
 
 window.toggleEscapeMenu = function(menuId) {
-  // 開いている他のメニューを閉じる
   document.querySelectorAll('.escape-submenu').forEach(el => {
     if (el.id !== menuId) el.classList.remove('open');
   });
-  // 指定されたメニューの開閉を切り替え
   document.getElementById(menuId).classList.toggle('open');
 }
 
 window.executeEscape = function(type) {
   if (type === 'shashutsu') {
-    // 射出：最新20件をメール送信
     const recent = [...data].sort((a,b) => a.id - b.id).slice(-20);
     const txt = encodeURIComponent(recent.map(d => (d.type === 'list' ? '・' : '') + d.content).join('\n\n'));
     window.location.href = `mailto:?subject=saikiyo_shashutsu&body=${txt}`;
   } 
   else if (type === 'bunsan' || type === 'tesshu') {
-    // 分散・撤収：ラジオボタンで指定された対象を抽出
     const targetVal = document.querySelector(`input[name="${type}-target"]:checked`).value;
     const targetData = data.filter(d => {
       if (targetVal === 'work' && d.status !== '作品') return false;
@@ -795,7 +817,6 @@ window.executeEscape = function(type) {
       return;
     }
 
-    // ダウンロード実行
     const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); 
@@ -804,7 +825,6 @@ window.executeEscape = function(type) {
     a.click(); 
     URL.revokeObjectURL(url);
 
-    // 撤収の場合のみ、消去プロセスを連動
     if (type === 'tesshu') {
       const msg = targetVal === 'all'
         ? 'すべてのデータをファイルに退避しました。\n母港から全データを完全に消去し、撤収を完了しますか？'
@@ -812,7 +832,7 @@ window.executeEscape = function(type) {
 
       if (window.confirm(msg)) {
         const targetIds = new Set(targetData.map(d => d.id));
-        data = data.filter(d => !targetIds.has(d.id)); // 退避したデータ以外を残す
+        data = data.filter(d => !targetIds.has(d.id));
         saveData(); 
         if (typeof renderTimeline === 'function') renderTimeline(); 
       }
@@ -821,7 +841,6 @@ window.executeEscape = function(type) {
   window.closePanels();
 }
 
-// 救出（インポート）専用として再定義
 window.escapeAction = function(type, e) {
   if (type === 'import') {
     const file = e.target.files[0]; 
@@ -843,65 +862,61 @@ window.escapeAction = function(type, e) {
   }
   window.closePanels();
 }
+
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
-
-  // 1. 内部設定をデフォルト状態にリセット
   config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
   
-  // 2. パネル上のラジオボタンの選択状態を同期
   document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
   document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
   document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
   document.querySelector('input[name="color-mode"][value="default"]').checked = true;
   document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
-  // 3. カスタムテーマカラーを削除し、カラーピッカーも初期色へ
   localStorage.removeItem('saikiyo_theme_color');
   document.documentElement.style.removeProperty('--color-A');
   const colorPicker = document.getElementById('theme-color-picker');
   if(colorPicker) colorPicker.value = '#001F3F';
 
-  // 4. 画面に反映
   applyConfig();
 }
 
 // ==========================================
-// 6. イベントリスナーの登録（初期化の最後に実行）
+// 6. イベントリスナーの登録
 // ==========================================
 function attachEventListeners() {
-  
-  // 【保存】スクロール位置の監視
   tlContainer.addEventListener('scroll', () => {
     localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
   });
 
-  // UI制御系ボタン
-  
-  btnEscape.addEventListener('click', () => {
-    if (btnEscape.innerText === '全選択') {
-      // 画面に表示されているアイテムをすべて選択
-      const items = document.querySelectorAll('#timeline-container .item');
-      items.forEach(item => {
+  // 分岐制御付きのイベントリスナー
+  btnEscape.addEventListener('click', () => { 
+    if (btnEscape.dataset.action === 'selectAll') {
+      // 画面に表示されている要素（検索等で絞り込まれているもの）のみを全選択
+      const visibleItems = tlContainer.querySelectorAll('.item');
+      visibleItems.forEach(item => {
         if (item.style.display !== 'none') {
-          const id = Number(item.dataset.id);
-          selectedIds.add(id);
+          const itemId = Number(item.dataset.id);
+          selectedIds.add(itemId);
           item.classList.add('selected', 'selecting');
         }
       });
       updateButtonsState();
     } else {
-      // 通常の脱出ターミナル呼び出し
-      document.getElementById('panel-escape').classList.add('active');
+      document.getElementById('panel-escape').classList.add('active'); 
     }
   });
+
+  document.getElementById('btn-menu').addEventListener('click', () => { document.getElementById('panel-menu').classList.add('active'); });
+
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+  });
   
-  
-  // ヌルヌル検索（文字入力ごとのリアルタイム絞り込み）
   inputContentNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
   inputTagsNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
 
-  // 検索ボタン
   btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
@@ -915,15 +930,15 @@ function attachEventListeners() {
       inputContentNode.value = ''; 
       inputTagsNode.value = '';   
       executeUnifiedSearch();
-      // 変更：検索解除時は問答無用で最新の短歌（一番下）へ張り付く
       tlContainer.scrollTop = tlContainer.scrollHeight;
     }
   });
 
-  // 送信・編集ボタン
   btnSend.addEventListener('click', () => {
     const hasSelection = selectedIds.size > 0;
-    if (mode === 'normal' && !hasSelection) {
+    const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
+    
+    if (!isGlobalSelectMode && !hasSelection) {
       const content = inputContentNode.value.trim();
       if (!content) return;
       const tags = inputTagsNode.value.trim().split(/\s+/).filter(Boolean);
@@ -931,9 +946,8 @@ function attachEventListeners() {
       inputContentNode.value = ''; inputTagsNode.value = '';
       saveData(); 
       renderTimeline(); 
-      // 送信時は確実に一番下へ移動
       tlContainer.scrollTop = tlContainer.scrollHeight;
-    } else if (mode === 'normal' && hasSelection) {
+    } else if (hasSelection) {
       let expandedIds = [];
       let singleMemo = ''; 
       
@@ -966,17 +980,18 @@ function attachEventListeners() {
     }
   });
 
-  // 編むボタン
+  // 編む（全取消）ボタンのイベントリスナー更新
   btnAmu.addEventListener('click', () => {
-    if (selectedIds.size > 0) { 
+    if (tlContainer.classList.contains('select-mode') || selectedIds.size > 0) { 
+      // 全取消の挙動
       exitSelectionMode(); 
     } else { 
-      tlContainer.classList.toggle('select-mode'); 
+      // 編む（選択モード開始）の挙動
+      tlContainer.classList.add('select-mode'); 
       updateButtonsState(); 
     }
   });
 
-  // 呟くボタン
   btnTweet.addEventListener('click', () => {
     let content = '';
     if (selectedIds.size === 0) {
@@ -991,7 +1006,6 @@ function attachEventListeners() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
   });
 
-  // ラジオボタン（設定）変更
   document.querySelectorAll('input[type="radio"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       const name = e.target.name; 
@@ -1005,7 +1019,6 @@ function attachEventListeners() {
     });
   });
 
-  // タイムラインのタップ・ダブルタップ制御
   tlContainer.addEventListener('click', (event) => {
     const itemElement = event.target.closest('.item');
     if (!itemElement) return;
@@ -1038,7 +1051,7 @@ function attachEventListeners() {
 }
 
 // ==========================================
-// 7. メイン初期化シーケンス
+// 7. メイン初期化シーケンス（通常起動のみ）
 // ==========================================
 function initApp() {
   // A. DOM要素の取得
@@ -1056,10 +1069,10 @@ function initApp() {
   appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
   applyThemeAndTitle();
 
-  // C. 初回レンダリング（内部で renderTimeline() が実行される）
+  // C. 初回レンダリング
   applyConfig();
 
-  // D. スクロール状態の復元（DOM構築直後に同期実行）
+  // D. スクロール状態の復元
   const savedPos = localStorage.getItem('saikiyo_scroll_pos');
   if (savedPos !== null) {
       tlContainer.scrollTop = parseInt(savedPos, 10);
@@ -1067,14 +1080,10 @@ function initApp() {
       tlContainer.scrollTop = tlContainer.scrollHeight;
   }
 
-  // E. 監視網の展開（すべて完了後にリスナーを登録）
+  // E. 監視網の展開
   attachEventListeners();
 }
 
-
-
-
-// みつゆルート（テキスト一括取り込み）用関数
 window.openTextImportPanel = function() {
   window.closePanels();
   document.getElementById('import-text-input').value = '';
@@ -1085,14 +1094,12 @@ window.executeTextImport = function() {
   const text = document.getElementById('import-text-input').value;
   if (!text.trim()) return;
   
-  // 空行（改行2回以上）を区切りとしてテキストを分割
   const blocks = text.split(/\n\s*\n/);
   let count = 0;
   
   blocks.forEach(block => {
     const content = block.trim();
     if (content) {
-      // 連続処理でもIDが重複しないようcountを加算
       data.push({ 
         id: Date.now() + count, 
         type: 'tanka', 
