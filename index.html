@@ -346,6 +346,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closePanels()">取消(戻る)</button>
     <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
   </div>
+  
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  <button class="panel-btn inverted" onclick="removeDuplicates()">重複</button>
+  
 </div>
 
 <div id="panel-list-editor" class="panel">
@@ -1124,6 +1128,59 @@ window.executeTextImport = function() {
   }
   window.closePanels();
 }
+
+window.removeDuplicates = function() {
+  if (!window.confirm('内容・タグ・メモが完全に一致するデータを検索し、古いものだけを残して重複を削除します。\n実行しますか？')) return;
+
+  const seen = new Map(); // 判定用キー -> 保持する古いID
+  const newData = [];
+  const idMapping = {}; // 破棄する新ID -> 保持する旧ID のマッピング記録
+  let removedCount = 0;
+
+  // 1. まず短歌の重複判定と、新旧IDのマッピング作成
+  data.sort((a, b) => a.id - b.id).forEach(item => {
+    if (item.type === 'tanka') {
+      // タグは順不同でも一致とみなすためソートして結合
+      const tagsStr = item.tags ? [...item.tags].sort().join(',') : '';
+      const memoStr = item.memo || '';
+      // 判定用のユニークキーを生成
+      const key = `${item.content}::${tagsStr}::${memoStr}`;
+
+      if (seen.has(key)) {
+        removedCount++;
+        // 新しいIDが、どの古いIDに統合されたかを記録
+        idMapping[item.id] = seen.get(key);
+      } else {
+        seen.set(key, item.id);
+        newData.push(item);
+      }
+    } else {
+      // リスト等はそのまま残す
+      newData.push(item);
+    }
+  });
+
+  if (removedCount === 0) {
+    alert('重複するデータは見つからなかった！');
+    return;
+  }
+
+  // 2. リスト内のID参照を、生き残った古いIDに繋ぎ直す
+  newData.forEach(item => {
+    if (item.type === 'list' && item.items) {
+      item.items = item.items.map(id => idMapping[id] || id);
+    }
+  });
+
+  // 3. データの保存と画面更新
+  data = newData;
+  saveData();
+  if (typeof renderTimeline === 'function') renderTimeline();
+  
+  alert(`${removedCount}件の重複データを破棄し、リストの参照も修正したよ！`);
+  window.closePanels();
+};
+
 
 // ==========================================
 // 唯一の起動トリガー
