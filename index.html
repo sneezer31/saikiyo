@@ -327,14 +327,13 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
-
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
   
   <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">密輸</button>
 
 <hr style="border-color: var(--color-A); margin: 30px 0;">
-  <button class="panel-btn" onclick="removeDuplicates()">重複</button>
+  <button class="panel-btn" onclick="removeDuplicates()"style="text-align: left; margin-top: 10px;">重複</button>
 
 
 
