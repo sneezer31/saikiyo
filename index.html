@@ -8,7 +8,7 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   3色マトリクス絶対指定ルール
+   2026.07.29
    ========================================= */
 :root {
   --color-A: #001F3F;
@@ -328,15 +328,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="document.getElementById('import-file').click()">完全救出</button>
+  <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
   
-  <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">みつゆルート（テキスト）</button>
+  <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">密輸</button>
 </div>
 
 <div id="panel-import-text" class="panel">
   <button class="close-btn" onclick="closePanels()">×</button>
-  <h2 style="text-align: left;">みつゆルート</h2>
+  <h2 style="text-align: left;">密輸</h2>
   <p style="font-size: 0.95rem; line-height: 1.5; color: var(--color-A); margin-bottom: 15px;">
     複数のテキストを一度に読み込みます。<br>
     ※空行（改行2回）で自動的に別々のデータとして分割されます。
