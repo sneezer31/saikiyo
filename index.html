@@ -327,6 +327,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
+
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
   
@@ -385,6 +386,7 @@ let currentListId = null;
 let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
+let searchTimeout = null;
 
 let lastTapTime = 0; 
 let tapTimeout = null; 
@@ -923,9 +925,22 @@ function attachEventListeners() {
     else document.exitFullscreen();
   });
   
-  inputContentNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
-  inputTagsNode.addEventListener('input', () => { if (isSearchLinked) executeUnifiedSearch(); });
+  inputContentNode.addEventListener('input', () => {
+    if (isSearchLinked) {
+      clearTimeout(searchTimeout); // 以前のタイマーを破棄
+      searchTimeout = setTimeout(executeUnifiedSearch, 250); // 250ミリ秒後に検索実行
+    }
+  });
 
+  inputTagsNode.addEventListener('input', () => {
+    if (isSearchLinked) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(executeUnifiedSearch, 250);
+    }
+  });
+  
+  
+  
   btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
