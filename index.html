@@ -442,8 +442,7 @@ function applyConfig() {
   }
   document.documentElement.style.setProperty('--font-family', config.font);
   document.documentElement.setAttribute('data-radius', config.radius);
-  tlContainer.className = config
-  ig.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
+  tlContainer.className = config.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
   renderTimeline();
 }
 
