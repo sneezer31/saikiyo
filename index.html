@@ -216,7 +216,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
   <button class="panel-btn" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
-
+<div id="stats-display" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--color-A); text-align: center; font-weight: bold; background: var(--color-C); padding: 10px; border-radius: var(--border-radius);">
+    総コンテンツ数: <span id="count-tanka">0</span> / リスト数: <span id="count-list">0</span>
+  </div>
   <div class="radio-group">
     <h3>タイムライン表示切替</h3>
     <label><input type="radio" name="view-mode" value="wrap" checked> 折り返しあり</label>
@@ -265,6 +267,14 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の艦名を入力">
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
       </div>
+      <div class="radio-group">
+      <h3>合言葉（空欄でロック解除）</h3>
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="setup-passphrase-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="新しい合言葉">
+        <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="setPassphrase()">設定</button>
+      </div>
+    </div>
+      
     </div>
   </div>
 </div>
@@ -398,7 +408,8 @@ let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNo
 // 2. ユーティリティ・データ操作関数
 // ==========================================
 function saveData() { 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem('saikiyo_last_save_time', Date.now().toString()); // 保存時刻を記録
 }
 
 function escapeHTML(str) { 
@@ -938,6 +949,56 @@ window.renameApp = function() {
   
   alert(`基地名を「${appTitle}」に変更しました。`);
 };
+
+window.setPassphrase = function() {
+  const newPass = document.getElementById('setup-passphrase-input').value.trim();
+  if (newPass) {
+    localStorage.setItem('saikiyo_passphrase', newPass);
+    alert('合言葉を設定しました。次回から扉が現れます。');
+  } else {
+    localStorage.removeItem('saikiyo_passphrase');
+    alert('合言葉を解除しました。');
+  }
+};
+
+window.checkPassphrase = function() {
+  const input = document.getElementById('auth-input').value;
+  const correct = localStorage.getItem('saikiyo_passphrase');
+  if (input === correct) {
+    document.getElementById('panel-auth').style.display = 'none';
+  } else {
+    alert('ちがうよ！');
+    document.getElementById('auth-input').value = '';
+  }
+};
+
+window.skipFirstBoot = function() {
+  localStorage.setItem('saikiyo_setup_done', 'true');
+  document.getElementById('panel-first-boot').style.display = 'none';
+};
+
+window.showFirstBootInput = function() {
+  document.getElementById('first-boot-choices').style.display = 'none';
+  document.getElementById('first-boot-input-area').style.display = 'flex';
+};
+
+window.saveFirstBootPass = function() {
+  const pass = document.getElementById('first-boot-pass-input').value.trim();
+  if (!pass) return alert('合言葉を入力してください。');
+  
+  localStorage.setItem('saikiyo_passphrase', pass);
+  localStorage.setItem('saikiyo_setup_done', 'true');
+  
+  const setupInput = document.getElementById('setup-passphrase-input');
+  if (setupInput) setupInput.value = pass;
+  
+  document.getElementById('panel-first-boot').style.display = 'none';
+  alert('合言葉を設定しました。次回起動時から扉が現れます。');
+};
+
+
+
+
    
 // ==========================================
 // 6. イベントリスナーの登録
@@ -946,6 +1007,12 @@ function attachEventListeners() {
   tlContainer.addEventListener('scroll', () => {
     localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
   });
+  
+  document.getElementById('header-title').addEventListener('click', () => {
+    tlContainer.scrollTo({ top: tlContainer.scrollHeight, behavior: 'smooth' });
+  });
+  
+  
 
   // 分岐制御付きのイベントリスナー
   btnEscape.addEventListener('click', () => { 
@@ -965,7 +1032,14 @@ function attachEventListeners() {
     }
   });
 
-  document.getElementById('btn-menu').addEventListener('click', () => { document.getElementById('panel-menu').classList.add('active'); });
+  document.getElementById('btn-menu').addEventListener('click', () => { 
+  
+  const tankaCount = data.filter(d => d.type !== 'list').length;
+    const listCount = data.filter(d => d.type === 'list').length;
+    document.getElementById('count-tanka').innerText = tankaCount;
+    document.getElementById('count-list').innerText = listCount;
+    
+    document.getElementById('panel-menu').classList.add('active'); });
 
   document.getElementById('btn-fullscreen').addEventListener('click', () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
@@ -1126,6 +1200,22 @@ function attachEventListeners() {
 // ==========================================
 function initApp() {
   // A. DOM要素の取得
+
+// 初回セットアップ判定
+  const setupDone = localStorage.getItem('saikiyo_setup_done');
+  if (!setupDone) {
+    document.getElementById('panel-first-boot').style.display = 'flex';
+  } else {
+    // セットアップ済みなら合言葉の有無を確認
+    const savedPass = localStorage.getItem('saikiyo_passphrase');
+    if (savedPass) {
+      document.getElementById('panel-auth').style.display = 'flex';
+      const setupInput = document.getElementById('setup-passphrase-input');
+      if (setupInput) setupInput.value = savedPass;
+    }
+  }
+
+  
   tlContainer = document.getElementById('timeline-container');
   btnSend = document.getElementById('btn-send');
   btnAmu = document.getElementById('btn-amu');
@@ -1153,6 +1243,12 @@ function initApp() {
 
   // E. 監視網の展開
   attachEventListeners();
+  
+  const lastSaveTime = parseInt(localStorage.getItem('saikiyo_last_save_time') || Date.now().toString(), 10);
+  if (Date.now() - lastSaveTime > 168 * 60 * 60 * 1000) {
+    document.getElementById('alert-168h').style.display = 'flex';
+  }
+  
 }
 
 window.openTextImportPanel = function() {
@@ -1249,5 +1345,35 @@ window.removeDuplicates = function() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', initApp);
 </script>
+
+<div id="alert-168h" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
+  <div style="background:var(--color-B); color:var(--color-A); padding:30px; border-radius:var(--border-radius); text-align:center; font-size:1.5rem; font-weight:bold; border: 2px solid var(--color-A);">
+    <p>どうしたんでい、セーブしな</p>
+    <button onclick="document.getElementById('alert-168h').style.display='none'" style="margin-top:20px; padding:10px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">OK</button>
+  </div>
+</div>
+
+
+<div id="panel-auth" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:var(--color-B); z-index:10000; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
+  <h2 style="color:var(--color-A); margin-bottom:20px;">合言葉をどうぞ</h2>
+  <input type="password" id="auth-input" style="padding:15px; font-size:1.5rem; width:100%; max-width:300px; border:1px solid var(--color-A); border-radius:var(--border-radius); margin-bottom:20px; text-align:center;">
+  <button onclick="checkPassphrase()" style="padding:15px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">開門</button>
+</div>
+
+<div id="panel-first-boot" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:var(--color-B); z-index:10001; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
+  <h2 style="color:var(--color-A); margin-bottom:20px; text-align:center;">初期セットアップ</h2>
+  <p style="color:var(--color-A); margin-bottom:20px; text-align:center; line-height:1.6;">アプリをロックする「合言葉（扉）」機能を使用しますか？<br><span style="font-size:0.9rem;">※後から設定画面で変更可能です</span></p>
+  
+  <div id="first-boot-choices" style="display:flex; gap:10px; width:100%; max-width:300px;">
+    <button onclick="skipFirstBoot()" style="padding:15px; flex:1; font-size:1.1rem; background:var(--color-B); color:var(--color-A); border:2px solid var(--color-A); border-radius:var(--border-radius); cursor:pointer; font-weight:bold;">使わない</button>
+    <button onclick="showFirstBootInput()" style="padding:15px; flex:1; font-size:1.1rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer; font-weight:bold;">使う</button>
+  </div>
+
+  <div id="first-boot-input-area" style="display:none; width:100%; max-width:300px; flex-direction:column; gap:10px;">
+    <input type="text" id="first-boot-pass-input" placeholder="合言葉を入力" style="padding:15px; font-size:1.2rem; border:1px solid var(--color-A); border-radius:var(--border-radius); text-align:center;">
+    <button onclick="saveFirstBootPass()" style="padding:15px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer; font-weight:bold;">決定して進む</button>
+  </div>
+</div>
+
 </body>
 </html>
