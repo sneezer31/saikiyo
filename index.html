@@ -892,6 +892,53 @@ window.resetSettings = function() {
   applyConfig();
 }
 
+window.jumpToDate = function() {
+  const dateInput = document.getElementById('date-jump-input').value;
+  if (!dateInput) return alert('日付を指定してください。');
+  
+  const targetTime = new Date(dateInput).getTime();
+  const items = Array.from(tlContainer.querySelectorAll('.item'));
+  
+  // 指定日以降の最も古い要素を探す
+  let targetElement = null;
+  for (let item of items) {
+    if (Number(item.dataset.id) >= targetTime) {
+      targetElement = item;
+      break;
+    }
+  }
+  
+  if (targetElement) {
+    targetElement.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    alert('指定された日付以降のデータは見つかりませんでした。');
+  }
+  window.closePanels();
+};
+
+window.returnToLatest = function() {
+  tlContainer.scrollTop = tlContainer.scrollHeight;
+  window.closePanels();
+};
+
+window.changeThemeColor = function(color) {
+  document.documentElement.style.setProperty('--color-A', color);
+  localStorage.setItem('saikiyo_theme_color', color);
+};
+
+window.renameApp = function() {
+  const input = document.getElementById('rename-input').value.trim();
+  if (!input) return alert('変更する名前を入力してください。');
+  
+  appTitle = input;
+  document.getElementById('header-title').innerText = appTitle;
+  document.title = appTitle;
+  localStorage.setItem('saikiyo_title', appTitle);
+  document.getElementById('rename-input').value = '';
+  
+  alert(`基地名を「${appTitle}」に変更しました。`);
+};
+   
 // ==========================================
 // 6. イベントリスナーの登録
 // ==========================================
