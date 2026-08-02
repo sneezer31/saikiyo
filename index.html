@@ -8,7 +8,7 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   2026.07.29
+   2026.08.02
    ========================================= */
 :root {
   --color-A: #001F3F;
@@ -962,7 +962,7 @@ window.setPassphrase = function() {
 };
 
 window.checkPassphrase = function() {
-  const input = document.getElementById('auth-input').value;
+  const input = document.getElementById('auth-input').value.trim();
   const correct = localStorage.getItem('saikiyo_passphrase');
   if (input === correct) {
     document.getElementById('panel-auth').style.display = 'none';
