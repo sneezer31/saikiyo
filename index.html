@@ -11,7 +11,7 @@
    2026.08.02
    ========================================= */
 :root {
-  --color-A: #111111; /* 完全な黒より目に優しい墨色。これが「自分で決める」のベース */
+  --color-A: #111111; /* 完全な黒より目に優しい墨色 */
   --color-B: #FFFFFF;
   --color-C: #E0E0E0;
   --font-family: sans-serif;
@@ -29,7 +29,6 @@
   --color-B: #FFFCF5; /* 目の錯覚レベルの極薄いクリーム色 */
   --color-C: #F0EBE1; /* 地の色（2色目よりわずかに濃い） */
 }
-
 
 [data-radius="round"] {
   --border-radius: 8px;
@@ -243,7 +242,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <label><input type="radio" name="font-mode" value="serif"> 明朝体</label>
   </div>
   
-
   <hr style="border-color: var(--color-A); margin: 30px 0;">
   
   <div id="engine-room-controls" style="display: flex; flex-direction: column; gap: 20px;">
@@ -260,16 +258,12 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">かえる</button>
       </div>
     </div>
-    
     <div class="radio-group">
-    <h3>テーマカラー</h3>
-    <label><input type="radio" name="color-mode" value="mono"> 白黒</label>
-    <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
-    <label><input type="radio" name="color-mode" value="custom" checked> 自分で決める</label>
-  </div>
-    
-    
-    
+      <h3>テーマカラー</h3>
+      <label><input type="radio" name="color-mode" value="mono"> 白黒</label>
+      <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
+      <label><input type="radio" name="color-mode" value="custom" checked> 自分で決める</label>
+    </div>
     <div class="radio-group">
       <h3>基地名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
@@ -314,11 +308,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <div id="panel-escape" class="panel">
-<!-- 変更前 -->
-  <button class="close-btn" onclick="closePanels()">×</button>
-  <h2>脱出ターミナル</h2>
-
-<!-- 変更後 -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">脱出ターミナル</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
@@ -396,7 +385,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closePanels()">取消(戻る)</button>
     <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
   </div>
-  
   
 </div>
 <div id="panel-list-editor" class="panel">
@@ -489,18 +477,11 @@ function applyThemeAndTitle() {
   }
 }
 
-  document.documentElement.style.setProperty('--font-family', config.font);
-  document.documentElement.setAttribute('data-radius', config.radius);
-  tlContainer.className = config.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
-  renderTimeline();
-}
-
 function applyConfig() {
   if (config.theme === 'mono') { 
     document.documentElement.setAttribute('data-theme', 'mono'); 
     document.documentElement.style.removeProperty('--color-A');
   } else if (config.theme === 'ginnezu') {
-    // ★ここで船長が作った ginnezu を呼び出します
     document.documentElement.setAttribute('data-theme', 'ginnezu'); 
     document.documentElement.style.removeProperty('--color-A');
   } else { 
@@ -526,7 +507,7 @@ function renderTimeline() {
     return true; 
   });
   
-  const fragment = document.createDocumentFragment(); // 追加: 透明な箱を用意
+  const fragment = document.createDocumentFragment();
   
   filtered.sort((a,b) => a.id - b.id).forEach(item => {
     const div = document.createElement('div');
@@ -561,6 +542,7 @@ function renderTimeline() {
   tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
   updateButtonsState();
 }
+
 function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
   if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
@@ -635,7 +617,7 @@ function updateButtonsState() {
     btnEscape.innerText = '全選択';
     btnEscape.disabled = false;
     btnEscape.classList.add('active-btn');
-    btnEscape.dataset.action = 'selectAll'; // クリック処理の分岐用標識
+    btnEscape.dataset.action = 'selectAll'; 
 
   } else {
     btnSend.innerText = '送る'; 
@@ -655,7 +637,7 @@ function updateButtonsState() {
     btnEscape.innerText = '脱出';
     btnEscape.disabled = false;
     btnEscape.classList.remove('active-btn');
-    btnEscape.dataset.action = 'escape'; // クリック処理の分岐用標識
+    btnEscape.dataset.action = 'escape'; 
   }
 }
 
@@ -939,18 +921,14 @@ window.escapeAction = function(type, e) {
 
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
-  // テーマの初期値を custom に変更
+  // ここでテーマの初期値を custom（自分で決める）へ修正
   config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'custom', radius: 'square' };
   
   document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
   document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
   document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
-  // ここを custom に修正
   document.querySelector('input[name="color-mode"][value="custom"]').checked = true;
-
-
-
-document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
+  document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
   localStorage.removeItem('saikiyo_theme_color');
   document.documentElement.style.removeProperty('--color-A');
@@ -967,7 +945,6 @@ window.jumpToDate = function() {
   const targetTime = new Date(dateInput).getTime();
   const items = Array.from(tlContainer.querySelectorAll('.item'));
   
-  // 指定日以降の最も古い要素を探す
   let targetElement = null;
   for (let item of items) {
     if (Number(item.dataset.id) >= targetTime) {
@@ -1021,11 +998,11 @@ window.setPassphrase = function() {
 window.checkPassphrase = function() {
   const input = document.getElementById('auth-input').value.trim();
   const correct = localStorage.getItem('saikiyo_passphrase');
-  const masterKey = 'よきいさ'; // ← ここに合鍵となる文字列を定義します
+  const masterKey = 'よきいさ'; 
 
   if (input === correct || input === masterKey) {
     document.getElementById('panel-auth').style.display = 'none';
-    document.getElementById('auth-input').value = ''; // 通過時にリセット
+    document.getElementById('auth-input').value = ''; 
   } else {
     alert('ちがうよ！');
     document.getElementById('auth-input').value = '';
@@ -1067,7 +1044,6 @@ window.executeChushutsuAction = function(actionType) {
 
   if (startMs > endMs) return alert('開始日時は終了日時より前に設定してください。');
 
-  // 指定期間のデータを抽出
   const targetData = data.filter(d => d.id >= startMs && d.id <= endMs);
   if (targetData.length === 0) return alert('指定期間内にデータは存在しません。');
 
@@ -1075,22 +1051,18 @@ window.executeChushutsuAction = function(actionType) {
   const msg = `指定期間内（${targetData.length}件）のデータを${actionName}しますか？`;
   if (!window.confirm(msg)) return;
 
-  // JSONファイル生成
   const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); 
   a.href = url; 
   
-  // ファイル名は YYYYMMDDHHMM.json のみ
-// エクスポート処理内のファイル名生成部を以下に統一
-const now = new Date();
-const pad = n => String(n).padStart(2, '0');
-const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
-a.download = `${ts}.json`;
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+  a.download = `${ts}.json`;
   a.click(); 
   URL.revokeObjectURL(url);
 
-  // 撤収の場合は母港からデータを破棄
   if (actionType === 'tesshu') {
     data = data.filter(d => d.id < startMs || d.id > endMs);
     saveData(); 
@@ -1101,8 +1073,6 @@ a.download = `${ts}.json`;
   alert(actionType === 'tesshu' ? '指定期間の撤収が完了しました。' : '指定期間の分散が完了しました。');
 };
 
-
-   
 // ==========================================
 // 6. イベントリスナーの登録
 // ==========================================
@@ -1115,12 +1085,8 @@ function attachEventListeners() {
     tlContainer.scrollTo({ top: tlContainer.scrollHeight, behavior: 'smooth' });
   });
   
-  
-
-  // 分岐制御付きのイベントリスナー
   btnEscape.addEventListener('click', () => { 
     if (btnEscape.dataset.action === 'selectAll') {
-      // 画面に表示されている要素（検索等で絞り込まれているもの）のみを全選択
       const visibleItems = tlContainer.querySelectorAll('.item');
       visibleItems.forEach(item => {
         if (item.style.display !== 'none') {
@@ -1136,13 +1102,13 @@ function attachEventListeners() {
   });
 
   document.getElementById('btn-menu').addEventListener('click', () => { 
-  
-  const tankaCount = data.filter(d => d.type !== 'list').length;
+    const tankaCount = data.filter(d => d.type !== 'list').length;
     const listCount = data.filter(d => d.type === 'list').length;
     document.getElementById('count-tanka').innerText = tankaCount;
     document.getElementById('count-list').innerText = listCount;
     
-    document.getElementById('panel-menu').classList.add('active'); });
+    document.getElementById('panel-menu').classList.add('active'); 
+  });
 
   document.getElementById('btn-fullscreen').addEventListener('click', () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
@@ -1151,8 +1117,8 @@ function attachEventListeners() {
   
   inputContentNode.addEventListener('input', () => {
     if (isSearchLinked) {
-      clearTimeout(searchTimeout); // 以前のタイマーを破棄
-      searchTimeout = setTimeout(executeUnifiedSearch, 250); // 250ミリ秒後に検索実行
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(executeUnifiedSearch, 250); 
     }
   });
 
@@ -1162,8 +1128,6 @@ function attachEventListeners() {
       searchTimeout = setTimeout(executeUnifiedSearch, 250);
     }
   });
-  
-  
   
   btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
@@ -1228,13 +1192,10 @@ function attachEventListeners() {
     }
   });
 
-  // 編む（全取消）ボタンのイベントリスナー更新
   btnAmu.addEventListener('click', () => {
     if (tlContainer.classList.contains('select-mode') || selectedIds.size > 0) { 
-      // 全取消の挙動
       exitSelectionMode(); 
     } else { 
-      // 編む（選択モード開始）の挙動
       tlContainer.classList.add('select-mode'); 
       updateButtonsState(); 
     }
@@ -1302,14 +1263,10 @@ function attachEventListeners() {
 // 7. メイン初期化シーケンス（通常起動のみ）
 // ==========================================
 function initApp() {
-  // A. DOM要素の取得
-
-// 初回セットアップ判定
   const setupDone = localStorage.getItem('saikiyo_setup_done');
   if (!setupDone) {
     document.getElementById('panel-first-boot').style.display = 'flex';
   } else {
-    // セットアップ済みなら合言葉の有無を確認
     const savedPass = localStorage.getItem('saikiyo_passphrase');
     if (savedPass) {
       document.getElementById('panel-auth').style.display = 'flex';
@@ -1318,7 +1275,6 @@ function initApp() {
     }
   }
 
-  
   tlContainer = document.getElementById('timeline-container');
   btnSend = document.getElementById('btn-send');
   btnAmu = document.getElementById('btn-amu');
@@ -1328,15 +1284,12 @@ function initApp() {
   inputContentNode = document.getElementById('input-content');
   inputTagsNode = document.getElementById('input-tags');
 
-  // B. データのロードと環境構築
   data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
   appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
   applyThemeAndTitle();
 
-  // C. 初回レンダリング
   applyConfig();
 
-  // D. スクロール状態の復元
   const savedPos = localStorage.getItem('saikiyo_scroll_pos');
   if (savedPos !== null) {
       tlContainer.scrollTop = parseInt(savedPos, 10);
@@ -1344,14 +1297,12 @@ function initApp() {
       tlContainer.scrollTop = tlContainer.scrollHeight;
   }
 
-  // E. 監視網の展開
   attachEventListeners();
   
   const lastSaveTime = parseInt(localStorage.getItem('saikiyo_last_save_time') || Date.now().toString(), 10);
   if (Date.now() - lastSaveTime > 168 * 60 * 60 * 1000) {
     document.getElementById('alert-168h').style.display = 'flex';
   }
-  
 }
 
 window.openTextImportPanel = function() {
@@ -1393,30 +1344,25 @@ window.executeTextImport = function() {
 window.removeDuplicates = function() {
   if (!window.confirm('内容・タグ・メモが完全に一致するデータを検索し、古いものだけを残して重複を削除します。\n実行しますか？')) return;
 
-  const seen = new Map(); // 判定用キー -> 保持する古いID
+  const seen = new Map(); 
   const newData = [];
-  const idMapping = {}; // 破棄する新ID -> 保持する旧ID のマッピング記録
+  const idMapping = {}; 
   let removedCount = 0;
 
-  // 1. まず短歌の重複判定と、新旧IDのマッピング作成
   data.sort((a, b) => a.id - b.id).forEach(item => {
     if (item.type === 'tanka') {
-      // タグは順不同でも一致とみなすためソートして結合
       const tagsStr = item.tags ? [...item.tags].sort().join(',') : '';
       const memoStr = item.memo || '';
-      // 判定用のユニークキーを生成
       const key = `${item.content}::${tagsStr}::${memoStr}`;
 
       if (seen.has(key)) {
         removedCount++;
-        // 新しいIDが、どの古いIDに統合されたかを記録
         idMapping[item.id] = seen.get(key);
       } else {
         seen.set(key, item.id);
         newData.push(item);
       }
     } else {
-      // リスト等はそのまま残す
       newData.push(item);
     }
   });
@@ -1426,14 +1372,12 @@ window.removeDuplicates = function() {
     return;
   }
 
-  // 2. リスト内のID参照を、生き残った古いIDに繋ぎ直す
   newData.forEach(item => {
     if (item.type === 'list' && item.items) {
       item.items = item.items.map(id => idMapping[id] || id);
     }
   });
 
-  // 3. データの保存と画面更新
   data = newData;
   saveData();
   if (typeof renderTimeline === 'function') renderTimeline();
@@ -1441,7 +1385,6 @@ window.removeDuplicates = function() {
   alert(`${removedCount}件の重複データを破棄し、リストの参照も修正したよ！`);
   window.closePanels();
 };
-
 
 // ==========================================
 // 唯一の起動トリガー
@@ -1455,7 +1398,6 @@ document.addEventListener('DOMContentLoaded', initApp);
     <button onclick="document.getElementById('alert-168h').style.display='none'" style="margin-top:20px; padding:10px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">OK</button>
   </div>
 </div>
-
 
 <div id="panel-auth" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:var(--color-B); z-index:10000; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
   <h2 style="color:var(--color-A); margin-bottom:20px;">合言葉をどうぞ</h2>
