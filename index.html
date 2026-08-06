@@ -259,9 +259,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
       </div>
     </div>
     <div class="radio-group">
+     
       <h3>テーマカラー</h3>
       <label><input type="radio" name="color-mode" value="mono"> 白黒</label>
       <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <label style="margin-bottom: 0;"><input type="radio" name="color-mode" value="custom" checked> 自分で決める</label>
+        <input type="color" id="theme-color-picker" onchange="changeThemeColor(this.value)" style="cursor: pointer; height: 30px; width: 50px;">
+      </div>
+    </div>nput type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
       <label><input type="radio" name="color-mode" value="custom" checked> 自分で決める</label>
     </div>
     <div class="radio-group">
@@ -967,10 +973,13 @@ window.returnToLatest = function() {
 };
 
 window.changeThemeColor = function(color) {
+  // 色をいじった瞬間に「自分で決める」のラジオボタンをONにする
+  document.querySelector('input[name="color-mode"][value="custom"]').checked = true;
+  config.theme = 'custom';
   document.documentElement.style.setProperty('--color-A', color);
   localStorage.setItem('saikiyo_theme_color', color);
+  applyConfig();
 };
-
 window.renameApp = function() {
   const input = document.getElementById('rename-input').value.trim();
   if (!input) return alert('変更する名前を入力してください。');
