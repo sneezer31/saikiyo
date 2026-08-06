@@ -881,12 +881,18 @@ window.executeEscape = function(type) {
       return;
     }
 
-    const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
+ const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); 
     a.href = url; 
-    a.download = `saikiyo_${targetVal}_${Date.now()}.json`;
-    a.click(); 
+    
+    // 現在時刻を年月日時分の文字列に変換する処理を追加
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+    
+    a.download = `saikiyo_${targetVal}_${ts}.json`; // ←人間が読める名前に変更
+    a.click();
     URL.revokeObjectURL(url);
 
     if (type === 'tesshu') {
