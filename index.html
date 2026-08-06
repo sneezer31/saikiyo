@@ -302,9 +302,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   
   <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">タグをつける</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードに送る</button>
-  <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   
-  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
+  <!-- 変更：即座にリスト作成机へワープするボタン -->
+  <button class="panel-btn" onclick="executeCreateListImmediate()" style="margin-top:20px; border-width: 2px;">新しいリストを編む ＞</button>  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
   
   <div class="desk-ctrls" style="margin-top:20px;">
     <button onclick="closePanels()">取消(戻る)</button>
@@ -851,6 +851,20 @@ window.closeListEditor = function() {
   document.getElementById('panel-list-editor').classList.remove('active'); 
   exitSelectionMode(); 
 }
+
+window.executeCreateListImmediate = function() {
+  let expandedIds = [];
+  selectedIds.forEach(id => {
+    const target = data.find(d => d.id === id);
+    if (target) {
+      if (target.type === 'list' && target.items) { expandedIds.push(...target.items); }
+      else { expandedIds.push(id); }
+    }
+  });
+  // 選択されたデータを持ったまま、リスト編集パネルを即座に開く
+  openListEditor(null, [...new Set(expandedIds)]);
+};
+
 
 window.toggleEscapeMenu = function(menuId) {
   document.querySelectorAll('.escape-submenu').forEach(el => {
