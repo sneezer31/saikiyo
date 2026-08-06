@@ -406,9 +406,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <textarea id="list-memo" rows="2" placeholder="締め切りなど" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
   <textarea id="list-tags" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
   <button class="panel-btn inverted" id="btn-copy-list" onclick="copyListItems()">クリップボードにコピー</button>
-  <div class="desk-ctrls">
-    <button onclick="closeListEditor()">戻る(保存)</button>
-    <button onclick="saveListAndClose()">決定(保存)</button>
+ <div class="desk-ctrls">
+    <button onclick="saveListAndClose()" style="background:var(--color-A); color:var(--color-B);">決定(保存)</button>
   </div>
 </div>
 
