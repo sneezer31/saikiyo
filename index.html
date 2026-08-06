@@ -11,9 +11,9 @@
    2026.08.02
    ========================================= */
 :root {
-  --color-A: #001F3F;
-  --color-B: #F0F4F8;
-  --color-C: #DCE2E9;
+  --color-A: #111111; /* 完全な黒より目に優しい墨色 */
+  --color-B: #FFFFFF;
+  --color-C: #E0E0E0;
   --font-family: sans-serif;
   --border-radius: 0px;
 }
@@ -23,6 +23,18 @@
   --color-B: #FFFFFF;
   --color-C: #E0E0E0;
 }
+[data-theme="silver"] {
+  --color-A: #546e7a; /* 銀鼠・ブルーグレー系 */
+  --color-B: #f5f7f8;
+  --color-C: #cfd8dc;
+}
+
+[data-theme="ginnezu"] {
+  --color-A: #595857; /* 銀鼠（文字として読める濃灰） */
+  --color-B: #FFFCF5; /* 目の錯覚レベルの極薄いクリーム色 */
+  --color-C: #F0EBE1; /* 地の色（2色目よりわずかに濃い） */
+}
+
 
 [data-radius="round"] {
   --border-radius: 8px;
@@ -142,11 +154,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 }
 
 #panel-list-editor { display: none; flex-direction: column; }
-#panel-list-editor.active { display: flex; }
 #panel-list-editor input, #panel-list-editor textarea {
   width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;
   background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 18px;
   border-radius: var(--border-radius);
+  flex-shrink: 0;
 }
 #panel-list-editor textarea { resize: none; }
 #list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; border-radius: var(--border-radius); }
@@ -235,11 +247,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <label><input type="radio" name="font-mode" value="sans-serif" checked> ゴシック体</label>
     <label><input type="radio" name="font-mode" value="serif"> 明朝体</label>
   </div>
-  <div class="radio-group">
-    <h3>テーマカラー</h3>
-    <label><input type="radio" name="color-mode" value="default" checked> 紺</label>
-    <label><input type="radio" name="color-mode" value="mono"> 白黒灰</label>
-  </div>
+  
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
   
@@ -257,10 +265,16 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">かえる</button>
       </div>
     </div>
+    
     <div class="radio-group">
-      <h3>計器盤の調色（テーマカラー）</h3>
-      <input type="color" id="theme-color-picker" class="dropdown" style="width: 100%; height: 40px; padding: 0;" onchange="changeThemeColor(this.value)">
-    </div>
+    <h3>テーマカラー</h3>
+    <label><input type="radio" name="color-mode" value="mono"> 白黒</label>
+    <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
+    <label><input type="radio" name="color-mode" value="custom" checked> 自分で決める</label>
+  </div>
+    
+    
+    
     <div class="radio-group">
       <h3>基地名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
@@ -305,8 +319,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <div id="panel-escape" class="panel">
+<!-- 変更前 -->
   <button class="close-btn" onclick="closePanels()">×</button>
   <h2>脱出ターミナル</h2>
+
+<!-- 変更後 -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+    <h2 style="margin: 0; border: none; padding: 0;">脱出ターミナル</h2>
+    <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
+  </div>
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-shashutsu')">射出</button>
   <div id="menu-shashutsu" class="escape-submenu">
@@ -346,13 +367,31 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 <hr style="border-color: var(--color-A); margin: 30px 0;">
   <button class="panel-btn" onclick="removeDuplicates()"style="text-align: left; margin-top: 10px;">重複</button>
 
+<hr style="border-color: var(--color-A); margin: 30px 0;">
 
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-chushutsu')" style="text-align: left;">抽出</button>
+  <div id="menu-chushutsu" class="escape-submenu">
+    <div style="font-size: 0.95rem; margin-bottom: 10px; color: var(--color-A);">分単位で期間を指定し、ファイルを生成します</div>
+    
+    <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 15px;">
+      <input type="datetime-local" id="chushutsu-start" class="dropdown" style="flex: 1; padding: 10px;">
+      <span style="color: var(--color-A);">〜</span>
+      <input type="datetime-local" id="chushutsu-end" class="dropdown" style="flex: 1; padding: 10px;">
+    </div>
+    
+    <div style="display: flex; gap: 10px;">
+      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A);" onclick="executeChushutsuAction('bunsan')">期間を分散</button>
+      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A); color: var(--color-B); background: var(--color-A);" onclick="executeChushutsuAction('tesshu')">期間を撤収</button>
+    </div>
+  </div>
 
 </div>
 
 <div id="panel-import-text" class="panel">
-  <button class="close-btn" onclick="closePanels()">×</button>
-  <h2 style="text-align: left;">密輸</h2>
+ <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+    <h2 style="margin: 0; border: none; padding: 0;">密輸</h2>
+    <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
+  </div>
   <p style="font-size: 0.95rem; line-height: 1.5; color: var(--color-A); margin-bottom: 15px;">
     複数のテキストを一度に読み込みます。<br>
     ※空行（改行2回）で自動的に別々のデータとして分割されます。
@@ -362,10 +401,14 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closePanels()">取消(戻る)</button>
     <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
   </div>
+  
+  
 </div>
 <div id="panel-list-editor" class="panel">
-  <button class="close-btn" onclick="closeListEditor()">×</button>
-  <h2>リストをつくる机</h2>
+ <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+    <h2 style="margin: 0; border: none; padding: 0;">リストをつくる机</h2>
+    <button onclick="closeListEditor()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
+  </div>
   <input type="text" id="list-name" placeholder="無題" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
   <div id="list-items"></div>
@@ -451,11 +494,25 @@ function applyThemeAndTitle() {
   }
 }
 
+  document.documentElement.style.setProperty('--font-family', config.font);
+  document.documentElement.setAttribute('data-radius', config.radius);
+  tlContainer.className = config.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
+  renderTimeline();
+}
+
 function applyConfig() {
   if (config.theme === 'mono') { 
     document.documentElement.setAttribute('data-theme', 'mono'); 
+    document.documentElement.style.removeProperty('--color-A');
+  } else if (config.theme === 'ginnezu') {
+    // ★ここで船長が作った ginnezu を呼び出します
+    document.documentElement.setAttribute('data-theme', 'ginnezu'); 
+    document.documentElement.style.removeProperty('--color-A');
   } else { 
+    // custom（自分で決める）
     document.documentElement.removeAttribute('data-theme'); 
+    const customColor = localStorage.getItem('saikiyo_theme_color');
+    if (customColor) document.documentElement.style.setProperty('--color-A', customColor);
   }
   document.documentElement.style.setProperty('--font-family', config.font);
   document.documentElement.setAttribute('data-radius', config.radius);
@@ -887,13 +944,18 @@ window.escapeAction = function(type, e) {
 
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
-  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
+  // テーマの初期値を custom に変更
+  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'custom', radius: 'square' };
   
   document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
   document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
   document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
-  document.querySelector('input[name="color-mode"][value="default"]').checked = true;
-  document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
+  // ここを custom に修正
+  document.querySelector('input[name="color-mode"][value="custom"]').checked = true;
+
+
+
+document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
   localStorage.removeItem('saikiyo_theme_color');
   document.documentElement.style.removeProperty('--color-A');
@@ -964,8 +1026,11 @@ window.setPassphrase = function() {
 window.checkPassphrase = function() {
   const input = document.getElementById('auth-input').value.trim();
   const correct = localStorage.getItem('saikiyo_passphrase');
-  if (input === correct) {
+  const masterKey = 'よきいさ'; // ← ここに合鍵となる文字列を定義します
+
+  if (input === correct || input === masterKey) {
     document.getElementById('panel-auth').style.display = 'none';
+    document.getElementById('auth-input').value = ''; // 通過時にリセット
   } else {
     alert('ちがうよ！');
     document.getElementById('auth-input').value = '';
@@ -996,7 +1061,50 @@ window.saveFirstBootPass = function() {
   alert('合言葉を設定しました。次回起動時から扉が現れます。');
 };
 
+window.executeChushutsuAction = function(actionType) {
+  const startVal = document.getElementById('chushutsu-start').value;
+  const endVal = document.getElementById('chushutsu-end').value;
 
+  if (!startVal || !endVal) return alert('開始日時と終了日時の両方を指定してください。');
+
+  const startMs = new Date(startVal).getTime();
+  const endMs = new Date(endVal).getTime();
+
+  if (startMs > endMs) return alert('開始日時は終了日時より前に設定してください。');
+
+  // 指定期間のデータを抽出
+  const targetData = data.filter(d => d.id >= startMs && d.id <= endMs);
+  if (targetData.length === 0) return alert('指定期間内にデータは存在しません。');
+
+  const actionName = actionType === 'tesshu' ? 'ファイルに出力してアプリから完全に消去（撤収）' : 'ファイルに出力（分散）';
+  const msg = `指定期間内（${targetData.length}件）のデータを${actionName}しますか？`;
+  if (!window.confirm(msg)) return;
+
+  // JSONファイル生成
+  const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); 
+  a.href = url; 
+  
+  // ファイル名は YYYYMMDDHHMM.json のみ
+// エクスポート処理内のファイル名生成部を以下に統一
+const now = new Date();
+const pad = n => String(n).padStart(2, '0');
+const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+a.download = `${ts}.json`;
+  a.click(); 
+  URL.revokeObjectURL(url);
+
+  // 撤収の場合は母港からデータを破棄
+  if (actionType === 'tesshu') {
+    data = data.filter(d => d.id < startMs || d.id > endMs);
+    saveData(); 
+    if (typeof renderTimeline === 'function') renderTimeline(); 
+  }
+  
+  window.closePanels();
+  alert(actionType === 'tesshu' ? '指定期間の撤収が完了しました。' : '指定期間の分散が完了しました。');
+};
 
 
    
