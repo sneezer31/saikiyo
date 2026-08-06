@@ -148,7 +148,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 }
 
 #panel-list-editor { display: none; flex-direction: column; }
+#panel-list-editor.active { display: flex; } /* ←この1行を追加 */
 #panel-list-editor input, #panel-list-editor textarea {
+
   width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;
   background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 18px;
   border-radius: var(--border-radius);
