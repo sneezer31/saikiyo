@@ -147,10 +147,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   border-radius: var(--border-radius);
 }
 
+/* CSSの権力闘争を解決（.active時にdisplay:flexを強制） */
 #panel-list-editor { display: none; flex-direction: column; }
-#panel-list-editor.active { display: flex; } /* ←この1行を追加 */
+#panel-list-editor.active { display: flex; }
 #panel-list-editor input, #panel-list-editor textarea {
-
   width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;
   background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-family: inherit; font-size: 18px;
   border-radius: var(--border-radius);
@@ -260,8 +260,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="returnToLatest()">かえる</button>
       </div>
     </div>
+    
     <div class="radio-group">
-     
       <h3>テーマカラー</h3>
       <label><input type="radio" name="color-mode" value="mono"> 白黒</label>
       <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
@@ -270,14 +270,16 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <input type="color" id="theme-color-picker" onchange="changeThemeColor(this.value)" style="cursor: pointer; height: 30px; width: 50px;">
       </div>
     </div>
-    </div>
+
     <div class="radio-group">
       <h3>基地名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
         <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の艦名を入力">
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
       </div>
-      <div class="radio-group">
+    </div>
+    
+    <div class="radio-group">
       <h3>合言葉（空欄でロック解除）</h3>
       <div style="display: flex; gap: 10px;">
         <input type="text" id="setup-passphrase-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="新しい合言葉">
@@ -285,7 +287,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
       </div>
     </div>
       
-    </div>
   </div>
 </div>
 
@@ -304,9 +305,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   
   <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">タグをつける</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードに送る</button>
+  <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   
-  <!-- 変更：即座にリスト作成机へワープするボタン -->
-  <button class="panel-btn" onclick="executeCreateListImmediate()" style="margin-top:20px; border-width: 2px;">新しいリストを編む ＞</button>  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
+  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
   
   <div class="desk-ctrls" style="margin-top:20px;">
     <button onclick="closePanels()">取消(戻る)</button>
@@ -392,8 +393,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closePanels()">取消(戻る)</button>
     <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
   </div>
-  
 </div>
+
 <div id="panel-list-editor" class="panel">
  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">リストをつくる机</h2>
@@ -426,7 +427,7 @@ let data = [];
 let mode = 'normal'; 
 let selectedIds = new Set();
 let currentListId = null; 
-let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'default', radius: 'square' };
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'custom', radius: 'square' };
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
 let searchTimeout = null;
@@ -442,7 +443,7 @@ let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNo
 // ==========================================
 function saveData() { 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  localStorage.setItem('saikiyo_last_save_time', Date.now().toString()); // 保存時刻を記録
+  localStorage.setItem('saikiyo_last_save_time', Date.now().toString()); 
 }
 
 function escapeHTML(str) { 
@@ -492,7 +493,6 @@ function applyConfig() {
     document.documentElement.setAttribute('data-theme', 'ginnezu'); 
     document.documentElement.style.removeProperty('--color-A');
   } else { 
-    // custom（自分で決める）
     document.documentElement.removeAttribute('data-theme'); 
     const customColor = localStorage.getItem('saikiyo_theme_color');
     if (customColor) document.documentElement.style.setProperty('--color-A', customColor);
@@ -600,7 +600,7 @@ function renderListItems(itemIds) {
 }
 
 // ==========================================
-// 4. UI状態制御関数（全選択ロジック統合）
+// 4. UI状態制御関数
 // ==========================================
 function updateButtonsState() {
   const hasSelection = selectedIds.size > 0;
@@ -620,7 +620,6 @@ function updateButtonsState() {
     
     btnSearch.disabled = true; 
     
-    // 脱出ボタンを全選択に変形
     btnEscape.innerText = '全選択';
     btnEscape.disabled = false;
     btnEscape.classList.add('active-btn');
@@ -640,7 +639,6 @@ function updateButtonsState() {
     
     btnSearch.disabled = false; 
     
-    // 脱出ボタンに復元
     btnEscape.innerText = '脱出';
     btnEscape.disabled = false;
     btnEscape.classList.remove('active-btn');
@@ -676,7 +674,7 @@ function exitSelectionMode() {
 }
 
 // ==========================================
-// 5. グローバル露出関数（HTMLからの呼び出し用）
+// 5. グローバル露出関数
 // ==========================================
 window.closePanels = function() { 
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); 
@@ -834,6 +832,9 @@ window.saveListAndClose = function() {
 }
 
 window.copyListItems = function() {
+  const btn = document.getElementById('btn-copy-list');
+  if (btn.innerText === 'コピー完了') return; // 連打バグ防止
+  
   const d = new Date(), p = n => n.toString().padStart(2, '0');
   const title = document.getElementById('list-name').value.trim();
   const memo = document.getElementById('list-memo').value.trim();
@@ -844,8 +845,8 @@ window.copyListItems = function() {
   
   physicalCopy(res.trim());
   
-  const btn = document.getElementById('btn-copy-list');
-  const orig = btn.innerText; btn.innerText = 'コピー完了';
+  const orig = btn.innerText; 
+  btn.innerText = 'コピー完了';
   setTimeout(() => btn.innerText = orig, 2000);
 }
 
@@ -853,20 +854,6 @@ window.closeListEditor = function() {
   document.getElementById('panel-list-editor').classList.remove('active'); 
   exitSelectionMode(); 
 }
-
-window.executeCreateListImmediate = function() {
-  let expandedIds = [];
-  selectedIds.forEach(id => {
-    const target = data.find(d => d.id === id);
-    if (target) {
-      if (target.type === 'list' && target.items) { expandedIds.push(...target.items); }
-      else { expandedIds.push(id); }
-    }
-  });
-  // 選択されたデータを持ったまま、リスト編集パネルを即座に開く
-  openListEditor(null, [...new Set(expandedIds)]);
-};
-
 
 window.toggleEscapeMenu = function(menuId) {
   document.querySelectorAll('.escape-submenu').forEach(el => {
@@ -942,7 +929,6 @@ window.escapeAction = function(type, e) {
 
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
-  // ここでテーマの初期値を custom（自分で決める）へ修正
   config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'custom', radius: 'square' };
   
   document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
@@ -988,13 +974,14 @@ window.returnToLatest = function() {
 };
 
 window.changeThemeColor = function(color) {
-  // 色をいじった瞬間に「自分で決める」のラジオボタンをONにする
-  document.querySelector('input[name="color-mode"][value="custom"]').checked = true;
+  const customRadio = document.querySelector('input[name="color-mode"][value="custom"]');
+  if(customRadio) customRadio.checked = true;
   config.theme = 'custom';
   document.documentElement.style.setProperty('--color-A', color);
   localStorage.setItem('saikiyo_theme_color', color);
   applyConfig();
 };
+
 window.renameApp = function() {
   const input = document.getElementById('rename-input').value.trim();
   if (!input) return alert('変更する名前を入力してください。');
@@ -1284,7 +1271,7 @@ function attachEventListeners() {
 }
 
 // ==========================================
-// 7. メイン初期化シーケンス（通常起動のみ）
+// 7. メイン初期化シーケンス
 // ==========================================
 function initApp() {
   const setupDone = localStorage.getItem('saikiyo_setup_done');
