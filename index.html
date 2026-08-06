@@ -8,7 +8,7 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   2026.08.06
+   2026.08.07
    ========================================= */
 :root {
   --color-A: #111111; /* 完全な黒より目に優しい墨色 */
@@ -263,10 +263,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     
     <div class="radio-group">
       <h3>テーマカラー</h3>
-      <label><input type="radio" name="color-mode" value="mono"> 白黒</label>
+      <label><input type="radio" name="color-mode" value="mono" checked> 白黒</label>
       <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
       <div style="display: flex; gap: 10px; align-items: center;">
-        <label style="margin-bottom: 0;"><input type="radio" name="color-mode" value="custom" checked> 自分で決める</label>
+        <label style="margin-bottom: 0;">
+        <input type="radio" name="color-mode" value="custom"> 自分で決める</label>
         <input type="color" id="theme-color-picker" onchange="changeThemeColor(this.value)" style="cursor: pointer; height: 30px; width: 50px;">
       </div>
     </div>
@@ -426,7 +427,7 @@ let data = [];
 let mode = 'normal'; 
 let selectedIds = new Set();
 let currentListId = null; 
-let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'custom', radius: 'square' };
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'monochrome', radius: 'square' };
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
 let searchTimeout = null;
@@ -471,6 +472,11 @@ function physicalCopy(text) {
   }
   document.body.removeChild(ta);
 }
+function saveConfig() {
+  localStorage.setItem('saikiyo_config', JSON.stringify(config));
+}
+
+
 
 // ==========================================
 // 3. コアロジック・レンダリング関数
@@ -943,6 +949,7 @@ window.resetSettings = function() {
   document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
   localStorage.removeItem('saikiyo_theme_color');
+  localStorage.removeItem('saikiyo_config');
   document.documentElement.style.removeProperty('--color-A');
   const colorPicker = document.getElementById('theme-color-picker');
   if(colorPicker) colorPicker.value = '#001F3F';
@@ -1240,6 +1247,7 @@ function attachEventListeners() {
       if (name === 'font-mode') config.font = val;
       if (name === 'color-mode') config.theme = val;
       if (name === 'radius-mode') config.radius = val;
+      saveConfig();
       applyConfig();
     });
   });
@@ -1303,6 +1311,22 @@ function initApp() {
   data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
   appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
   applyThemeAndTitle();
+
+const savedConfig = localStorage.getItem('saikiyo_config');
+  if (savedConfig) {
+    config = { ...config, ...JSON.parse(savedConfig) };
+    const safeCheck = (name, val) => {
+      const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+      if (el) el.checked = true;
+    };
+    safeCheck('view-mode', config.view);
+    safeCheck('filter-mode', config.filter);
+    safeCheck('font-mode', config.font);
+    safeCheck('color-mode', config.theme);
+    safeCheck('radius-mode', config.radius);
+  }
+
+
 
   applyConfig();
 
