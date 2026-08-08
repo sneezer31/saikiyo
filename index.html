@@ -192,6 +192,17 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   cursor: pointer;
 }
 </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+
+
+
+
+
 </head>
 <body>
 <div id="app">
@@ -1188,6 +1199,7 @@ function attachEventListeners() {
         btnSearch.style.opacity = '1';
       }
       saveData();
+      renderTimeline();
       tlContainer.scrollTop = tlContainer.scrollHeight;
     } else if (hasSelection) {
       let expandedIds = [];
