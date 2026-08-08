@@ -8,8 +8,27 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   2026.08.09
+   2026.08.08
    ========================================= */
+:root {
+  --color-A: #111111; /* 完全な黒より目に優しい墨色 */
+  --color-B: #FFFFFF;
+  --color-C: #E0E0E0;
+  --font-family: sans-serif;
+  --border-radius: 0px;
+}
+
+[data-theme="mono"] {
+  --color-A: #000000;
+  --color-B: #FFFFFF;
+  --color-C: #E0E0E0;
+}
+
+[data-theme="ginnezu"] {
+  --color-A: #595857; /* 銀鼠（文字として読める濃灰） */
+  --color-B: #FFFCF5; /* 目の錯覚レベルの極薄いクリーム色 */
+  --color-C: #F0EBE1; /* 地の色（2色目よりわずかに濃い） */
+}
 
 [data-radius="round"] {
   --border-radius: 8px;
@@ -253,38 +272,16 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
       </div>
     </div>
     
-    <div class="color-control-panel">
-  <h3>テーマカラー</h3>
-  
-  <!-- テーマスイッチ（固定値） -->
-  <div class="theme-switches" style="margin-bottom: 15px; display: flex; gap: 10px;">
-    <button id="btn-monochrome" type="button" style="padding: 5px 15px; cursor: pointer;">白黒</button>
-    <button id="btn-silver" type="button" style="padding: 5px 15px; cursor: pointer;">銀鼠</button>
-  </div>
-
-  <!-- 2つの独立パレット -->
-  <div class="palettes-desk" style="display: flex; gap: 20px;">
-    
-    <!-- パレットA：1つ穴（自動生成） -->
-    <div class="palette-tool">
-      <span style="font-size: 0.8em; color: #666;">1色で自動生成</span>
-      <div style="margin-top: 5px;">
-        <input type="color" id="hole-auto" title="基準色">
+    <div class="radio-group">
+      <h3>テーマカラー</h3>
+      <label><input type="radio" name="color-mode" value="mono" checked> 白黒</label>
+      <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <label style="margin-bottom: 0;">
+        <input type="radio" name="color-mode" value="custom"> 自分で決める</label>
+        <input type="color" id="theme-color-picker" onchange="changeThemeColor(this.value)" style="cursor: pointer; height: 30px; width: 50px;">
       </div>
     </div>
-
-    <!-- パレットB：3つ穴（完全手動） -->
-    <div class="palette-tool">
-      <span style="font-size: 0.8em; color: #666;">3色を自作</span>
-      <div style="margin-top: 5px; display: flex; gap: 5px;">
-        <input type="color" id="hole-manual-main" title="主調色">
-        <input type="color" id="hole-manual-sub" title="副調色">
-        <input type="color" id="hole-manual-bg" title="地の色">
-      </div>
-    </div>
-
-  </div>
-</div>
 
     <div class="radio-group">
       <h3>基地名変更（リネーム）</h3>
