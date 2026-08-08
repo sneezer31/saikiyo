@@ -287,12 +287,17 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     </div>
     
     <!-- 完全に換装された独立型パレットUI -->
+<!-- 完全に換装された独立型パレットUI -->
     <div class="color-control-panel">
       <h3>テーマカラー</h3>
-      <div class="theme-switches" style="margin-bottom: 15px; display: flex; gap: 10px;">
-        <button id="btn-monochrome" type="button" style="padding: 5px 15px; cursor: pointer;">白黒</button>
-        <button id="btn-silver" type="button" style="padding: 5px 15px; cursor: pointer;">銀鼠</button>
+      
+      <!-- ボタン群も縦並び（column）に設定し、<br>を排除 -->
+      <div class="theme-switches" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <button id="btn-monochrome" type="button" style="padding: 10px 15px; cursor: pointer; width: 100%; text-align: center;">白黒</button>
+        <button id="btn-silver" type="button" style="padding: 10px 15px; cursor: pointer; width: 100%; text-align: center;">銀鼠</button>
       </div>
+
+      <!-- パレット群も縦並び（column）に設定し、<br>を排除 -->
       <div class="palettes-desk" style="display: flex; flex-direction: column; gap: 20px;">
         
         <div class="palette-tool">
@@ -301,7 +306,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
             <input type="color" id="hole-auto" title="基準色">
           </div>
         </div>
-       <br>
+
         <div class="palette-tool">
           <span style="font-size: 0.85em; opacity: 0.8;">3色を自作</span>
           <div style="margin-top: 5px; display: flex; gap: 5px;">
@@ -313,7 +318,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         
       </div>
     </div>
-
     <div class="radio-group">
       <h3>基地名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
