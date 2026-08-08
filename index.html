@@ -8,7 +8,7 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   2026.08.07
+   2026.08.08
    ========================================= */
 :root {
   --color-A: #111111; /* 完全な黒より目に優しい墨色 */
@@ -443,8 +443,8 @@ let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNo
 // ==========================================
 function saveData() { 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  localStorage.setItem('saikiyo_last_save_time', Date.now().toString()); 
 }
+
 
 function escapeHTML(str) { 
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); 
@@ -873,6 +873,7 @@ window.executeEscape = function(type) {
     const txt = encodeURIComponent(recent.map(d => (d.type === 'list' ? '・' : '') + d.content).join('\n\n'));
     window.location.href = `mailto:?subject=saikiyo_shashutsu&body=${txt}`;
   } 
+  localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
   else if (type === 'bunsan' || type === 'tesshu') {
     const targetVal = document.querySelector(`input[name="${type}-target"]:checked`).value;
     const targetData = data.filter(d => {
@@ -899,6 +900,8 @@ window.executeEscape = function(type) {
     a.download = `saikiyo_${targetVal}_${ts}.json`; // ←人間が読める名前に変更
     a.click();
     URL.revokeObjectURL(url);
+    
+    localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
 
     if (type === 'tesshu') {
       const msg = targetVal === 'all'
@@ -940,12 +943,12 @@ window.escapeAction = function(type, e) {
 
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
-  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'custom', radius: 'square' };
+  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'mono', radius: 'square' };
   
   document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
   document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
   document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
-  document.querySelector('input[name="color-mode"][value="custom"]').checked = true;
+  document.querySelector('input[name="color-mode"][value="mono"]').checked = true;
   document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
   localStorage.removeItem('saikiyo_theme_color');
@@ -1179,8 +1182,13 @@ function attachEventListeners() {
       const tags = inputTagsNode.value.trim().split(/\s+/).filter(Boolean);
       data.push({ id: Date.now(), type: 'tanka', content: content, status: '作品', publish_status: '未発表', tags: tags });
       inputContentNode.value = ''; inputTagsNode.value = '';
-      saveData(); 
-      renderTimeline(); 
+      if (isSearchLinked) {
+        isSearchLinked = false;
+        btnSearch.innerText = '検索';
+        btnSearch.style.opacity = '1';
+      }
+      saveData();
+      renderTimeline();
       tlContainer.scrollTop = tlContainer.scrollHeight;
     } else if (hasSelection) {
       let expandedIds = [];
