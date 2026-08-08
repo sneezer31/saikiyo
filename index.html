@@ -8,32 +8,53 @@
 <title>さいきよ</title>
 <style>
 /* =========================================
-   2026.08.08
+   2026.08.09 浄化・パレット完全換装版
    ========================================= */
 :root {
-  --color-A: #111111; /* 完全な黒より目に優しい墨色 */
+  --color-A: #111111;
   --color-B: #FFFFFF;
   --color-C: #E0E0E0;
   --font-family: sans-serif;
   --border-radius: 0px;
 }
 
-[data-theme="mono"] {
-  --color-A: #000000;
-  --color-B: #FFFFFF;
-  --color-C: #E0E0E0;
-}
-
-[data-theme="ginnezu"] {
-  --color-A: #595857; /* 銀鼠（文字として読める濃灰） */
-  --color-B: #FFFCF5; /* 目の錯覚レベルの極薄いクリーム色 */
-  --color-C: #F0EBE1; /* 地の色（2色目よりわずかに濃い） */
-}
-
 [data-radius="round"] {
   --border-radius: 8px;
 }
 
+/* --- 新パレット用デザイン --- */
+.color-control-panel {
+  margin-bottom: 20px;
+  color: var(--color-A);
+}
+.color-control-panel input[type="color"] {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #ccc;
+  border-radius: 8px; 
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+}
+.color-control-panel input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.color-control-panel input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 8px;
+}
+.theme-switches button {
+  border-radius: 4px;
+  border: 1px solid var(--color-A);
+  background: var(--color-B);
+  color: var(--color-A);
+  transition: opacity 0.2s;
+}
+.theme-switches button:hover {
+  opacity: 0.7;
+}
+
+/* --- ベースデザイン --- */
 html, body {
   height: 100dvh;
   margin: 0;
@@ -147,7 +168,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   border-radius: var(--border-radius);
 }
 
-/* CSSの権力闘争を解決（.active時にdisplay:flexを強制） */
 #panel-list-editor { display: none; flex-direction: column; }
 #panel-list-editor.active { display: flex; }
 #panel-list-editor input, #panel-list-editor textarea {
@@ -164,7 +184,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
 .desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; border-radius: var(--border-radius); }
 
-/* 脱出ターミナル用サブメニュー */
 .escape-submenu {
   display: none;
   background: var(--color-C);
@@ -197,11 +216,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
-
-
-
-
-
 
 </head>
 <body>
@@ -272,14 +286,31 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
       </div>
     </div>
     
-    <div class="radio-group">
+    <!-- 完全に換装された独立型パレットUI -->
+    <div class="color-control-panel">
       <h3>テーマカラー</h3>
-      <label><input type="radio" name="color-mode" value="mono" checked> 白黒</label>
-      <label><input type="radio" name="color-mode" value="ginnezu"> 銀鼠</label>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <label style="margin-bottom: 0;">
-        <input type="radio" name="color-mode" value="custom"> 自分で決める</label>
-        <input type="color" id="theme-color-picker" onchange="changeThemeColor(this.value)" style="cursor: pointer; height: 30px; width: 50px;">
+      <div class="theme-switches" style="margin-bottom: 15px; display: flex; gap: 10px;">
+        <button id="btn-monochrome" type="button" style="padding: 5px 15px; cursor: pointer;">白黒</button>
+        <button id="btn-silver" type="button" style="padding: 5px 15px; cursor: pointer;">銀鼠</button>
+      </div>
+      <div class="palettes-desk" style="display: flex; flex-wrap: wrap; gap: 20px;">
+        
+        <div class="palette-tool">
+          <span style="font-size: 0.85em; opacity: 0.8;">1色で自動生成</span>
+          <div style="margin-top: 5px;">
+            <input type="color" id="hole-auto" title="基準色">
+          </div>
+        </div>
+
+        <div class="palette-tool">
+          <span style="font-size: 0.85em; opacity: 0.8;">3色を自作</span>
+          <div style="margin-top: 5px; display: flex; gap: 5px;">
+            <input type="color" id="hole-manual-main" title="主調色(文字)">
+            <input type="color" id="hole-manual-sub" title="副調色(枠・アーカイブ)">
+            <input type="color" id="hole-manual-bg" title="地の色(背景)">
+          </div>
+        </div>
+        
       </div>
     </div>
 
@@ -438,7 +469,7 @@ let data = [];
 let mode = 'normal'; 
 let selectedIds = new Set();
 let currentListId = null; 
-let config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'monochrome', radius: 'square' };
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', radius: 'square' }; // themeを完全撤廃
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
 let searchTimeout = null;
@@ -455,7 +486,6 @@ let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNo
 function saveData() { 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
-
 
 function escapeHTML(str) { 
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); 
@@ -483,11 +513,10 @@ function physicalCopy(text) {
   }
   document.body.removeChild(ta);
 }
+
 function saveConfig() {
   localStorage.setItem('saikiyo_config', JSON.stringify(config));
 }
-
-
 
 // ==========================================
 // 3. コアロジック・レンダリング関数
@@ -495,24 +524,42 @@ function saveConfig() {
 function applyThemeAndTitle() {
   document.getElementById('header-title').innerText = appTitle;
   document.title = appTitle;
-  const customColor = localStorage.getItem('saikiyo_theme_color');
-  if (customColor) {
-    document.documentElement.style.setProperty('--color-A', customColor);
-  }
 }
 
+// 新しい色制御の中枢関数（古いchangeThemeColorを完全に置き換え）
+window.applyColors = function(mainA, subC, bgB) {
+  document.documentElement.style.setProperty('--color-A', mainA);
+  document.documentElement.style.setProperty('--color-C', subC);
+  document.documentElement.style.setProperty('--color-B', bgB);
+  
+  localStorage.setItem('saikiyo_color_A', mainA);
+  localStorage.setItem('saikiyo_color_C', subC);
+  localStorage.setItem('saikiyo_color_B', bgB);
+  
+  const manualMain = document.getElementById('hole-manual-main');
+  const manualSub = document.getElementById('hole-manual-sub');
+  const manualBg = document.getElementById('hole-manual-bg');
+  if (manualMain) manualMain.value = mainA.substring(0, 7);
+  if (manualSub) manualSub.value = subC.substring(0, 7);
+  if (manualBg) manualBg.value = bgB.substring(0, 7);
+};
+
 function applyConfig() {
-  if (config.theme === 'mono') { 
-    document.documentElement.setAttribute('data-theme', 'mono'); 
-    document.documentElement.style.removeProperty('--color-A');
-  } else if (config.theme === 'ginnezu') {
-    document.documentElement.setAttribute('data-theme', 'ginnezu'); 
-    document.documentElement.style.removeProperty('--color-A');
-  } else { 
-    document.documentElement.removeAttribute('data-theme'); 
-    const customColor = localStorage.getItem('saikiyo_theme_color');
-    if (customColor) document.documentElement.style.setProperty('--color-A', customColor);
+  // 古い属性を無効化
+  document.documentElement.removeAttribute('data-theme');
+  
+  // 新しいローカルストレージからの色復元
+  const savedA = localStorage.getItem('saikiyo_color_A');
+  const savedC = localStorage.getItem('saikiyo_color_C');
+  const savedB = localStorage.getItem('saikiyo_color_B');
+  
+  if (savedA && savedC && savedB) {
+    applyColors(savedA, savedC, savedB);
+  } else {
+    // 記憶がない場合は白黒を初期値とする
+    applyColors('#111111', '#E0E0E0', '#FFFFFF');
   }
+
   document.documentElement.style.setProperty('--font-family', config.font);
   document.documentElement.setAttribute('data-radius', config.radius);
   tlContainer.className = config.view === 'wrap' ? 'view-mode-wrap' : 'view-mode-nowrap';
@@ -953,19 +1000,20 @@ window.escapeAction = function(type, e) {
 
 window.resetSettings = function() {
   if (!window.confirm('設定をすべて初期値に戻しますか？')) return;
-  config = { view: 'wrap', filter: 'work', font: 'sans-serif', theme: 'mono', radius: 'square' };
+  
+  config = { view: 'wrap', filter: 'work', font: 'sans-serif', radius: 'square' };
   
   document.querySelector('input[name="view-mode"][value="wrap"]').checked = true;
   document.querySelector('input[name="filter-mode"][value="work"]').checked = true;
   document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
-  document.querySelector('input[name="color-mode"][value="mono"]').checked = true;
   document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
+  // 古いカラーキーも含めて全消去
   localStorage.removeItem('saikiyo_theme_color');
+  localStorage.removeItem('saikiyo_color_A');
+  localStorage.removeItem('saikiyo_color_B');
+  localStorage.removeItem('saikiyo_color_C');
   localStorage.removeItem('saikiyo_config');
-  document.documentElement.style.removeProperty('--color-A');
-  const colorPicker = document.getElementById('theme-color-picker');
-  if(colorPicker) colorPicker.value = '#001F3F';
 
   applyConfig();
 }
@@ -996,15 +1044,6 @@ window.jumpToDate = function() {
 window.returnToLatest = function() {
   tlContainer.scrollTop = tlContainer.scrollHeight;
   window.closePanels();
-};
-
-window.changeThemeColor = function(color) {
-  const customRadio = document.querySelector('input[name="color-mode"][value="custom"]');
-  if(customRadio) customRadio.checked = true;
-  config.theme = 'custom';
-  document.documentElement.style.setProperty('--color-A', color);
-  localStorage.setItem('saikiyo_theme_color', color);
-  applyConfig();
 };
 
 window.renameApp = function() {
@@ -1256,6 +1295,7 @@ function attachEventListeners() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
   });
 
+  // ラジオボタンの汎用リスナー（パレットのカラーモード判定は削除済み）
   document.querySelectorAll('input[type="radio"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       const name = e.target.name; 
@@ -1263,7 +1303,6 @@ function attachEventListeners() {
       if (name === 'view-mode') config.view = val;
       if (name === 'filter-mode') config.filter = val;
       if (name === 'font-mode') config.font = val;
-      if (name === 'color-mode') config.theme = val;
       if (name === 'radius-mode') config.radius = val;
       saveConfig();
       applyConfig();
@@ -1299,6 +1338,50 @@ function attachEventListeners() {
       }, doubleTapThreshold);
     }
   });
+
+  // ===== パレット関連の新神経機構 =====
+  document.getElementById('btn-monochrome').addEventListener('click', () => {
+    applyColors('#111111', '#E0E0E0', '#FFFFFF');
+  });
+  
+  document.getElementById('btn-silver').addEventListener('click', () => {
+    applyColors('#595857', '#F0EBE1', '#FFFCF5');
+  });
+
+  const holeAuto = document.getElementById('hole-auto');
+  if (holeAuto) {
+    holeAuto.addEventListener('input', (e) => {
+      const hex = e.target.value;
+      const r = parseInt(hex.slice(1,3), 16) || 0;
+      const g = parseInt(hex.slice(3,5), 16) || 0;
+      const b = parseInt(hex.slice(5,7), 16) || 0;
+      
+      const mix = (c, ratio) => Math.round(c * (1 - ratio) + 255 * ratio);
+      const toHex = (c) => c.toString(16).padStart(2, '0');
+      
+      // 指定色をベースに白を混ぜて自動生成
+      const subHex = `#${toHex(mix(r, 0.85))}${toHex(mix(g, 0.85))}${toHex(mix(b, 0.85))}`;
+      const bgHex = `#${toHex(mix(r, 0.95))}${toHex(mix(g, 0.95))}${toHex(mix(b, 0.95))}`;
+      
+      applyColors(hex, subHex, bgHex);
+    });
+  }
+
+  const manualMain = document.getElementById('hole-manual-main');
+  const manualSub = document.getElementById('hole-manual-sub');
+  const manualBg = document.getElementById('hole-manual-bg');
+  
+  const updateManualColors = () => {
+    if(manualMain && manualSub && manualBg) {
+      applyColors(manualMain.value, manualSub.value, manualBg.value);
+    }
+  };
+  
+  if (manualMain && manualSub && manualBg) {
+    manualMain.addEventListener('input', updateManualColors);
+    manualSub.addEventListener('input', updateManualColors);
+    manualBg.addEventListener('input', updateManualColors);
+  }
 }
 
 // ==========================================
@@ -1330,7 +1413,7 @@ function initApp() {
   appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
   applyThemeAndTitle();
 
-const savedConfig = localStorage.getItem('saikiyo_config');
+  const savedConfig = localStorage.getItem('saikiyo_config');
   if (savedConfig) {
     config = { ...config, ...JSON.parse(savedConfig) };
     const safeCheck = (name, val) => {
@@ -1340,11 +1423,8 @@ const savedConfig = localStorage.getItem('saikiyo_config');
     safeCheck('view-mode', config.view);
     safeCheck('filter-mode', config.filter);
     safeCheck('font-mode', config.font);
-    safeCheck('color-mode', config.theme);
     safeCheck('radius-mode', config.radius);
   }
-
-
 
   applyConfig();
 
