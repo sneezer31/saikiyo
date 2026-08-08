@@ -879,13 +879,12 @@ window.toggleEscapeMenu = function(menuId) {
 }
 
 window.executeEscape = function(type) {
-  if (type === 'shashutsu') {
+  if (type === 'shashutsu') { 
     const recent = [...data].sort((a,b) => a.id - b.id).slice(-20);
     const txt = encodeURIComponent(recent.map(d => (d.type === 'list' ? '・' : '') + d.content).join('\n\n'));
     window.location.href = `mailto:?subject=saikiyo_shashutsu&body=${txt}`;
-  } 
-  localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-  }else if (type === 'bunsan' || type === 'tesshu') {
+    localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
+  } else if (type === 'bunsan' || type === 'tesshu') {
     const targetVal = document.querySelector(`input[name="${type}-target"]:checked`).value;
     const targetData = data.filter(d => {
       if (targetVal === 'work' && d.status !== '作品') return false;
