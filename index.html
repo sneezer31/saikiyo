@@ -324,7 +324,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     </div>       
       <h3>基地名変更（リネーム）</h3>
       <div style="display: flex; gap: 10px;">
-        <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の艦名を入力">
+        <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の基地名を入力">
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
       </div>
     </div>
@@ -345,7 +345,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
   
-  <textarea id="amu-memo-input" rows="2" placeholder="メモを編集（空欄で消去）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+  <textarea id="amu-memo-input" rows="2" placeholder="メモを一括で上書きする（空欄で消去）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
   
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
@@ -353,8 +353,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
   
-  <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">タグをつける</button>
-  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードに送る</button>
+  <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">一括でタグをつける</button>
+  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   
   <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
@@ -453,7 +453,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <input type="text" id="list-name" placeholder="無題" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
   <div id="list-items"></div>
-  <textarea id="list-memo" rows="2" placeholder="締め切りなど" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
+  <textarea id="list-memo" rows="2" placeholder="メモ" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
   <textarea id="list-tags" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
   <button class="panel-btn inverted" id="btn-copy-list" onclick="copyListItems()">クリップボードにコピー</button>
  <div class="desk-ctrls">
@@ -478,12 +478,13 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     
     <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">1. 詠む・探す</h3>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
+    <li><strong>入力窓と検索窓は兼用です。</strong></li>
       <li><strong>入力・タグ:</strong> 下部のテキストエリアから短歌とタグ（空白区切り）を即座に記録します。</li>
-      <li><strong>検索:</strong> 「検索」ボタンで、本文・タグ・メモ・日付から瞬時にデータを抽出します。</li>
+      <li><strong>検索:</strong> 「検索」ボタンで、本文・タグ・メモ・日付から瞬時にデータを呼び出します。</li>
     </ul>
 
     <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">2. 編む（編集室）</h3>
-    <p>タイムラインの短歌をタップ、または「編む」で複数選択して起動します。</p>
+    <p>タイムラインの短歌をダブルタップ、または「編む」で複数選択して起動します。</p>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
       <li><strong>ステータス管理:</strong> 「作品 / アーカイブ」「既発表 / 未発表」を振り分けます。</li>
       <li><strong>リスト化:</strong> 選択した短歌から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。</li>
@@ -492,9 +493,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">3. 脱出と救出（データ管理）</h3>
     <p>データは端末内にのみ存在するため、定期的な退避が必須です。</p>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
-      <li><strong>脱出:</strong> 全データ、または期間指定でJSONファイルとして出力し、アプリ外へ退避します。</li>
+      <li><strong>分散・撤収・抽出:</strong> 全データ、または期間指定でJSONファイルとして出力し、アプリ外へ退避します。</li>
       <li><strong>救出・密輸:</strong> 退避したJSONファイルの読み込み、またはテキストデータの一括流し込みを行います。</li>
-      <li><strong>重複排除:</strong> 内容とタグが完全一致する不要な重複データを切除します。</li>
+      <li><strong>重複:</strong> 内容とタグが完全一致する不要な重複データを切除します。</li>
     </ul>
   </div>
 </div>
@@ -1001,8 +1002,8 @@ window.executeEscape = function(type) {
 
     if (type === 'tesshu') {
       const msg = targetVal === 'all'
-        ? 'すべてのデータをファイルに退避しました。\n母港から全データを完全に消去し、撤収を完了しますか？'
-        : `対象データ（${targetData.length}件）をファイルに退避しました。\n母港からこのデータだけを消去しますか？`;
+        ? 'すべてのデータをファイルに退避しました。\nさらに、基地から全データを完全に消去し、撤収を完了しますか？'
+        : `対象データ（${targetData.length}件）をファイルに退避しました。\nさらに、基地からこのデータだけを完全に消去しますか？`;
 
       if (window.confirm(msg)) {
         const targetIds = new Set(targetData.map(d => d.id));
@@ -1297,7 +1298,7 @@ function attachEventListeners() {
         if (singleTarget && singleTarget.memo) singleMemo = singleTarget.memo;
         memoInputNode.placeholder = "メモを編集（空欄で消去）";
       } else {
-        memoInputNode.placeholder = "複数選択時：入力すると全件のメモを一括上書きします";
+        memoInputNode.placeholder = "複数選択時：入力すると全件のメモを一括上書きします（これまでの消えます）";
       }
       
       const previewArea = document.getElementById('amu-preview');
@@ -1571,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 <div id="alert-168h" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
   <div style="background:var(--color-B); color:var(--color-A); padding:30px; border-radius:var(--border-radius); text-align:center; font-size:1.5rem; font-weight:bold; border: 2px solid var(--color-A);">
-    <p>どうしたんでい、セーブしな</p>
+    <p>どうしたんだい？セーブしなよ</p>
     <button onclick="document.getElementById('alert-168h').style.display='none'" style="margin-top:20px; padding:10px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">OK</button>
   </div>
 </div>
