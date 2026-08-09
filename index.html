@@ -249,6 +249,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
   <button class="panel-btn" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
+  
+  <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="document.getElementById('panel-manual').classList.add('active')">取扱説明書を読む</button>
+  
+  <button class="panel-btn inverted" onclick="window.open('https://github.com/sneezer31/saikiyo/blob/piyopiyo/README.md', '_blank')" style="margin-bottom: 20px;">取扱説明書をもっと読む</button>
+  
 <div id="stats-display" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--color-A); text-align: center; font-weight: bold; background: var(--color-C); padding: 10px; border-radius: var(--border-radius);">
     総コンテンツ数: <span id="count-tanka">0</span> / リスト数: <span id="count-list">0</span>
   </div>
@@ -460,6 +465,38 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="close-btn" onclick="document.getElementById('panel-reader').classList.remove('active')">×</button>
   <h2 id="reader-title">鑑賞モード</h2>
   <div id="reader-content" style="font-size: 1.2rem; line-height: 2.0; white-space: pre-wrap; padding-bottom: 50px;"></div>
+</div>
+
+<div id="panel-manual" class="panel" style="z-index: 250;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+    <h2 style="margin: 0; border: none; padding: 0;">取扱説明書</h2>
+    <button onclick="document.getElementById('panel-manual').classList.remove('active')" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
+  </div>
+  
+  <div style="font-size: 1.05rem; line-height: 1.8; padding-bottom: 30px; color: var(--color-A);">
+    <p>「さいきよ」は、ブラウザの記憶領域のみを使用する、完全オフライン稼働の短歌記録アプリです。</p>
+    
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">1. 詠む・探す</h3>
+    <ul style="padding-left: 20px; margin-bottom: 15px;">
+      <li><strong>入力・タグ:</strong> 下部のテキストエリアから短歌とタグ（空白区切り）を即座に記録します。</li>
+      <li><strong>検索:</strong> 「検索」ボタンで、本文・タグ・メモ・日付から瞬時にデータを抽出します。</li>
+    </ul>
+
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">2. 編む（編集室）</h3>
+    <p>タイムラインの短歌をタップ、または「編む」で複数選択して起動します。</p>
+    <ul style="padding-left: 20px; margin-bottom: 15px;">
+      <li><strong>ステータス管理:</strong> 「作品 / アーカイブ」「既発表 / 未発表」を振り分けます。</li>
+      <li><strong>リスト化:</strong> 選択した短歌から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。</li>
+    </ul>
+
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">3. 脱出と救出（データ管理）</h3>
+    <p>データは端末内にのみ存在するため、定期的な退避が必須です。</p>
+    <ul style="padding-left: 20px; margin-bottom: 15px;">
+      <li><strong>脱出:</strong> 全データ、または期間指定でJSONファイルとして出力し、アプリ外へ退避します。</li>
+      <li><strong>救出・密輸:</strong> 退避したJSONファイルの読み込み、またはテキストデータの一括流し込みを行います。</li>
+      <li><strong>重複排除:</strong> 内容とタグが完全一致する不要な重複データを切除します。</li>
+    </ul>
+  </div>
 </div>
 
 <script>
