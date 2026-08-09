@@ -1244,7 +1244,7 @@ function attachEventListeners() {
     }
   });
   
-  btnSearch.addEventListener('click', () => {
+btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
       btnSearch.innerText = '解除'; 
@@ -1256,11 +1256,10 @@ function attachEventListeners() {
       btnSearch.style.opacity = '1'; 
       inputContentNode.value = ''; 
       inputTagsNode.value = '';   
-      executeUnifiedSearch();
-      tlContainer.scrollTop = tlContainer.scrollHeight;
+      // 【浄化完了】ここでタイムラインの強制リセットと強制スクロールを行わない。
+      // これにより、検索結果を画面にフリーズさせたまま、新しい推敲と入力が可能になります。
     }
   });
-
   btnSend.addEventListener('click', () => {
     const hasSelection = selectedIds.size > 0;
     const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
