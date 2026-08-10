@@ -30,7 +30,6 @@
     resize: vertical;
   }
   
-  /* ボタンの基本設定（目に優しい白背景＋黒文字） */
   button {
     padding: 14px; font-size: 1.1rem; font-weight: bold;
     background: var(--bg-color); color: var(--text-color);
@@ -40,7 +39,6 @@
   button:hover:not(:disabled) { opacity: 0.7; }
   button:disabled { opacity: 0.3; cursor: not-allowed; }
   
-  /* 主要アクションボタンの枠線を少し太くして強調（黒ベタは廃止） */
   #btn-preview, #generate-btn {
     border: 2px solid var(--text-color);
   }
@@ -59,7 +57,6 @@
     margin-bottom: 10px;
   }
 
-  /* 下部に押しやった設定パネル群 */
   .settings-panel {
     display: flex; flex-direction: column; gap: 15px;
     padding: 15px; border: 1px dashed var(--text-color);
@@ -69,14 +66,14 @@
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
   
-  select, input[type="file"] {
+  select, input[type="file"], input[type="number"] {
     padding: 8px; font-size: 1rem; font-family: inherit;
     background: var(--bg-color); color: var(--text-color);
     border: 1px solid var(--text-color); cursor: pointer;
     border-radius: 4px;
+    box-sizing: border-box;
   }
 
-  /* カラーパレットの巨大化と面取り（視認性の大幅向上） */
   input[type="color"] {
     width: 100%; height: 44px; padding: 0;
     border: 1px solid var(--text-color);
@@ -104,17 +101,14 @@
 重力が正しく底に落ちたなら
 今日の航海はこれにて終わり</textarea>
 
-  <!-- プレビュー操作群をテキストエリアの直下に配置 -->
   <div class="action-btns">
     <button type="button" id="btn-undo" disabled>← 戻る</button>
     <button type="button" id="btn-preview">プレビュー更新</button>
     <button type="button" id="btn-redo" disabled>進む →</button>
   </div>
 
-  <!-- キャンバス（結果）をすぐ見られる位置へ -->
   <canvas id="canvas" width="1080" height="1350"></canvas>
 
-  <!-- 細かな設定群はキャンバスの下へ隔離 -->
   <div class="settings-panel">
     <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: -5px;">デザイン設定</div>
     <div class="preset-btns">
@@ -130,6 +124,11 @@
           <option value="'Zen Kaku Gothic New', sans-serif">ゴシック体 (Zen Kaku)</option>
           <option value="'Zen Kurenaido', sans-serif">手書き風 (Zen Kurenaido)</option>
         </select>
+      </div>
+
+      <div class="control-group">
+        <label>行間 (文字サイズに対する倍率)</label>
+        <input type="number" id="spacing-input" value="1.8" step="0.1" min="1.0">
       </div>
 
       <div class="control-group">
@@ -158,13 +157,13 @@
     </div>
   </div>
 
-  <!-- 最終決定ボタン -->
   <button type="button" id="generate-btn">決定（画像を保存）</button>
 </div>
 
 <script>
   const textInput = document.getElementById('text-input');
   const fontSelect = document.getElementById('font-select');
+  const spacingInput = document.getElementById('spacing-input');
   const strokeSelect = document.getElementById('stroke-select');
   const colorText = document.getElementById('color-text');
   const colorBg = document.getElementById('color-bg');
@@ -186,6 +185,7 @@
     return {
       text: textInput.value,
       font: fontSelect.value,
+      spacing: spacingInput.value,
       stroke: strokeSelect.value,
       colorText: colorText.value,
       colorBg: colorBg.value,
@@ -211,6 +211,7 @@
     
     textInput.value = state.text;
     fontSelect.value = state.font;
+    spacingInput.value = state.spacing;
     strokeSelect.value = state.stroke;
     colorText.value = state.colorText;
     colorBg.value = state.colorBg;
@@ -281,7 +282,10 @@
     
     const fontSize = 34;
     const charStepY = fontSize * 1.15;
-    const lineStepX = fontSize * 1.8;
+    
+    // 入力された数値をパース（不正な値や空欄の場合は1.8を担保）
+    const spacingRatio = parseFloat(spacingInput.value) || 1.8;
+    const lineStepX = fontSize * spacingRatio;
 
     ctx.font = `500 ${fontSize}px ${fontSelect.value}`;
     ctx.fillStyle = colorText.value;
