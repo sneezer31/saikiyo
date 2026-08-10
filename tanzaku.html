@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>縦書き画像生成</title>
+<title>さいきよ‐たてがき</title>
 <style>
   :root {
     --bg-color: #FFFFFF;
@@ -64,23 +64,25 @@
   }
   .preset-btns { display: flex; gap: 10px; }
   
-  /* デフォルトは2列グリッド（PC・タブレット用） */
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
   
-  /* スマホ環境（画面幅600px以下）の完全縦並び最適化 */
   @media (max-width: 600px) {
     .controls { grid-template-columns: 1fr; }
     .action-btns button { padding: 12px 5px; font-size: 0.9rem; }
     #btn-preview { font-size: 1.05rem; white-space: nowrap; }
   }
   
-  select, input[type="file"], input[type="number"] {
+  select, input[type="file"], input[type="number"], input[type="range"] {
     padding: 8px; font-size: 1rem; font-family: inherit;
     background: var(--bg-color); color: var(--text-color);
     border: 1px solid var(--text-color); cursor: pointer;
     border-radius: 4px;
     box-sizing: border-box;
+  }
+
+  input[type="range"] {
+    padding: 0; border: none; height: 38px;
   }
 
   input[type="color"] {
@@ -103,7 +105,7 @@
 <body>
 
 <div class="container">
-  <h2>縦書き画像生成</h2>
+  <h2>さいきよ‐たてがき</h2>
 
   <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）"></textarea>
 
@@ -161,9 +163,14 @@
         <input type="color" id="color-bg" value="#FFFFFF">
       </div>
 
-      <div class="control-group" style="grid-column: span 1;">
-        <label>背景画像持ち込み (オプション)</label>
+      <div class="control-group">
+        <label>背景画像持ち込み</label>
         <input type="file" id="bg-image-input" accept="image/*">
+      </div>
+      
+      <div class="control-group">
+        <label>画像の濃さ (透過率)</label>
+        <input type="range" id="bg-opacity-input" min="0.1" max="1" step="0.05" value="1">
       </div>
     </div>
   </div>
@@ -180,6 +187,7 @@
   const colorText = document.getElementById('color-text');
   const colorBg = document.getElementById('color-bg');
   const bgImageInput = document.getElementById('bg-image-input');
+  const bgOpacityInput = document.getElementById('bg-opacity-input');
   
   const btnPreview = document.getElementById('btn-preview');
   const btnUndo = document.getElementById('btn-undo');
@@ -202,7 +210,8 @@
       stroke: strokeSelect.value,
       colorText: colorText.value,
       colorBg: colorBg.value,
-      bgImage: uploadedBgImage
+      bgImage: uploadedBgImage,
+      bgOpacity: bgOpacityInput.value
     };
   }
 
@@ -230,6 +239,7 @@
     colorText.value = state.colorText;
     colorBg.value = state.colorBg;
     uploadedBgImage = state.bgImage;
+    if (state.bgOpacity !== undefined) bgOpacityInput.value = state.bgOpacity;
     
     historyIndex = index;
     updateHistoryButtons();
@@ -264,16 +274,22 @@
     }
     uploadedBgImage = null;
     bgImageInput.value = '';
+    bgOpacityInput.value = '1';
   }
 
   function drawCanvas() {
     const width = canvas.width;
     const height = canvas.height;
 
+    // キャンバスを一旦背景色で塗りつぶす（透過時に色が透けるようにする）
+    ctx.fillStyle = colorBg.value;
+    ctx.fillRect(0, 0, width, height);
+
     if (uploadedBgImage) {
       ctx.save();
-      ctx.fillStyle = colorBg.value;
-      ctx.fillRect(0, 0, width, height);
+      
+      // スライダーの値を透過率として適用
+      ctx.globalAlpha = parseFloat(bgOpacityInput.value);
       
       const hRatio = width / uploadedBgImage.width;
       const vRatio = height / uploadedBgImage.height;
@@ -282,19 +298,12 @@
       const centerShiftY = (height - uploadedBgImage.height * ratio) / 2;
       
       ctx.drawImage(uploadedBgImage, 0, 0, uploadedBgImage.width, uploadedBgImage.height, centerShiftX, centerShiftY, uploadedBgImage.width * ratio, uploadedBgImage.height * ratio);
-      
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.fillRect(0, 0, width, height);
       ctx.restore();
-    } else {
-      ctx.fillStyle = colorBg.value;
-      ctx.fillRect(0, 0, width, height);
     }
 
     const rawText = textInput.value;
     const lines = rawText.split('\n');
     
-    // 入力された文字サイズを取得（不正な値なら56）
     const fontSize = parseFloat(fontsizeInput.value) || 56;
     const charStepY = fontSize * 1.15;
     
