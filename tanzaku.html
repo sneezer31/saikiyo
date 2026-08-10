@@ -29,47 +29,65 @@
     background: var(--bg-color); color: var(--text-color);
     resize: vertical;
   }
-  .controls {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  }
-  .control-group {
-    display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem;
-  }
-  select, input[type="color"], input[type="file"] {
-    padding: 8px; font-size: 1rem; font-family: inherit;
-    background: var(--bg-color); color: var(--text-color);
-    border: 1px solid var(--text-color); cursor: pointer;
-  }
+  
+  /* ボタンの基本設定（目に優しい白背景＋黒文字） */
   button {
     padding: 14px; font-size: 1.1rem; font-weight: bold;
     background: var(--bg-color); color: var(--text-color);
     border: 1px solid var(--text-color); cursor: pointer; width: 100%;
+    border-radius: 4px;
   }
-  button:hover:not(:disabled) { opacity: 0.85; }
+  button:hover:not(:disabled) { opacity: 0.7; }
   button:disabled { opacity: 0.3; cursor: not-allowed; }
-  .preset-btns { display: flex; gap: 10px; }
   
+  /* 主要アクションボタンの枠線を少し太くして強調（黒ベタは廃止） */
+  #btn-preview, #generate-btn {
+    border: 2px solid var(--text-color);
+  }
+
   .action-btns {
     display: flex; gap: 10px; margin-top: 5px;
   }
-  #btn-preview {
-    background: var(--text-color); color: var(--bg-color);
-    flex: 2;
-  }
-  #btn-undo, #btn-redo {
-    flex: 1; font-size: 1rem;
-  }
-  #generate-btn {
-    background: var(--text-color); color: var(--bg-color);
-    margin-top: 10px; padding: 18px; font-size: 1.2rem;
-  }
-
+  #btn-preview { flex: 2; }
+  #btn-undo, #btn-redo { flex: 1; font-size: 1rem; }
+  
   canvas {
     max-width: 100%; height: auto;
     border: 1px solid var(--text-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     background: #FFF;
-    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* 下部に押しやった設定パネル群 */
+  .settings-panel {
+    display: flex; flex-direction: column; gap: 15px;
+    padding: 15px; border: 1px dashed var(--text-color);
+    border-radius: 8px; margin-bottom: 10px;
+  }
+  .preset-btns { display: flex; gap: 10px; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
+  
+  select, input[type="file"] {
+    padding: 8px; font-size: 1rem; font-family: inherit;
+    background: var(--bg-color); color: var(--text-color);
+    border: 1px solid var(--text-color); cursor: pointer;
+    border-radius: 4px;
+  }
+
+  /* カラーパレットの巨大化と面取り（視認性の大幅向上） */
+  input[type="color"] {
+    width: 100%; height: 44px; padding: 0;
+    border: 1px solid var(--text-color);
+    border-radius: 4px; cursor: pointer;
+    background-color: var(--bg-color);
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+  #generate-btn {
+    margin-top: 10px; padding: 18px; font-size: 1.2rem;
   }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,64 +99,66 @@
 <div class="container">
   <h2>縦書き画像生成</h2>
 
-  <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）">
-  
-  
-  
-  
-  </textarea>
+  <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）">朝酒の缶をプルトップより開き
+横たわり見るアプリの画面
+重力が正しく底に落ちたなら
+今日の航海はこれにて終わり</textarea>
 
-  <div class="preset-btns">
-    <button type="button" onclick="setPreset('monochrome')">白黒</button>
-    <button type="button" onclick="setPreset('silver')">銀鼠</button>
-  </div>
-
-  <div class="controls">
-    <div class="control-group">
-      <label>書体</label>
-      <select id="font-select">
-        <option value="'Shippori Mincho', serif">明朝体 (Shippori Mincho)</option>
-        <option value="'Zen Kaku Gothic New', sans-serif">ゴシック体 (Zen Kaku)</option>
-        <option value="'Zen Kurenaido', sans-serif">手書き風 (Zen Kurenaido)</option>
-      </select>
-    </div>
-
-    <div class="control-group">
-      <label>文字の縁取り</label>
-      <select id="stroke-select">
-        <option value="none">なし</option>
-        <option value="white">白縁</option>
-        <option value="gray">灰色縁</option>
-      </select>
-    </div>
-
-    <div class="control-group">
-      <label>文字色 (主調色)</label>
-      <input type="color" id="color-text" value="#111111">
-    </div>
-
-    <div class="control-group">
-      <label>背景色</label>
-      <input type="color" id="color-bg" value="#FFFFFF">
-    </div>
-
-    <div class="control-group" style="grid-column: span 2;">
-      <label>背景画像持ち込み (オプション)</label>
-      <input type="file" id="bg-image-input" accept="image/*">
-    </div>
-  </div>
-
-
-
-  <canvas id="canvas" width="1080" height="1350"></canvas>
-
+  <!-- プレビュー操作群をテキストエリアの直下に配置 -->
   <div class="action-btns">
     <button type="button" id="btn-undo" disabled>← 戻る</button>
     <button type="button" id="btn-preview">プレビュー更新</button>
     <button type="button" id="btn-redo" disabled>進む →</button>
   </div>
 
+  <!-- キャンバス（結果）をすぐ見られる位置へ -->
+  <canvas id="canvas" width="1080" height="1350"></canvas>
 
+  <!-- 細かな設定群はキャンバスの下へ隔離 -->
+  <div class="settings-panel">
+    <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: -5px;">デザイン設定</div>
+    <div class="preset-btns">
+      <button type="button" onclick="setPreset('monochrome')">白黒</button>
+      <button type="button" onclick="setPreset('silver')">銀鼠</button>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>書体</label>
+        <select id="font-select">
+          <option value="'Shippori Mincho', serif">明朝体 (Shippori Mincho)</option>
+          <option value="'Zen Kaku Gothic New', sans-serif">ゴシック体 (Zen Kaku)</option>
+          <option value="'Zen Kurenaido', sans-serif">手書き風 (Zen Kurenaido)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>文字の縁取り</label>
+        <select id="stroke-select">
+          <option value="none">なし</option>
+          <option value="white">白縁</option>
+          <option value="gray">灰色縁</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>文字色 (主調色)</label>
+        <input type="color" id="color-text" value="#111111">
+      </div>
+
+      <div class="control-group">
+        <label>背景色</label>
+        <input type="color" id="color-bg" value="#FFFFFF">
+      </div>
+
+      <div class="control-group" style="grid-column: span 2;">
+        <label>背景画像持ち込み (オプション)</label>
+        <input type="file" id="bg-image-input" accept="image/*">
+      </div>
+    </div>
+  </div>
+
+  <!-- 最終決定ボタン -->
   <button type="button" id="generate-btn">決定（画像を保存）</button>
 </div>
 
@@ -159,7 +179,6 @@
 
   let uploadedBgImage = null;
   
-  // 履歴（Undo/Redo）管理用配列
   let stateHistory = [];
   let historyIndex = -1;
 
@@ -177,7 +196,6 @@
   function saveState() {
     const currentState = captureCurrentState();
     
-    // 現在のインデックスより先の履歴（Redo分）が存在する場合は破棄して新しい未来を作る
     if (historyIndex < stateHistory.length - 1) {
       stateHistory = stateHistory.slice(0, historyIndex + 1);
     }
@@ -237,7 +255,6 @@
     const width = canvas.width;
     const height = canvas.height;
 
-    // 1. 背景の描画
     if (uploadedBgImage) {
       ctx.save();
       ctx.fillStyle = colorBg.value;
@@ -259,7 +276,6 @@
       ctx.fillRect(0, 0, width, height);
     }
 
-    // 2. テキスト描画設定（完全自動センタリング仕様）
     const rawText = textInput.value;
     const lines = rawText.split('\n');
     
@@ -322,7 +338,6 @@
     }
   }
 
-  // ボタンイベント群
   btnPreview.addEventListener('click', () => {
     saveState();
     drawCanvas();
@@ -332,11 +347,9 @@
   btnRedo.addEventListener('click', () => restoreState(historyIndex + 1));
 
   generateBtn.addEventListener('click', () => {
-    // ダウンロード時は強制的に最新の入力を反映してから書き出す
     saveState();
     drawCanvas();
     
-    // 人間が読めるファイル名（YYYYMMDD_HHMM）を生成
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
     const filename = `tanka_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
@@ -347,7 +360,6 @@
     link.click();
   });
 
-  // 初回起動時のセットアップ
   window.addEventListener('load', () => {
     setTimeout(() => {
       saveState();
