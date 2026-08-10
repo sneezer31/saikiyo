@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>さいきよ‐たてがき</title>
+<title>縦書き画像生成</title>
 <style>
   :root {
     --bg-color: #FFFFFF;
@@ -63,8 +63,17 @@
     border-radius: 8px; margin-bottom: 10px;
   }
   .preset-btns { display: flex; gap: 10px; }
+  
+  /* デフォルトは2列グリッド（PC・タブレット用） */
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
+  
+  /* スマホ環境（画面幅600px以下）の完全縦並び最適化 */
+  @media (max-width: 600px) {
+    .controls { grid-template-columns: 1fr; }
+    .action-btns button { padding: 12px 5px; font-size: 0.9rem; }
+    #btn-preview { font-size: 1.05rem; white-space: nowrap; }
+  }
   
   select, input[type="file"], input[type="number"] {
     padding: 8px; font-size: 1rem; font-family: inherit;
@@ -94,7 +103,7 @@
 <body>
 
 <div class="container">
-  <h2>さいきよ‐たてがき</h2>
+  <h2>縦書き画像生成</h2>
 
   <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）"></textarea>
 
@@ -124,6 +133,11 @@
       </div>
 
       <div class="control-group">
+        <label>文字サイズ (px)</label>
+        <input type="number" id="fontsize-input" value="56" step="1" min="10">
+      </div>
+
+      <div class="control-group">
         <label>行間 (文字サイズに対する倍率)</label>
         <input type="number" id="spacing-input" value="1.8" step="0.1" min="1.0">
       </div>
@@ -147,7 +161,7 @@
         <input type="color" id="color-bg" value="#FFFFFF">
       </div>
 
-      <div class="control-group" style="grid-column: span 2;">
+      <div class="control-group" style="grid-column: span 1;">
         <label>背景画像持ち込み (オプション)</label>
         <input type="file" id="bg-image-input" accept="image/*">
       </div>
@@ -160,6 +174,7 @@
 <script>
   const textInput = document.getElementById('text-input');
   const fontSelect = document.getElementById('font-select');
+  const fontsizeInput = document.getElementById('fontsize-input');
   const spacingInput = document.getElementById('spacing-input');
   const strokeSelect = document.getElementById('stroke-select');
   const colorText = document.getElementById('color-text');
@@ -182,6 +197,7 @@
     return {
       text: textInput.value,
       font: fontSelect.value,
+      fontSize: fontsizeInput.value,
       spacing: spacingInput.value,
       stroke: strokeSelect.value,
       colorText: colorText.value,
@@ -208,6 +224,7 @@
     
     textInput.value = state.text;
     fontSelect.value = state.font;
+    fontsizeInput.value = state.fontSize;
     spacingInput.value = state.spacing;
     strokeSelect.value = state.stroke;
     colorText.value = state.colorText;
@@ -277,10 +294,10 @@
     const rawText = textInput.value;
     const lines = rawText.split('\n');
     
-    const fontSize = 34;
+    // 入力された文字サイズを取得（不正な値なら56）
+    const fontSize = parseFloat(fontsizeInput.value) || 56;
     const charStepY = fontSize * 1.15;
     
-    // 入力された数値をパース（不正な値や空欄の場合は1.8を担保）
     const spacingRatio = parseFloat(spacingInput.value) || 1.8;
     const lineStepX = fontSize * spacingRatio;
 
