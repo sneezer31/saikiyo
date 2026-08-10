@@ -81,10 +81,12 @@
 <div class="container">
   <h2>縦書き画像生成</h2>
 
-  <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）">朝酒の缶をプルトップより開き
-横たわり見るアプリの画面
-重力が正しく底に落ちたなら
-今日の航海はこれにて終わり</textarea>
+  <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）">
+  
+  
+  
+  
+  </textarea>
 
   <div class="preset-btns">
     <button type="button" onclick="setPreset('monochrome')">白黒</button>
@@ -126,13 +128,16 @@
     </div>
   </div>
 
+
+
+  <canvas id="canvas" width="1080" height="1350"></canvas>
+
   <div class="action-btns">
     <button type="button" id="btn-undo" disabled>← 戻る</button>
     <button type="button" id="btn-preview">プレビュー更新</button>
     <button type="button" id="btn-redo" disabled>進む →</button>
   </div>
 
-  <canvas id="canvas" width="1080" height="1350"></canvas>
 
   <button type="button" id="generate-btn">決定（画像を保存）</button>
 </div>
