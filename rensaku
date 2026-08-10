@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>連作作戦盤</title>
+<style>
+  :root { --bg-color: #F8F8F8; --text-color: #111111; --primary: #2C7C73; --btn-bg: #FFFFFF; }
+  body { margin: 0; padding: 0; font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); }
+  
+  /* 画面切り替え用のクラス */
+  .screen { display: none; padding: 20px; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; min-height: 100vh; box-sizing: border-box; }
+  .screen.active { display: flex; }
+
+  h2 { margin: 0 0 10px 0; font-size: 1.4rem; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+
+  /* フォーム要素 */
+  textarea { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; border: 1px solid #999; border-radius: 4px; resize: vertical; }
+  #input-text { height: 180px; }
+  #preview-text { height: 300px; background-color: #EEE; cursor: not-allowed; }
+
+  .settings-group { border: 1px solid #CCC; padding: 15px; border-radius: 4px; background: #FFF; display: flex; flex-direction: column; gap: 10px; }
+  .radio-row { display: flex; gap: 15px; align-items: center; font-size: 0.95rem; }
+  .radio-label { font-weight: bold; width: 80px; }
+
+  /* ボタン */
+  .btn-group { display: flex; gap: 10px; margin-top: auto; padding-top: 20px; }
+  button { padding: 14px; font-size: 1.1rem; font-weight: bold; background: var(--btn-bg); color: var(--text-color); border: 2px solid var(--text-color); cursor: pointer; border-radius: 4px; flex: 1; }
+  button.primary { background: var(--primary); color: #FFF; border-color: var(--primary); }
+  button:active { opacity: 0.7; }
+
+  /* ソートエリア */
+  #sort-area {
+    display: flex; gap: 10px; padding: 15px; background: #EAEAEA; border: 1px inset #CCC; border-radius: 8px; flex-grow: 1; overflow: auto;
+  }
+  
+  /* 短冊の基本スタイル */
+  .tanzaku {
+    background-color: #FFF; border: 1px solid #666; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    padding: 10px; cursor: grab; user-select: none; touch-action: none; transition: transform 0.1s;
+  }
+  .tanzaku.dragging { opacity: 0.8; cursor: grabbing; transform: scale(1.02); box-shadow: 5px 5px 15px rgba(0,0,0,0.2); z-index: 100; }
+
+  /* 動的スタイル適用 */
+  .font-mincho { font-family: 'Shippori Mincho', serif; }
+  .font-gothic { font-family: sans-serif; }
+  
+  /* 縦書きモード */
+  .dir-vertical { flex-direction: row-reverse; flex-wrap: wrap; align-content: flex-start; }
+  .dir-vertical .tanzaku { writing-mode: vertical-rl; min-height: 200px; padding: 15px 10px; line-height: 2; }
+  
+  /* 横書きモード */
+  .dir-horizontal { flex-direction: column; }
+  .dir-horizontal .tanzaku { writing-mode: horizontal-tb; width: 100%; box-sizing: border-box; line-height: 1.5; }
+
+  /* 折り返し設定 */
+  .wrap-false .tanzaku { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wrap-true .tanzaku { white-space: pre-wrap; word-break: break-all; }
+
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- 画面1: 設定と入力 -->
+<div id="screen1" class="screen active">
+  <h2>1. 設定と入力</h2>
+  
+  <div class="settings-group">
+    <div class="radio-row">
+      <span class="radio-label">書体</span>
+      <label><input type="radio" name="font" value="mincho" checked> 明朝体</label>
+      <label><input type="radio" name="font" value="gothic"> ゴシック体</label>
+    </div>
+    <div class="radio-row">
+      <span class="radio-label">方向</span>
+      <label><input type="radio" name="direction" value="vertical"> 縦書き</label>
+      <label><input type="radio" name="direction" value="horizontal" checked> 横書き</label>
+    </div>
+    <div class="radio-row">
+      <span class="radio-label">折り返し</span>
+      <label><input type="radio" name="wrap" value="true"> あり（全文表示）</label>
+      <label><input type="radio" name="wrap" value="false" checked> なし（初句のみ）</label>
+    </div>
+  </div>
+
+  <textarea id="input-text" placeholder="ここに連作を入力してください。&#10;（1首ごとに1行の空行を入れてください）"></textarea>
+  
+  <div class="btn-group">
+    <button type="button" class="primary" onclick="goToScreen2()">次へ（並べ替え）</button>
+  </div>
+</div>
+
+<!-- 画面2: 並べ替え作業台 -->
+<div id="screen2" class="screen">
+  <h2>2. 並べ替え</h2>
+  <div id="sort-area"></div>
+  
+  <div class="btn-group">
+    <button type="button" onclick="goToScreen(1)">戻る</button>
+    <button type="button" class="primary" onclick="goToScreen3()">次へ（プレビュー）</button>
+  </div>
+</div>
+
+<!-- 画面3: プレビューと出力 -->
+<div id="screen3" class="screen">
+  <h2>3. プレビューと出力</h2>
+  <textarea id="preview-text" readonly></textarea>
+  
+  <div class="btn-group">
+    <button type="button" onclick="goToScreen(2)">戻る</button>
+    <button type="button" class="primary" onclick="copyToClipboard()">決定（コピー）</button>
+  </div>
+</div>
+
+<script>
+  const screens = [
+    document.getElementById('screen1'),
+    document.getElementById('screen2'),
+    document.getElementById('screen3')
+  ];
+  const inputText = document.getElementById('input-text');
+  const sortArea = document.getElementById('sort-area');
+  const previewText = document.getElementById('preview-text');
+
+  let draggedItem = null;
+  let currentDirection = 'horizontal';
+
+  // 画面切り替えの共通関数
+  function goToScreen(screenNumber) {
+    screens.forEach((screen, index) => {
+      if (index === screenNumber - 1) {
+        screen.classList.add('active');
+      } else {
+        screen.classList.remove('active');
+      }
+    });
+  }
+
+  // 画面1 -> 画面2への遷移処理（短冊の生成）
+  function goToScreen2() {
+    const rawText = inputText.value;
+    const poems = rawText.split(/\n\s*\n/).map(p => p.trim()).filter(p => p !== '');
+    
+    if (poems.length === 0) {
+      alert("短歌が入力されていません。");
+      return;
+    }
+
+    // 設定の取得
+    const font = document.querySelector('input[name="font"]:checked').value;
+    currentDirection = document.querySelector('input[name="direction"]:checked').value;
+    const wrap = document.querySelector('input[name="wrap"]:checked').value;
+
+    // ソートエリアのクラスをリセットして再設定
+    sortArea.className = '';
+    sortArea.classList.add(`font-${font}`);
+    sortArea.classList.add(`dir-${currentDirection}`);
+    sortArea.classList.add(`wrap-${wrap}`);
+
+    // 短冊を生成
+    sortArea.innerHTML = '';
+    poems.forEach(poem => {
+      const tanzaku = document.createElement('div');
+      tanzaku.className = 'tanzaku';
+      tanzaku.textContent = poem;
+      tanzaku.addEventListener('pointerdown', handlePointerDown);
+      sortArea.appendChild(tanzaku);
+    });
+
+    goToScreen(2);
+  }
+
+  // 画面2 -> 画面3への遷移処理（結果の回収とプレビュー生成）
+  function goToScreen3() {
+    const tanzakus = Array.from(sortArea.children);
+    const resultText = tanzakus.map(el => el.textContent).join('\n\n');
+    previewText.value = resultText;
+    goToScreen(3);
+  }
+
+  // クリップボードへのコピー
+  function copyToClipboard() {
+    navigator.clipboard.writeText(previewText.value).then(() => {
+      alert("クリップボードにコピーしました！");
+    }).catch(err => {
+      alert("コピーに失敗しました。");
+      console.error(err);
+    });
+  }
+
+  // 以下、ドラッグ＆ドロップのロジック
+  function handlePointerDown(e) {
+    if (e.button !== 0 && e.type !== 'touchstart') return;
+    
+    draggedItem = this;
+    this.classList.add('dragging');
+    this.setPointerCapture(e.pointerId);
+
+    this.addEventListener('pointermove', handlePointerMove);
+    this.addEventListener('pointerup', handlePointerUp);
+    this.addEventListener('pointercancel', handlePointerUp);
+  }
+
+  function handlePointerMove(e) {
+    e.preventDefault(); 
+    if (!draggedItem) return;
+
+    const elements = document.elementsFromPoint(e.clientX, e.clientY);
+    const target = elements.find(el => el.classList.contains('tanzaku') && el !== draggedItem);
+
+    if (target) {
+      const targetRect = target.getBoundingClientRect();
+      
+      // 縦書き（右から左）と横書き（上から下）で入れ替えの判定軸を変える
+      if (currentDirection === 'vertical') {
+        const threshold = targetRect.left + (targetRect.width / 2);
+        if (e.clientX > threshold) {
+          sortArea.insertBefore(draggedItem, target);
+        } else {
+          sortArea.insertBefore(draggedItem, target.nextSibling);
+        }
+      } else {
+        const threshold = targetRect.top + (targetRect.height / 2);
+        if (e.clientY < threshold) {
+          sortArea.insertBefore(draggedItem, target);
+        } else {
+          sortArea.insertBefore(draggedItem, target.nextSibling);
+        }
+      }
+    }
+  }
+
+  function handlePointerUp(e) {
+    this.classList.remove('dragging');
+    this.releasePointerCapture(e.pointerId);
+    this.removeEventListener('pointermove', handlePointerMove);
+    this.removeEventListener('pointerup', handlePointerUp);
+    this.removeEventListener('pointercancel', handlePointerUp);
+    draggedItem = null;
+  }
+</script>
+
+</body>
+</html>
