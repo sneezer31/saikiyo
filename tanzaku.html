@@ -387,7 +387,14 @@
     link.click();
   });
 
-  window.addEventListener('load', () => {
+window.addEventListener('load', () => {
+    // 母艦からURLパラメータ（?text=...）で渡された短歌を受け取る
+    const params = new URLSearchParams(window.location.search);
+    const initialText = params.get('text');
+    if (initialText) {
+      textInput.value = initialText;
+    }
+
     setTimeout(() => {
       saveState();
       drawCanvas();
