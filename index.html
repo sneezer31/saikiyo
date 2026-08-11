@@ -1069,7 +1069,6 @@ window.toggleEscapeMenu = function(menuId) {
   });
   document.getElementById(menuId).classList.toggle('open');
 }
-
 window.executeEscape = async function(type) {
   if (type === 'shashutsu') { 
     const targetData = data;
@@ -1082,20 +1081,33 @@ window.executeEscape = async function(type) {
     const p = n => String(n).padStart(2, '0');
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
     const fileName = `saikiyo_backup_${ts}.json`;
+    const jsonStr = JSON.stringify(targetData, null, 2);
+
+    // 通常ダウンロード用の共通処理
+    const triggerDownload = () => {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
+      window.closePanels();
+    };
 
     try {
-      const jsonStr = JSON.stringify(targetData, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      
+      // Androidの制限を突破するため MIMEタイプを 'text/plain' としてFile化
+      const blob = new Blob([jsonStr], { type: 'text/plain' });
       let file = null;
       try {
-        file = new File([blob], fileName, { type: 'application/json' });
+        file = new File([blob], fileName, { type: 'text/plain' });
       } catch (e) {
-        // new Fileが使えない環境では安全にnullにして次へ流す
         file = null;
       }
 
-      // Web Share API（ファイル共有）の厳密判定
       let canShareFile = false;
       if (file && navigator.canShare) {
         try {
@@ -1106,33 +1118,29 @@ window.executeEscape = async function(type) {
       }
 
       if (canShareFile) {
-        // OSの共有シート（メール等）を起動
-        await navigator.share({
-          files: [file],
-          title: 'さいきよバックアップ',
-          text: `さいきよ全データ（${targetData.length}件）のバックアップファイルです。`
-        });
-        localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-        window.closePanels();
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'さいきよバックアップ',
+            text: `さいきよ全データ（${targetData.length}件）のバックアップファイルです。`
+          });
+          localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
+          window.closePanels();
+        } catch (shareErr) {
+          // ユーザーが自らキャンセルした場合は何もしない
+          if (shareErr.name === 'AbortError') {
+            return;
+          }
+          // Permission deniedなど共有に失敗した場合は、即座にダウンロードへ自動フォールバック
+          triggerDownload();
+          alert('共有が許可されなかったため、ファイルを直接保存しました。');
+        }
       } else {
-        // ファイル直接共有が非対応の環境：確実なファイルダウンロードへフォールバック
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-        window.closePanels();
-        alert('共有メニュー非対応の環境のため、ファイルをダウンロード保存しました。');
+        triggerDownload();
+        alert('共有メニュー非対応の環境のため、ファイルを直接保存しました。');
       }
     } catch (err) {
-      if (err.name !== 'AbortError') {
-        alert('射出処理中にエラーが発生しました: ' + err.message);
-      }
+      triggerDownload();
     }
 
   } else if (type === 'bunsan' || type === 'tesshu') {
@@ -1178,8 +1186,6 @@ window.executeEscape = async function(type) {
     window.closePanels();
   }
 };
-
-
 
 window.escapeAction = function(type, e) {
   if (type === 'import') {
