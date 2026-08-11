@@ -1069,12 +1069,10 @@ window.toggleEscapeMenu = function(menuId) {
   });
   document.getElementById(menuId).classList.toggle('open');
 }
-
 window.executeEscape = async function(type) {
   if (type === 'shashutsu') { 
-    // 【真・射出】全データをJSONファイル化してOSの共有機能（メール等）へ直接引き渡す
     const targetData = data;
-    if (targetData.length === 0) {
+    if (!targetData || targetData.length === 0) {
       alert('射出するデータがありません');
       return;
     }
@@ -1084,35 +1082,56 @@ window.executeEscape = async function(type) {
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
     const fileName = `saikiyo_backup_${ts}.json`;
 
-    const jsonStr = JSON.stringify(targetData, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const file = new File([blob], fileName, { type: 'application/json' });
-
-    // Web Share API（ファイル添付共有）が使えるか判定
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      const jsonStr = JSON.stringify(targetData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      
+      let file = null;
       try {
+        file = new File([blob], fileName, { type: 'application/json' });
+      } catch (e) {
+        // new Fileが非対応の環境ではnullのままフォールバックへ
+        file = null;
+      }
+
+      // Web Share API（ファイル共有）の厳密な判定
+      let canShareFile = false;
+      if (file && navigator.canShare) {
+        try {
+          canShareFile = navigator.canShare({ files: [file] });
+        } catch (e) {
+          canShareFile = false;
+        }
+      }
+
+      if (canShareFile) {
+        // OSの共有シート（メール等）を起動
         await navigator.share({
           files: [file],
           title: 'さいきよバックアップ',
           text: `さいきよ全データ（${targetData.length}件）のバックアップファイルです。`
         });
         localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-      } catch (err) {
-        // ユーザーが共有メニューをキャンセルした場合は何もしない
-        if (err.name !== 'AbortError') {
-          console.error('共有エラー:', err);
-        }
+        window.closePanels();
+      } else {
+        // ファイル共有非対応（PCや非対応ブラウザ）の場合：確実なダウンロード処理
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
+        window.closePanels();
+        alert('共有メニュー非対応の環境のため、ファイルをダウンロード保存しました。');
       }
-    } else {
-      // 非対応環境（PC等）の場合は自動でファイルダウンロードにフォールバック
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-      localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-      alert('お使いの環境では直接添付ができないため、ファイルをダウンロードしました。');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        alert('射出処理中にエラーが発生しました: ' + err.message);
+      }
     }
 
   } else if (type === 'bunsan' || type === 'tesshu') {
@@ -1155,7 +1174,9 @@ window.executeEscape = async function(type) {
         if (typeof renderTimeline === 'function') renderTimeline(); 
       }
     }
+    window.closePanels();
   }
+};
   window.closePanels();
 };
 
