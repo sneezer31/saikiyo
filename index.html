@@ -384,7 +384,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-shashutsu')">射出</button>
   <div id="menu-shashutsu" class="escape-submenu">
-    <div class="escape-sub-left">全データのバックアップファイルをメール等で即座に送信・退避します</div>
+    <div class="escape-sub-left">最新の20件をメールで送ります</div>
     <div class="escape-sub-right"><button onclick="executeEscape('shashutsu')">決定</button></div>
   </div>
 
@@ -1069,6 +1069,7 @@ window.toggleEscapeMenu = function(menuId) {
   });
   document.getElementById(menuId).classList.toggle('open');
 }
+
 window.executeEscape = async function(type) {
   if (type === 'shashutsu') { 
     const targetData = data;
@@ -1090,11 +1091,11 @@ window.executeEscape = async function(type) {
       try {
         file = new File([blob], fileName, { type: 'application/json' });
       } catch (e) {
-        // new Fileが非対応の環境ではnullのままフォールバックへ
+        // new Fileが使えない環境では安全にnullにして次へ流す
         file = null;
       }
 
-      // Web Share API（ファイル共有）の厳密な判定
+      // Web Share API（ファイル共有）の厳密判定
       let canShareFile = false;
       if (file && navigator.canShare) {
         try {
@@ -1114,7 +1115,7 @@ window.executeEscape = async function(type) {
         localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
         window.closePanels();
       } else {
-        // ファイル共有非対応（PCや非対応ブラウザ）の場合：確実なダウンロード処理
+        // ファイル直接共有が非対応の環境：確実なファイルダウンロードへフォールバック
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1176,8 +1177,6 @@ window.executeEscape = async function(type) {
     }
     window.closePanels();
   }
-};
-  window.closePanels();
 };
 
 
