@@ -9,6 +9,7 @@
 <style>
 /* =========================================
    2026.08.09 浄化・パレット完全換装版
+   2026.08.11 リストをつくる机 D&D換装版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -177,10 +178,31 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   flex-shrink: 0;
 }
 #panel-list-editor textarea { resize: none; }
-#list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; border-radius: var(--border-radius); }
-.list-item-edit { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px; }
-.list-item-edit button { background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 5px 10px; cursor: pointer; font-weight: bold; border-radius: var(--border-radius); }
-.list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 14px; }
+#list-items { flex: 1; overflow-y: auto; border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); min-height: 150px; border-radius: var(--border-radius); position: relative; }
+
+/* D&D対応リストアイテム */
+.list-item-edit { 
+  display: flex; align-items: center; gap: 8px; margin-bottom: 5px; border: 1px solid var(--color-A); padding: 8px; 
+  background: var(--color-B); border-radius: var(--border-radius); cursor: grab; user-select: none; touch-action: none;
+  box-sizing: border-box;
+}
+.list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 15px; pointer-events: none; }
+.list-item-edit .item-num { width: 24px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; pointer-events: none; flex-shrink: 0; }
+.list-item-edit button.btn-remove { 
+  background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 4px 10px; cursor: pointer; font-weight: bold; border-radius: var(--border-radius); flex-shrink: 0;
+}
+
+/* 抜け殻（プレースホルダー） */
+.list-item-placeholder {
+  background-color: var(--color-C); border: 1px dashed var(--color-A); border-radius: var(--border-radius); box-sizing: border-box; margin-bottom: 5px;
+}
+
+/* ドラッグ中の実体 */
+.list-item-edit.dragging {
+  position: fixed; pointer-events: none; opacity: 0.95; transform: scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 1000;
+  border: 2px solid var(--color-A); background: var(--color-B);
+}
+
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
 .desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; border-radius: var(--border-radius); }
 
@@ -252,8 +274,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   
   <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="document.getElementById('panel-manual').classList.add('active')">取扱説明書を読む</button>
   
-  
-<div id="stats-display" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--color-A); text-align: center; font-weight: bold; background: var(--color-C); padding: 10px; border-radius: var(--border-radius);">
+  <div id="stats-display" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--color-A); text-align: center; font-weight: bold; background: var(--color-C); padding: 10px; border-radius: var(--border-radius);">
     総コンテンツ数: <span id="count-tanka">0</span> / リスト数: <span id="count-list">0</span>
   </div>
   <div class="radio-group">
@@ -290,19 +311,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
       </div>
     </div>
     
-<!-- 完全に換装された独立型パレットUI -->
     <div class="color-control-panel">
       <h3>テーマカラー</h3>
       
-      <!-- ボタン群も縦並び（column）に設定し、<br>を排除 -->
-<div class="theme-switches" style="margin-bottom: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
-  <button id="btn-monochrome" type="button" style="padding: 10px 15px; cursor: pointer;">白黒</button>
-  <button id="btn-silver" type="button" style="padding: 10px 15px; cursor: pointer;">銀鼠</button>
-</div>
+      <div class="theme-switches" style="margin-bottom: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+        <button id="btn-monochrome" type="button" style="padding: 10px 15px; cursor: pointer;">白黒</button>
+        <button id="btn-silver" type="button" style="padding: 10px 15px; cursor: pointer;">銀鼠</button>
+      </div>
 
-      <!-- パレット群も縦並び（column）に設定し、<br>を排除 -->
       <div class="palettes-desk" style="display: flex; flex-direction: column; gap: 20px;">
-        
         <div class="palette-tool">
           <span style="font-size: 0.85em; opacity: 0.8;">1色で自動生成</span>
           <div style="margin-top: 5px;">
@@ -318,14 +335,12 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
             <input type="color" id="hole-manual-bg" title="地の色(背景)">
           </div>
         </div>
-        
       </div>
     </div>       
-      <h3>基地名変更（リネーム）</h3>
-      <div style="display: flex; gap: 10px;">
-        <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の基地名を入力">
-        <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
-      </div>
+    <h3>基地名変更（リネーム）</h3>
+    <div style="display: flex; gap: 10px;">
+      <input type="text" id="rename-input" class="dropdown" style="flex: 1; padding: 10px;" placeholder="現在の基地名を入力">
+      <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="renameApp()">変更</button>
     </div>
     
     <div class="radio-group">
@@ -335,7 +350,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="setPassphrase()">設定</button>
       </div>
     </div>
-      
   </div>
 </div>
 
@@ -405,10 +419,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   
   <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">密輸</button>
 
-<hr style="border-color: var(--color-A); margin: 30px 0;">
-  <button class="panel-btn" onclick="removeDuplicates()"style="text-align: left; margin-top: 10px;">重複</button>
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  <button class="panel-btn" onclick="removeDuplicates()" style="text-align: left; margin-top: 10px;">重複</button>
 
-<hr style="border-color: var(--color-A); margin: 30px 0;">
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-chushutsu')" style="text-align: left;">抽出</button>
   <div id="menu-chushutsu" class="escape-submenu">
@@ -425,7 +439,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
       <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A); color: var(--color-B); background: var(--color-A);" onclick="executeChushutsuAction('tesshu')">期間を撤収</button>
     </div>
   </div>
-
 </div>
 
 <div id="panel-import-text" class="panel">
@@ -508,7 +521,7 @@ let data = [];
 let mode = 'normal'; 
 let selectedIds = new Set();
 let currentListId = null; 
-let config = { view: 'wrap', filter: 'work', font: 'sans-serif', radius: 'square' }; // themeを完全撤廃
+let config = { view: 'wrap', filter: 'work', font: 'sans-serif', radius: 'square' };
 let appTitle = 'さいきよ';
 let isSearchLinked = false; 
 let searchTimeout = null;
@@ -518,6 +531,11 @@ let tapTimeout = null;
 const doubleTapThreshold = 300; 
 
 let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNode, inputTagsNode;
+
+// D&D用状態変数（机専用）
+let deskDraggedItem = null;
+let deskPlaceholder = null;
+let deskPointerOffsetY = 0;
 
 // ==========================================
 // 2. ユーティリティ・データ操作関数
@@ -565,7 +583,6 @@ function applyThemeAndTitle() {
   document.title = appTitle;
 }
 
-// 新しい色制御の中枢関数（古いchangeThemeColorを完全に置き換え）
 window.applyColors = function(mainA, subC, bgB) {
   document.documentElement.style.setProperty('--color-A', mainA);
   document.documentElement.style.setProperty('--color-C', subC);
@@ -584,10 +601,8 @@ window.applyColors = function(mainA, subC, bgB) {
 };
 
 function applyConfig() {
-  // 古い属性を無効化
   document.documentElement.removeAttribute('data-theme');
   
-  // 新しいローカルストレージからの色復元
   const savedA = localStorage.getItem('saikiyo_color_A');
   const savedC = localStorage.getItem('saikiyo_color_C');
   const savedB = localStorage.getItem('saikiyo_color_B');
@@ -595,7 +610,6 @@ function applyConfig() {
   if (savedA && savedC && savedB) {
     applyColors(savedA, savedC, savedB);
   } else {
-    // 記憶がない場合は白黒を初期値とする
     applyColors('#111111', '#E0E0E0', '#FFFFFF');
   }
 
@@ -607,7 +621,6 @@ function applyConfig() {
 
 function renderTimeline() {
   const distanceFromBottom = tlContainer.scrollHeight - tlContainer.scrollTop;
-  
   tlContainer.innerHTML = '';
   
   let filtered = data.filter(d => {
@@ -617,7 +630,6 @@ function renderTimeline() {
   });
   
   const fragment = document.createDocumentFragment();
-  
   const spacer = document.createElement('div');
   spacer.style.flex = '1';
   fragment.appendChild(spacer);
@@ -625,7 +637,6 @@ function renderTimeline() {
   filtered.sort((a,b) => a.id - b.id).forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
-  
     div.dataset.id = item.id;
     if (item.status === 'アーカイブ') div.classList.add('is-archive');
     if (selectedIds.has(item.id)) div.classList.add('selected', 'selecting');
@@ -650,7 +661,6 @@ function renderTimeline() {
   });
   
   tlContainer.appendChild(fragment);
-  
   executeUnifiedSearch();
   tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
   updateButtonsState();
@@ -684,24 +694,33 @@ function executeUnifiedSearch() {
   });
 }
 
+// D&D対応：机のアイテムレンダリング
 function renderListItems(itemIds) {
   const container = document.getElementById('list-items');
   container.innerHTML = ''; 
-  container.dataset.items = JSON.stringify(itemIds);
   
   itemIds.forEach((id, index) => {
     const tanka = data.find(d => d.id === id);
     if(!tanka) return;
     const div = document.createElement('div'); 
     div.className = 'list-item-edit';
+    div.dataset.id = id;
     div.innerHTML = `
-      <div style="width:20px; text-align:center;">${index+1}</div>
-      <button onclick="moveListItem(${index}, -1)">↑</button>
-      <button onclick="moveListItem(${index}, 1)">↓</button>
+      <div class="item-num">${index+1}</div>
       <span>${escapeHTML(tanka.content)}</span>
-      <button onclick="removeListItem(${index})">✕</button>
+      <button type="button" class="btn-remove" onclick="removeListItem(this)">✕</button>
     `;
+    div.addEventListener('pointerdown', handleListPointerDown);
     container.appendChild(div);
+  });
+}
+
+function updateListNumbers() {
+  const container = document.getElementById('list-items');
+  const items = container.querySelectorAll('.list-item-edit:not(.dragging)');
+  items.forEach((item, index) => {
+    const numEl = item.querySelector('.item-num');
+    if (numEl) numEl.innerText = index + 1;
   });
 }
 
@@ -883,19 +902,104 @@ window.openListEditor = function(listId, initialItemIds = []) {
   }
 }
 
-window.moveListItem = function(index, dir) {
-  let items = JSON.parse(document.getElementById('list-items').dataset.items);
-  if (index + dir < 0 || index + dir >= items.length) return;
-  const temp = items[index]; 
-  items[index] = items[index + dir]; 
-  items[index + dir] = temp;
-  renderListItems(items);
+window.removeListItem = function(btn) {
+  const itemEl = btn.closest('.list-item-edit');
+  if (itemEl) {
+    itemEl.remove();
+    updateListNumbers();
+  }
 }
 
-window.removeListItem = function(index) {
-  let items = JSON.parse(document.getElementById('list-items').dataset.items);
-  items.splice(index, 1); 
-  renderListItems(items);
+// 机専用：D&D物理演算イベントハンドラ
+function handleListPointerDown(e) {
+  if (e.target.tagName === 'BUTTON') return;
+  if (e.button !== 0 && e.type !== 'touchstart') return;
+  e.preventDefault();
+
+  deskDraggedItem = this;
+  const listContainer = document.getElementById('list-items');
+  const rect = deskDraggedItem.getBoundingClientRect();
+  
+  deskPlaceholder = document.createElement('div');
+  deskPlaceholder.className = 'list-item-placeholder';
+  deskPlaceholder.style.height = `${rect.height}px`;
+  
+  listContainer.insertBefore(deskPlaceholder, deskDraggedItem);
+  
+  deskPointerOffsetY = e.clientY - rect.top;
+  
+  deskDraggedItem.classList.add('dragging');
+  deskDraggedItem.style.width = `${rect.width}px`;
+  deskDraggedItem.style.height = `${rect.height}px`;
+  deskDraggedItem.style.left = `${rect.left}px`;
+  deskDraggedItem.style.top = `${rect.top}px`;
+  
+  document.body.appendChild(deskDraggedItem);
+
+  document.addEventListener('pointermove', handleListPointerMove, { passive: false });
+  document.addEventListener('pointerup', handleListPointerUp);
+  document.addEventListener('pointercancel', handleListPointerUp);
+}
+
+function handleListPointerMove(e) {
+  if (!deskDraggedItem) return;
+  e.preventDefault();
+
+  deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
+
+  const listContainer = document.getElementById('list-items');
+  const elements = document.elementsFromPoint(e.clientX, e.clientY);
+  const target = elements.find(el => el.classList && el.classList.contains('list-item-edit') && el.parentNode === listContainer);
+
+  if (target && target !== deskPlaceholder) {
+    const items = Array.from(listContainer.children).filter(c => c !== deskPlaceholder);
+    const rects = items.map(item => ({ item, rect: item.getBoundingClientRect() }));
+
+    const targetRect = target.getBoundingClientRect();
+    if (e.clientY < targetRect.top + (targetRect.height / 2)) {
+      listContainer.insertBefore(deskPlaceholder, target);
+    } else {
+      listContainer.insertBefore(deskPlaceholder, target.nextSibling);
+    }
+
+    rects.forEach(({ item, rect }) => {
+      const newRect = item.getBoundingClientRect();
+      const dy = rect.top - newRect.top;
+      if (dy !== 0) {
+        item.style.transform = `translateY(${dy}px)`;
+        item.style.transition = 'none';
+        requestAnimationFrame(() => {
+          item.style.transform = '';
+          item.style.transition = 'transform 0.15s ease-out';
+        });
+      }
+    });
+  }
+}
+
+function handleListPointerUp(e) {
+  if (!deskDraggedItem) return;
+  
+  const listContainer = document.getElementById('list-items');
+  listContainer.insertBefore(deskDraggedItem, deskPlaceholder);
+  deskPlaceholder.remove();
+  deskPlaceholder = null;
+
+  deskDraggedItem.classList.remove('dragging');
+  deskDraggedItem.style = '';
+  
+  document.removeEventListener('pointermove', handleListPointerMove);
+  document.removeEventListener('pointerup', handleListPointerUp);
+  document.removeEventListener('pointercancel', handleListPointerUp);
+  deskDraggedItem = null;
+
+  updateListNumbers();
+}
+
+function getCurrentDeskItemIds() {
+  const container = document.getElementById('list-items');
+  const items = Array.from(container.querySelectorAll('.list-item-edit:not(.dragging)'));
+  return items.map(el => Number(el.dataset.id)).filter(Boolean);
 }
 
 window.openExpandedReader = function(title, text) {
@@ -906,7 +1010,7 @@ window.openExpandedReader = function(title, text) {
 
 window.openExpandedReaderFromList = function() {
   const title = document.getElementById('list-name').value.trim() || '無題';
-  const items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  const items = getCurrentDeskItemIds();
   if (items.length === 0) return alert('リストが空です');
   const txt = items.map(id => { let t = data.find(d => d.id === id); return t ? t.content : ''; }).filter(Boolean).join('\n\n');
   window.openExpandedReader(title, txt);
@@ -923,7 +1027,7 @@ window.saveListAndClose = function() {
   const memo = document.getElementById('list-memo').value.trim();
   const tagsStr = document.getElementById('list-tags').value.trim();
   const tags = tagsStr ? tagsStr.split(/\s+/) : [];
-  const items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  const items = getCurrentDeskItemIds();
   
   if (items.length > 0) {
     let l = data.find(d => d.id === currentListId);
@@ -939,13 +1043,13 @@ window.saveListAndClose = function() {
 
 window.copyListItems = function() {
   const btn = document.getElementById('btn-copy-list');
-  if (btn.innerText === 'コピー完了') return; // 連打バグ防止
+  if (btn.innerText === 'コピー完了') return; 
   
   const d = new Date(), p = n => n.toString().padStart(2, '0');
   const title = document.getElementById('list-name').value.trim();
   const memo = document.getElementById('list-memo').value.trim();
   const tagStr = document.getElementById('list-tags').value.trim();
-  let items = JSON.parse(document.getElementById('list-items').dataset.items || '[]');
+  const items = getCurrentDeskItemIds();
   let txt = items.map(id => { let t = data.find(d => d.id === id); return t ? t.content : ''; }).filter(Boolean).join('\n\n');
   const res = `${title ? '【'+title+'】\n' : ''}[${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}]\n\n${txt}\n\n${memo ? '【メモ】'+memo+'\n' : ''}${tagStr ? '【タグ】'+tagStr : ''}`;
   
@@ -987,17 +1091,16 @@ window.executeEscape = function(type) {
       return;
     }
 
- const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
+    const blob = new Blob([JSON.stringify(targetData, null, 2)], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); 
     a.href = url; 
     
-    // 現在時刻を年月日時分の文字列に変換する処理を追加
     const d = new Date();
     const p = n => String(n).padStart(2, '0');
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
     
-    a.download = `saikiyo_${targetVal}_${ts}.json`; // ←人間が読める名前に変更
+    a.download = `saikiyo_${targetVal}_${ts}.json`; 
     a.click();
     URL.revokeObjectURL(url);
     
@@ -1051,7 +1154,6 @@ window.resetSettings = function() {
   document.querySelector('input[name="font-mode"][value="sans-serif"]').checked = true;
   document.querySelector('input[name="radius-mode"][value="square"]').checked = true;
 
-  // 古いカラーキーも含めて全消去
   localStorage.removeItem('saikiyo_theme_color');
   localStorage.removeItem('saikiyo_color_A');
   localStorage.removeItem('saikiyo_color_B');
@@ -1247,7 +1349,7 @@ function attachEventListeners() {
     }
   });
   
-btnSearch.addEventListener('click', () => {
+  btnSearch.addEventListener('click', () => {
     if (!isSearchLinked) {
       isSearchLinked = true; 
       btnSearch.innerText = '解除'; 
@@ -1259,10 +1361,9 @@ btnSearch.addEventListener('click', () => {
       btnSearch.style.opacity = '1'; 
       inputContentNode.value = ''; 
       inputTagsNode.value = '';   
-      // 【浄化完了】ここでタイムラインの強制リセットと強制スクロールを行わない。
-      // これにより、検索結果を画面にフリーズさせたまま、新しい推敲と入力が可能になります。
     }
   });
+
   btnSend.addEventListener('click', () => {
     const hasSelection = selectedIds.size > 0;
     const isGlobalSelectMode = tlContainer.classList.contains('select-mode');
@@ -1337,7 +1438,6 @@ btnSearch.addEventListener('click', () => {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToTweet)}`, '_blank');
   });
 
-  // ラジオボタンの汎用リスナー（パレットのカラーモード判定は削除済み）
   document.querySelectorAll('input[type="radio"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       const name = e.target.name; 
@@ -1381,7 +1481,6 @@ btnSearch.addEventListener('click', () => {
     }
   });
 
-  // ===== パレット関連の新神経機構 =====
   document.getElementById('btn-monochrome').addEventListener('click', () => {
     applyColors('#111111', '#E0E0E0', '#FFFFFF');
   });
@@ -1401,7 +1500,6 @@ btnSearch.addEventListener('click', () => {
       const mix = (c, ratio) => Math.round(c * (1 - ratio) + 255 * ratio);
       const toHex = (c) => c.toString(16).padStart(2, '0');
       
-      // 指定色をベースに白を混ぜて自動生成
       const subHex = `#${toHex(mix(r, 0.85))}${toHex(mix(g, 0.85))}${toHex(mix(b, 0.85))}`;
       const bgHex = `#${toHex(mix(r, 0.95))}${toHex(mix(g, 0.95))}${toHex(mix(b, 0.95))}`;
       
@@ -1560,7 +1658,7 @@ window.removeDuplicates = function() {
 
   data = newData;
   saveData();
-  if (typeof renderTimeline === 'function') renderTimeline();
+  if (typeof renderTimeline === 'function') renderTimeline(); 
   
   alert(`${removedCount}件の重複データを破棄し、リストの参照も修正したよ！`);
   window.closePanels();
