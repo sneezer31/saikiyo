@@ -413,7 +413,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
   <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
-  <input type="file" id="import-file" style="display:none" accept=".json" onchange="escapeAction('import', event)">
+  <input type="file" id="import-file" style="display:none" accept=".json,.txt" onchange="escapeAction('import', event)">
   
   <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">密輸</button>
 
@@ -1080,67 +1080,39 @@ window.executeEscape = async function(type) {
     const d = new Date();
     const p = n => String(n).padStart(2, '0');
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
-    const fileName = `saikiyo_backup_${ts}.json`;
+    // Androidの検閲を突破するため、拡張子を .txt に設定
+    const fileName = `saikiyo_backup_${ts}.txt`;
     const jsonStr = JSON.stringify(targetData, null, 2);
 
-    // 通常ダウンロード用の共通処理
-    const triggerDownload = () => {
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-      window.closePanels();
-    };
-
     try {
-      // Androidの制限を突破するため MIMEタイプを 'text/plain' としてFile化
       const blob = new Blob([jsonStr], { type: 'text/plain' });
-      let file = null;
-      try {
-        file = new File([blob], fileName, { type: 'text/plain' });
-      } catch (e) {
-        file = null;
-      }
+      const file = new File([blob], fileName, { type: 'text/plain' });
 
-      let canShareFile = false;
-      if (file && navigator.canShare) {
-        try {
-          canShareFile = navigator.canShare({ files: [file] });
-        } catch (e) {
-          canShareFile = false;
-        }
-      }
-
-      if (canShareFile) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: 'さいきよバックアップ',
-            text: `さいきよ全データ（${targetData.length}件）のバックアップファイルです。`
-          });
-          localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
-          window.closePanels();
-        } catch (shareErr) {
-          // ユーザーが自らキャンセルした場合は何もしない
-          if (shareErr.name === 'AbortError') {
-            return;
-          }
-          // Permission deniedなど共有に失敗した場合は、即座にダウンロードへ自動フォールバック
-          triggerDownload();
-          alert('共有が許可されなかったため、ファイルを直接保存しました。');
-        }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'さいきよバックアップ',
+          text: `さいきよ全データ（${targetData.length}件）のバックアップファイルです。`
+        });
+        localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
+        window.closePanels();
       } else {
-        triggerDownload();
-        alert('共有メニュー非対応の環境のため、ファイルを直接保存しました。');
+        // 万が一共有シート自体が出ない特殊環境のみダウンロード保存
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
+        window.closePanels();
       }
     } catch (err) {
-      triggerDownload();
+      if (err.name !== 'AbortError') {
+        alert('射出エラー: ' + err.message);
+      }
     }
 
   } else if (type === 'bunsan' || type === 'tesshu') {
@@ -1186,7 +1158,6 @@ window.executeEscape = async function(type) {
     window.closePanels();
   }
 };
-
 window.escapeAction = function(type, e) {
   if (type === 'import') {
     const file = e.target.files[0]; 
