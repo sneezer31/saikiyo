@@ -367,7 +367,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">一括でタグをつける</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
-  
+  <button class="panel-btn inverted" style="margin: 0; padding: 10px; flex: 1;" onclick="openImageGeneratorFromAmu()">画像を作る</button>
   <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
   
   <div class="desk-ctrls" style="margin-top:20px;">
@@ -1019,6 +1019,19 @@ window.openExpandedReaderFromAmu = function() {
   if (!txt) return alert('展開するデータがありません');
   window.openExpandedReader('編集室プレビュー', txt);
 }
+
+window.openImageGeneratorFromAmu = function() {
+  const txt = document.getElementById('amu-preview').innerText;
+  if (!txt) return alert('対象データがありません');
+
+  const targetPath = 'tanzaku.html'; 
+  const url = `${targetPath}?text=${encodeURIComponent(txt)}`;
+  
+  window.open(url, '_blank');
+};
+
+
+
 
 window.saveListAndClose = function() {
   const name = document.getElementById('list-name').value.trim() || '無題のリスト';
