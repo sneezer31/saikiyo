@@ -77,15 +77,14 @@ body {
 header, #console, button {
   flex-shrink: 0;
 }
-
 header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 15px; border-bottom: 1px solid var(--color-A);
   font-weight: bold;
-  background-color: var(--color-A); color: var(--color-B);
+  background-color: var(--color-C); color: var(--color-A);
 }
-header button { background: none; border: none; color: var(--color-B); font-size: 1.2rem; cursor: pointer; margin-right: 15px; }
-#header-title { color: var(--color-B); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; }
+header button { background: none; border: none; color: var(--color-A); font-size: 1.2rem; cursor: pointer; margin-right: 15px; }
+#header-title { color: var(--color-A); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; }
 
 #timeline-container { flex: 1; overflow-y: auto; padding: 15px; }
 
@@ -367,7 +366,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">一括でタグをつける</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
-  <button class="panel-btn" onclick="openImageGeneratorFromAmu()">画像を作る</button>
+  <button class="panel-btn onclick="openImageGeneratorFromAmu()">画像を作る</button>
   <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
   
   <div class="desk-ctrls" style="margin-top:20px;">
@@ -497,7 +496,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <p>タイムラインの短歌をダブルタップ、または「編む」で複数選択して起動します。</p>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
       <li><strong>ステータス管理:</strong> 「作品 / アーカイブ」「既発表 / 未発表」を振り分けます。</li>
-      <li><strong>リスト化:</strong> 選択した短歌から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。※注意　リストは短歌そのものを複製しているのではなく、「曲を集めたプレイリスト」のように元の短歌を参照しています。そのため、リストを削除しても元の短歌は消えませんが、タイムライン側で元の短歌を削除・撤収すると、リストからも表示されなくなります。</li>
+      <li><strong>リスト化:</strong> 選択した短歌から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。</li>
     </ul>
 
     <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">3. 脱出と救出（データ管理）</h3>
