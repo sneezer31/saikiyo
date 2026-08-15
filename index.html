@@ -394,16 +394,16 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-dasshutsu')">脱出</button>
   <div id="menu-dasshutsu" class="escape-submenu">
-    <div class="escape-sub-left">メールを打ち出します</div>
+    <div class="escape-sub-left">バックアップファイルをメールで送ります</div>
     <div class="escape-sub-right"><button onclick="executeEscape('dasshutsu')">決定</button></div>
   </div>
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-haishutsu')">排出</button>
   <div id="menu-haishutsu" class="escape-submenu">
     <div class="escape-sub-left">
-      <label><input type="radio" name="haishutsu-target" value="archive"> アーカイブのみ</label>
+      <label><input type="radio" name="haishutsu-target" value="archive" checked> アーカイブのみ</label>
       <label><input type="radio" name="haishutsu-target" value="work"> 作品のみ</label>
-      <label><input type="radio" name="haishutsu-target" value="all" checked> アーカイブと作品</label>
+      <label><input type="radio" name="haishutsu-target" value="all"> アーカイブと作品</label>
       <div style="margin-top: 10px; font-size: 0.95rem;">コピーを作り基地から削除します</div>
     </div>
     <div class="escape-sub-right"><button onclick="executeEscape('haishutsu')">決定</button></div>
