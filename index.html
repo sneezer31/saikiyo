@@ -10,6 +10,12 @@
 /* =========================================
    2026.08.09 浄化・パレット完全換装版
    2026.08.11 リストをつくる机 D&D換装版
+   2026.08.15 発着ターミナル情報設計＆UI統一改修版
+   2026.08.15 合言葉入力キーボード（IME）修正版
+   2026.08.15 編集室インラインアクション改修版
+   2026.08.15 スマートスクロール（自動ピン留め）対応版
+   2026.08.15 空間分割（tanka/memoマルチテナント）対応版
+   2026.08.15 設定パネル情報レイアウト最適化版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -85,6 +91,7 @@ header {
 }
 header button { background: none; border: none; color: var(--color-A); font-size: 1.2rem; cursor: pointer; margin-right: 15px; }
 #header-title { color: var(--color-A); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; }
+#btn-space-toggle { font-size: 1rem; font-weight: bold; padding: 4px 8px; border: 1px solid var(--color-A); border-radius: var(--border-radius); background: var(--color-B); color: var(--color-A); cursor: pointer; }
 
 #timeline-container { flex: 1; overflow-y: auto; padding: 15px; }
 
@@ -243,6 +250,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <div>
       <button id="btn-menu">≡</button>
       <button id="btn-fullscreen">⛶</button>
+      <button id="btn-space-toggle" style="margin-left: 10px;">[tanka]</button>
     </div>
     <div id="header-title">さいきよ</div>
   </header>
@@ -253,7 +261,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
     <textarea id="input-tags" rows="1" placeholder="タグは空白区切り" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
     <div class="buttons">
-      <button id="btn-escape" data-action="escape">脱出</button>
+      <button id="btn-escape" data-action="escape">発着</button>
       <button id="btn-amu" disabled>取消</button>
       <button id="btn-send">送る</button>
       <button id="btn-search">検索</button>
@@ -267,24 +275,24 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <h2 style="margin: 0; border: none; padding: 0;">設定</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
-  <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
-  
-  <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="document.getElementById('panel-manual').classList.add('active')">取扱説明書を読む</button>
   
   <div id="stats-display" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--color-A); text-align: center; font-weight: bold; background: var(--color-C); padding: 10px; border-radius: var(--border-radius);">
     総コンテンツ数: <span id="count-tanka">0</span> / リスト数: <span id="count-list">0</span>
   </div>
-  <div class="radio-group">
-    <h3>タイムライン表示切替</h3>
-    <label><input type="radio" name="view-mode" value="wrap" checked> 折り返しあり</label>
-    <label><input type="radio" name="view-mode" value="nowrap"> 折り返しなし</label>
-  </div>
+
   <div class="radio-group">
     <h3>データ表示フィルター</h3>
     <label><input type="radio" name="filter-mode" value="work" checked> 作品のみ</label>
     <label><input type="radio" name="filter-mode" value="all"> 作品とアーカイブ</label>
     <label><input type="radio" name="filter-mode" value="archive"> アーカイブのみ</label>
   </div>
+
+  <div class="radio-group">
+    <h3>タイムライン表示切替</h3>
+    <label><input type="radio" name="view-mode" value="wrap" checked> 折り返しあり</label>
+    <label><input type="radio" name="view-mode" value="nowrap"> 折り返しなし</label>
+  </div>
+
   <div class="radio-group">
     <h3>書体変更</h3>
     <label><input type="radio" name="font-mode" value="sans-serif" checked> ゴシック体</label>
@@ -347,11 +355,20 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
         <button class="panel-btn" style="margin: 0; padding: 10px 15px; width: auto;" onclick="setPassphrase()">設定</button>
       </div>
     </div>
+
+    <hr style="border-color: var(--color-A); margin: 10px 0;">
+
+    <button class="panel-btn inverted" style="margin-bottom: 0;" onclick="document.getElementById('panel-manual').classList.add('active')">取扱説明書を読む</button>
+    <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
   </div>
 </div>
 
 <div id="panel-amu-actions" class="panel">
-  <h2>編集室</h2>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+    <h2 style="margin: 0; border: none; padding: 0;">編集室</h2>
+    <button onclick="closePanels(); exitSelectionMode(); cleanupAmuInline();" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
+  </div>
+
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
   
@@ -366,64 +383,63 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">一括でタグをつける</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
-  <button class="panel-btn" onclick="openImageGeneratorFromAmu()">画像を作る</button>
-  <p style="margin-top:20px; font-size:0.9rem; color:var(--color-A);">※パネルを閉じる時は「取消」を押してください</p>
-  
-  <div class="desk-ctrls" style="margin-top:20px;">
-    <button onclick="closePanels()">取消(戻る)</button>
-    <button id="btn-amu-decide" onclick="executeAmuActions()" style="background:var(--color-A); color:var(--color-B);">決定</button>
-  </div>
+  <button class="panel-btn amu-action-btn" data-type="image" data-val="true" onclick="toggleAmuAction(this)">画像を作る</button>
 </div>
 
 <div id="panel-escape" class="panel">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
-    <h2 style="margin: 0; border: none; padding: 0;">脱出ターミナル</h2>
+    <h2 style="margin: 0; border: none; padding: 0;">発着ターミナル</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
 
- <button class="panel-btn" onclick="toggleEscapeMenu('menu-shashutsu')">射出</button>
-  <div id="menu-shashutsu" class="escape-submenu">
-    <div class="escape-sub-left">全データのバックアップファイルをメール等で即座に送信・退避します</div>
-    <div class="escape-sub-right"><button onclick="executeEscape('shashutsu')">決定</button></div>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-dasshutsu')">脱出</button>
+  <div id="menu-dasshutsu" class="escape-submenu">
+    <div class="escape-sub-left">メールを打ち出します</div>
+    <div class="escape-sub-right"><button onclick="executeEscape('dasshutsu')">決定</button></div>
+  </div>
+
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-haishutsu')">排出</button>
+  <div id="menu-haishutsu" class="escape-submenu">
+    <div class="escape-sub-left">
+      <label><input type="radio" name="haishutsu-target" value="archive"> アーカイブのみ</label>
+      <label><input type="radio" name="haishutsu-target" value="work"> 作品のみ</label>
+      <label><input type="radio" name="haishutsu-target" value="all" checked> アーカイブと作品</label>
+      <div style="margin-top: 10px; font-size: 0.95rem;">コピーを作り基地から削除します</div>
+    </div>
+    <div class="escape-sub-right"><button onclick="executeEscape('haishutsu')">決定</button></div>
   </div>
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunsan')">分散</button>
-  <div id="menu-bunsan" class="escape-submenu">
-    <div class="escape-sub-left">
-      <label><input type="radio" name="bunsan-target" value="archive"> アーカイブのみ</label>
-      <label><input type="radio" name="bunsan-target" value="work"> 作品のみ</label>
-      <label><input type="radio" name="bunsan-target" value="all" checked> アーカイブと作品</label>
-    </div>
-    <div class="escape-sub-right"><button onclick="executeEscape('bunsan')">決定</button></div>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-hannyu')">搬入</button>
+  <div id="menu-hannyu" class="escape-submenu">
+    <div class="escape-sub-left">バックアップファイルを差分取り込みします</div>
+    <div class="escape-sub-right"><button onclick="document.getElementById('import-file').click()">決定</button></div>
   </div>
-
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-tesshu')">撤収</button>
-  <div id="menu-tesshu" class="escape-submenu">
-    <div class="escape-sub-left">
-      <label><input type="radio" name="tesshu-target" value="archive"> アーカイブのみ</label>
-      <label><input type="radio" name="tesshu-target" value="work"> 作品のみ</label>
-      <label><input type="radio" name="tesshu-target" value="all" checked> アーカイブと作品</label>
-    </div>
-    <div class="escape-sub-right"><button onclick="executeEscape('tesshu')">決定</button></div>
-  </div>
-
-  <hr style="border-color: var(--color-A); margin: 30px 0;">
-
-  <button class="panel-btn" onclick="document.getElementById('import-file').click()">救出</button>
   <input type="file" id="import-file" style="display:none" accept=".json,.txt" onchange="escapeAction('import', event)">
   
-  <button class="panel-btn inverted" onclick="openTextImportPanel()" style="text-align: left; margin-top: 10px;">密輸</button>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-mitsuyu')">密輸</button>
+  <div id="menu-mitsuyu" class="escape-submenu">
+    <div class="escape-sub-left">テキストを一括入力します</div>
+    <div class="escape-sub-right"><button onclick="openTextImportPanel()">決定</button></div>
+  </div>
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
-  <button class="panel-btn" onclick="removeDuplicates()" style="text-align: left; margin-top: 10px;">重複</button>
 
-  <hr style="border-color: var(--color-A); margin: 30px 0;">
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunshin')">分身</button>
+  <div id="menu-bunshin" class="escape-submenu">
+    <div class="escape-sub-left">
+      <label><input type="radio" name="bunshin-target" value="archive"> アーカイブのみ</label>
+      <label><input type="radio" name="bunshin-target" value="work"> 作品のみ</label>
+      <label><input type="radio" name="bunshin-target" value="all" checked> アーカイブと作品</label>
+      <div style="margin-top: 10px; font-size: 0.95rem;">コピーファイルを作ります</div>
+    </div>
+    <div class="escape-sub-right"><button onclick="executeEscape('bunshin')">決定</button></div>
+  </div>
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-chushutsu')" style="text-align: left;">抽出</button>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-chushutsu')">抽出</button>
   <div id="menu-chushutsu" class="escape-submenu">
-    <div style="font-size: 0.95rem; margin-bottom: 10px; color: var(--color-A);">分単位で期間を指定し、ファイルを生成します</div>
+    <div style="font-size: 0.95rem; margin-bottom: 10px; color: var(--color-A);">期間を決めて排出、分身します</div>
     
     <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 15px;">
       <input type="datetime-local" id="chushutsu-start" class="dropdown" style="flex: 1; padding: 10px;">
@@ -432,8 +448,16 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     </div>
     
     <div style="display: flex; gap: 10px;">
-      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A);" onclick="executeChushutsuAction('bunsan')">期間を分散</button>
-      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A); color: var(--color-B); background: var(--color-A);" onclick="executeChushutsuAction('tesshu')">期間を撤収</button>
+      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A);" onclick="executeChushutsuAction('bunshin')">期間を分身</button>
+      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A); color: var(--color-B); background: var(--color-A);" onclick="executeChushutsuAction('haishutsu')">期間を排出</button>
+    </div>
+  </div>
+
+  <div id="wrap-jufuku">
+    <button class="panel-btn" id="btn-jufuku" onclick="toggleEscapeMenu('menu-jufuku')">重複</button>
+    <div id="menu-jufuku" class="escape-submenu">
+      <div class="escape-sub-left">内容が同じものを削除します</div>
+      <div class="escape-sub-right"><button onclick="removeDuplicates()">決定</button></div>
     </div>
   </div>
 </div>
@@ -483,28 +507,31 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
   
   <div style="font-size: 1.05rem; line-height: 1.8; padding-bottom: 30px; color: var(--color-A);">
-    <p>「さいきよ」は、ブラウザの記憶領域のみを使用する、完全オフライン稼働の短歌記録アプリです。</p>
+    <p>「さいきよ」は、ブラウザの記憶領域のみを使用する、完全オフライン稼働の記録アプリです。</p>
     
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">1. 詠む・探す</h3>
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">1. 空間の切り替え</h3>
+    <p>画面右上の [tanka] / [memo] ボタンで、完全に独立した2つのデータ空間を行き来できます。用途に合わせて使い分けてください。</p>
+
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">2. 詠む・探す</h3>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
     <li><strong>入力窓と検索窓は兼用です。</strong></li>
-      <li><strong>入力・タグ:</strong> 下部のテキストエリアから短歌とタグ（空白区切り）を即座に記録します。</li>
+      <li><strong>入力・タグ:</strong> 下部のテキストエリアから本文とタグ（空白区切り）を即座に記録します。</li>
       <li><strong>検索:</strong> 「検索」ボタンで、本文・タグ・メモ・日付から瞬時にデータを呼び出します。</li>
     </ul>
 
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">2. 編む（編集室）</h3>
-    <p>タイムラインの短歌をダブルタップ、または「編む」で複数選択して起動します。</p>
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">3. 編む（編集室）</h3>
+    <p>タイムラインの要素をダブルタップ、または「編む」で複数選択して起動します。</p>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
       <li><strong>ステータス管理:</strong> 「作品 / アーカイブ」「既発表 / 未発表」を振り分けます。</li>
-      <li><strong>リスト化:</strong> 選択した短歌から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。</li>
+      <li><strong>リスト化:</strong> 選択した要素から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。</li>
     </ul>
 
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">3. 脱出と救出（データ管理）</h3>
-    <p>データは端末内にのみ存在するため、定期的な退避が必須です。お勧めは、ファイルを自分宛ての空メールに添付して送ることです。スマホとパソコン間のやり取りに不可欠な作業です。</p>
+    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">4. 発着（データ管理）</h3>
+    <p>データは端末内にのみ存在するため、定期的な退避が必須です。お勧めは、ファイルを自分宛ての空メールに添付して送ることです。</p>
     <ul style="padding-left: 20px; margin-bottom: 15px;">
-      <li><strong>分散・撤収・射出:</strong> 全データ、または指定したデータをバックアップファイルとして端末やメール等へ退避します。</li>
-      <li><strong>救出・密輸:</strong> 退避したバックアップファイルの読み込み、またはテキストデータの一括流し込みを行います。</li>
-      <li><strong>重複:</strong> 内容とタグが完全一致する不要な重複データを切除します。</li>
+      <li><strong>脱出・排出・分身:</strong> 全データ、または指定したデータをバックアップファイルとして端末やメール等へ退避します。</li>
+      <li><strong>搬入・密輸:</strong> 退避したバックアップファイルの読み込み、またはテキストデータの一括流し込みを行います。</li>
+      <li><strong>重複:</strong> 内容とタグが完全一致する不要な重複データを切除します（※tanka空間限定）。</li>
     </ul>
   </div>
 </div>
@@ -513,7 +540,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 // ==========================================
 // 1. グローバル変数と定数の定義
 // ==========================================
-const STORAGE_KEY = 'saikiyo_data';
+// 互換性のためtanka空間は従来のキーを使用、memo空間は新規キー
+const STORAGE_KEY_TANKA = 'saikiyo_data';
+const STORAGE_KEY_MEMO = 'saikiyo_data_memo';
+
+let currentSpace = 'tanka'; // 'tanka' または 'memo'
 let data = [];
 let mode = 'normal'; 
 let selectedIds = new Set();
@@ -527,7 +558,7 @@ let lastTapTime = 0;
 let tapTimeout = null; 
 const doubleTapThreshold = 300; 
 
-let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNode, inputTagsNode;
+let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNode, inputTagsNode, btnSpaceToggle;
 
 // D&D用状態変数（机専用）
 let deskDraggedItem = null;
@@ -537,8 +568,16 @@ let deskPointerOffsetY = 0;
 // ==========================================
 // 2. ユーティリティ・データ操作関数
 // ==========================================
+function getStorageKey() {
+  return currentSpace === 'tanka' ? STORAGE_KEY_TANKA : STORAGE_KEY_MEMO;
+}
+
+function loadData() {
+  data = JSON.parse(localStorage.getItem(getStorageKey())) || [];
+}
+
 function saveData() { 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(getStorageKey(), JSON.stringify(data));
 }
 
 function escapeHTML(str) { 
@@ -570,6 +609,19 @@ function physicalCopy(text) {
 
 function saveConfig() {
   localStorage.setItem('saikiyo_config', JSON.stringify(config));
+}
+
+// 空間に応じて「重複」ボタンの表示を切り替える
+function updateJufukuVisibility() {
+  const jufukuBtn = document.getElementById('btn-jufuku');
+  const jufukuMenu = document.getElementById('menu-jufuku');
+  if (currentSpace === 'memo') {
+    jufukuBtn.style.display = 'none';
+    jufukuMenu.style.display = 'none';
+  } else {
+    jufukuBtn.style.display = 'block';
+    jufukuMenu.classList.remove('open');
+  }
 }
 
 // ==========================================
@@ -616,8 +668,11 @@ function applyConfig() {
   renderTimeline();
 }
 
-function renderTimeline() {
-  const distanceFromBottom = tlContainer.scrollHeight - tlContainer.scrollTop;
+function renderTimeline(forceBottom = false) {
+  // 自動ピン留めの判定：下から20px以内にいれば一番下にいると判定
+  const isAtBottom = (tlContainer.scrollHeight - tlContainer.scrollTop) <= (tlContainer.clientHeight + 20);
+  const previousScrollTop = tlContainer.scrollTop;
+
   tlContainer.innerHTML = '';
   
   let filtered = data.filter(d => {
@@ -659,7 +714,14 @@ function renderTimeline() {
   
   tlContainer.appendChild(fragment);
   executeUnifiedSearch();
-  tlContainer.scrollTop = tlContainer.scrollHeight - distanceFromBottom;
+  
+  // スマートスクロールの実行
+  if (forceBottom || isAtBottom) {
+    tlContainer.scrollTop = tlContainer.scrollHeight;
+  } else {
+    tlContainer.scrollTop = previousScrollTop;
+  }
+  
   updateButtonsState();
 }
 
@@ -761,7 +823,7 @@ function updateButtonsState() {
     
     btnSearch.disabled = false; 
     
-    btnEscape.innerText = '脱出';
+    btnEscape.innerText = '発着';
     btnEscape.disabled = false;
     btnEscape.classList.remove('active-btn');
     btnEscape.dataset.action = 'escape'; 
@@ -802,23 +864,47 @@ window.closePanels = function() {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); 
 }
 
+// 編集室のインラインメニュー状態をリセットする処理
+window.cleanupAmuInline = function() {
+  document.querySelectorAll('.amu-inline-ctrl').forEach(el => el.remove());
+  document.querySelectorAll('.amu-action-btn.selected').forEach(b => b.classList.remove('selected'));
+};
+
 window.toggleAmuAction = function(btn) {
-  const type = btn.dataset.type;
   const isSelected = btn.classList.contains('selected');
-  if (type === 'status' || type === 'publish') {
-    document.querySelectorAll(`.amu-action-btn[data-type="${type}"]`).forEach(el => el.classList.remove('selected'));
-    if (!isSelected) btn.classList.add('selected');
-  } else {
-    btn.classList.toggle('selected');
-  }
+  
+  // まず他の開いているインラインメニューを閉じる
+  cleanupAmuInline();
+
+  // すでに開いていたボタンを押した場合は閉じるだけで終了
+  if (isSelected) return;
+
+  btn.classList.add('selected');
+
+  // その場に「取消」「決定」ボタンを生成して直下に挿入
+  const ctrlDiv = document.createElement('div');
+  ctrlDiv.className = 'amu-inline-ctrl';
+  ctrlDiv.style.display = 'flex';
+  ctrlDiv.style.gap = '10px';
+  ctrlDiv.style.marginBottom = '12px';
+
+  ctrlDiv.innerHTML = `
+    <button style="flex:1; padding:15px; background:var(--color-B); color:var(--color-A); border:1px solid var(--color-A); font-weight:bold; font-size:1.1rem; border-radius:var(--border-radius); cursor:pointer;" onclick="cleanupAmuInline()">取消</button>
+    <button style="flex:1; padding:15px; background:var(--color-A); color:var(--color-B); border:1px solid var(--color-A); font-weight:bold; font-size:1.1rem; border-radius:var(--border-radius); cursor:pointer;" onclick="executeSingleAmuAction('${btn.dataset.type}', '${btn.dataset.val}', this)">決定</button>
+  `;
+
+  btn.parentNode.insertBefore(ctrlDiv, btn.nextSibling);
 }
 
-window.executeAmuActions = function() {
-  const btnDecide = document.getElementById('btn-amu-decide');
-  btnDecide.innerText = 'できたよ！';
-  btnDecide.style.pointerEvents = 'none';
+// 単一のアクションを実行する
+window.executeSingleAmuAction = function(type, val, submitBtn) {
+  submitBtn.innerText = 'できたよ！';
+  submitBtn.style.pointerEvents = 'none';
+  const cancelBtn = submitBtn.previousElementSibling;
+  if (cancelBtn) cancelBtn.style.pointerEvents = 'none';
   document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
-  
+
+  // 1. メモの保存処理（すべてのアクションで共通実行）
   const memoInputValue = document.getElementById('amu-memo-input').value.trim();
   const isMemoEdited = memoInputValue !== "" || selectedIds.size === 1; 
   if (isMemoEdited) {
@@ -829,22 +915,19 @@ window.executeAmuActions = function() {
       }
     });
   }
-  
-  const selectedBtns = document.querySelectorAll('.amu-action-btn.selected');
-  let needTag = false, needCopy = false, needCreateList = false;
-  
-  selectedBtns.forEach(btn => {
-    const type = btn.dataset.type;
-    const val = btn.dataset.val;
-    if (type === 'status') {
-      data.forEach(d => { if(selectedIds.has(d.id)) d.status = val === 'archive' ? 'アーカイブ' : '作品'; });
-    } else if (type === 'publish') {
-      data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = val === 'published' ? '既発表' : '未発表'; });
-    } else if (type === 'tag') { needTag = true; }
-    else if (type === 'copy') { needCopy = true; }
-    else if (type === 'create_list') { needCreateList = true; }
-  });
-  
+
+  // 2. 個別アクションの処理
+  let needTag = false, needCopy = false, needCreateList = false, needImage = false;
+
+  if (type === 'status') {
+    data.forEach(d => { if(selectedIds.has(d.id)) d.status = val === 'archive' ? 'アーカイブ' : '作品'; });
+  } else if (type === 'publish') {
+    data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = val === 'published' ? '既発表' : '未発表'; });
+  } else if (type === 'tag') { needTag = true; }
+  else if (type === 'copy') { needCopy = true; }
+  else if (type === 'create_list') { needCreateList = true; }
+  else if (type === 'image') { needImage = true; }
+
   if (needTag) {
     const t = prompt('共通で付与するタグを入力（空白なし）');
     if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
@@ -853,12 +936,14 @@ window.executeAmuActions = function() {
     let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
     physicalCopy(txt);
   }
-  
+
   saveData();
-  
+
+  // 意図的遅延（1秒）
   setTimeout(() => {
-    btnDecide.innerText = '決定';
-    btnDecide.style.pointerEvents = 'auto';
+    submitBtn.innerText = '決定';
+    submitBtn.style.pointerEvents = 'auto';
+    if (cancelBtn) cancelBtn.style.pointerEvents = 'auto';
     document.querySelectorAll('.amu-action-btn').forEach(b => { b.style.pointerEvents = 'auto'; });
     
     if (needCreateList) {
@@ -871,9 +956,14 @@ window.executeAmuActions = function() {
         } 
       });
       openListEditor(null, [...new Set(expandedIds)]);
+      cleanupAmuInline();
+    } else if (needImage) {
+      openImageGeneratorFromAmu();
+      cleanupAmuInline();
     } else {
       window.closePanels(); 
       exitSelectionMode();
+      cleanupAmuInline();
     }
   }, 1000);
 }
@@ -1029,9 +1119,6 @@ window.openImageGeneratorFromAmu = function() {
   window.open(url, '_blank');
 };
 
-
-
-
 window.saveListAndClose = function() {
   const name = document.getElementById('list-name').value.trim() || '無題のリスト';
   const memo = document.getElementById('list-memo').value.trim();
@@ -1082,10 +1169,10 @@ window.toggleEscapeMenu = function(menuId) {
   document.getElementById(menuId).classList.toggle('open');
 }
 window.executeEscape = async function(type) {
-  if (type === 'shashutsu') { 
+  if (type === 'dasshutsu') { 
     const targetData = data;
     if (!targetData || targetData.length === 0) {
-      alert('射出するデータがありません');
+      alert('脱出するデータがありません');
       return;
     }
 
@@ -1093,7 +1180,8 @@ window.executeEscape = async function(type) {
     const p = n => String(n).padStart(2, '0');
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
     // Androidの検閲を突破するため、拡張子を .txt に設定
-    const fileName = `saikiyo_backup_${ts}.txt`;
+    // ※空間名（tanka/memo）をファイル名に含めて混同を防止
+    const fileName = `saikiyo_${currentSpace}_backup_${ts}.txt`;
     const jsonStr = JSON.stringify(targetData, null, 2);
 
     try {
@@ -1103,8 +1191,8 @@ window.executeEscape = async function(type) {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'さいきよバックアップ',
-          text: `さいきよ全データ（${targetData.length}件）のバックアップファイルです。`
+          title: `さいきよバックアップ (${currentSpace})`,
+          text: `さいきよ[${currentSpace}]の全データ（${targetData.length}件）のバックアップファイルです。`
         });
         localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
         window.closePanels();
@@ -1123,11 +1211,11 @@ window.executeEscape = async function(type) {
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
-        alert('射出エラー: ' + err.message);
+        alert('脱出エラー: ' + err.message);
       }
     }
 
-  } else if (type === 'bunsan' || type === 'tesshu') {
+  } else if (type === 'bunshin' || type === 'haishutsu') {
     const targetVal = document.querySelector(`input[name="${type}-target"]:checked`).value;
     const targetData = data.filter(d => {
       if (targetVal === 'work' && d.status !== '作品') return false;
@@ -1149,16 +1237,16 @@ window.executeEscape = async function(type) {
     const p = n => String(n).padStart(2, '0');
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
     
-    a.download = `saikiyo_${targetVal}_${ts}.json`; 
+    a.download = `saikiyo_${currentSpace}_${targetVal}_${ts}.json`; 
     a.click();
     URL.revokeObjectURL(url);
     
     localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
 
-    if (type === 'tesshu') {
+    if (type === 'haishutsu') {
       const msg = targetVal === 'all'
-        ? 'すべてのデータをファイルに退避しました。\nさらに、基地から全データを完全に消去し、撤収を完了しますか？'
-        : `対象データ（${targetData.length}件）をファイルに退避しました。\nさらに、基地からこのデータだけを完全に消去しますか？`;
+        ? `すべてのデータをファイルに退避しました。\nさらに、基地（${currentSpace}）から全データを完全に消去し、排出を完了しますか？`
+        : `対象データ（${targetData.length}件）をファイルに退避しました。\nさらに、基地（${currentSpace}）からこのデータだけを完全に消去しますか？`;
 
       if (window.confirm(msg)) {
         const targetIds = new Set(targetData.map(d => d.id));
@@ -1182,8 +1270,8 @@ window.escapeAction = function(type, e) {
           const existingIds = new Set(data.map(d => d.id));
           imported.forEach(d => { if (!existingIds.has(d.id)) data.push(d); });
           saveData(); 
-          renderTimeline(); 
-          alert('救出完了');
+          renderTimeline(true); 
+          alert(`[${currentSpace}] への搬入完了`);
         }
       } catch(err) { alert('不正なファイルです'); }
     };
@@ -1315,7 +1403,7 @@ window.executeChushutsuAction = function(actionType) {
   const targetData = data.filter(d => d.id >= startMs && d.id <= endMs);
   if (targetData.length === 0) return alert('指定期間内にデータは存在しません。');
 
-  const actionName = actionType === 'tesshu' ? 'ファイルに出力してアプリから完全に消去（撤収）' : 'ファイルに出力（分散）';
+  const actionName = actionType === 'haishutsu' ? 'ファイルに出力してアプリから完全に消去（排出）' : 'ファイルに出力（分身）';
   const msg = `指定期間内（${targetData.length}件）のデータを${actionName}しますか？`;
   if (!window.confirm(msg)) return;
 
@@ -1331,14 +1419,14 @@ window.executeChushutsuAction = function(actionType) {
   a.click(); 
   URL.revokeObjectURL(url);
 
-  if (actionType === 'tesshu') {
+  if (actionType === 'haishutsu') {
     data = data.filter(d => d.id < startMs || d.id > endMs);
     saveData(); 
     if (typeof renderTimeline === 'function') renderTimeline(); 
   }
   
   window.closePanels();
-  alert(actionType === 'tesshu' ? '指定期間の撤収が完了しました。' : '指定期間の分散が完了しました。');
+  alert(actionType === 'haishutsu' ? '指定期間の排出が完了しました。' : '指定期間の分身が完了しました。');
 };
 
 // ==========================================
@@ -1351,6 +1439,19 @@ function attachEventListeners() {
   
   document.getElementById('header-title').addEventListener('click', () => {
     tlContainer.scrollTo({ top: tlContainer.scrollHeight, behavior: 'smooth' });
+  });
+
+  // [tanka] / [memo] 空間トグルボタン
+  btnSpaceToggle.addEventListener('click', () => {
+    saveData(); // 現在の空間のデータを念のため保存
+    currentSpace = currentSpace === 'tanka' ? 'memo' : 'tanka';
+    localStorage.setItem('saikiyo_space', currentSpace);
+    btnSpaceToggle.innerText = `[${currentSpace}]`;
+    
+    updateJufukuVisibility(); // 空間に応じたUIの切り替え
+    loadData(); // 新しい空間のデータをロード
+    exitSelectionMode(); // 選択状態等をリセット
+    renderTimeline(true); // 強制的に一番下にスクロールして表示
   });
   
   btnEscape.addEventListener('click', () => { 
@@ -1428,8 +1529,7 @@ function attachEventListeners() {
         btnSearch.style.opacity = '1';
       }
       saveData();
-      renderTimeline();
-      tlContainer.scrollTop = tlContainer.scrollHeight;
+      renderTimeline(true); // 新規送信時は必ず一番下にスクロール
     } else if (hasSelection) {
       let expandedIds = [];
       let singleMemo = ''; 
@@ -1458,8 +1558,8 @@ function attachEventListeners() {
       previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
       memoInputNode.value = singleMemo; 
       
+      cleanupAmuInline(); // パネルを開く前に念のためインライン状態をリセット
       document.getElementById('panel-amu-actions').classList.add('active');
-      document.querySelectorAll('.amu-action-btn').forEach(b => b.classList.remove('selected'));
     }
   });
 
@@ -1596,8 +1696,15 @@ function initApp() {
   btnTweet = document.getElementById('btn-tweet');
   inputContentNode = document.getElementById('input-content');
   inputTagsNode = document.getElementById('input-tags');
+  btnSpaceToggle = document.getElementById('btn-space-toggle');
 
-  data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  // 空間の初期化
+  currentSpace = localStorage.getItem('saikiyo_space') || 'tanka';
+  btnSpaceToggle.innerText = `[${currentSpace}]`;
+  updateJufukuVisibility();
+
+  loadData();
+  
   appTitle = localStorage.getItem('saikiyo_title') || 'さいきよ';
   applyThemeAndTitle();
 
@@ -1661,14 +1768,15 @@ window.executeTextImport = function() {
   
   if (count > 0) { 
     saveData(); 
-    if (typeof renderTimeline === 'function') renderTimeline(); 
-    alert(`${count}件のデータを取り込みました。`); 
+    if (typeof renderTimeline === 'function') renderTimeline(true); 
+    alert(`[${currentSpace}] に ${count}件のデータを取り込みました。`); 
   }
   window.closePanels();
 }
 
 window.removeDuplicates = function() {
-  if (!window.confirm('内容・タグ・メモが完全に一致するデータを検索し、古いものだけを残して重複を削除します。\n実行しますか？')) return;
+  // memo空間では重複機能は無効化されているため、念のための安全装置
+  if (currentSpace === 'memo') return;
 
   const seen = new Map(); 
   const newData = [];
@@ -1727,7 +1835,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 <div id="panel-auth" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:var(--color-B); z-index:10000; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
   <h2 style="color:var(--color-A); margin-bottom:20px;">合言葉をどうぞ</h2>
-  <input type="password" id="auth-input" style="padding:15px; font-size:1.5rem; width:100%; max-width:300px; border:1px solid var(--color-A); border-radius:var(--border-radius); margin-bottom:20px; text-align:center;">
+  <input type="text" id="auth-input" style="padding:15px; font-size:1.5rem; width:100%; max-width:300px; border:1px solid var(--color-A); border-radius:var(--border-radius); margin-bottom:20px; text-align:center;">
   <button onclick="checkPassphrase()" style="padding:15px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">開門</button>
 </div>
 
