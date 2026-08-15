@@ -15,7 +15,7 @@
    2026.08.15 編集室インラインアクション改修版
    2026.08.15 スマートスクロール（自動ピン留め）対応版
    2026.08.15 空間分割（tanka/memoマルチテナント）対応版
-   2026.08.15 設定パネル情報レイアウト最適化版
+   2026.08.16 取扱説明書外部化（案A）対応版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -358,7 +358,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
     <hr style="border-color: var(--color-A); margin: 10px 0;">
 
-    <button class="panel-btn inverted" style="margin-bottom: 0;" onclick="document.getElementById('panel-manual').classList.add('active')">取扱説明書を読む</button>
+    <button class="panel-btn inverted" style="margin-bottom: 0;" onclick="window.open('about.html', '_blank')">取扱説明書を読む</button>
     <button class="panel-btn inverted" style="margin-bottom: 30px;" onclick="resetSettings()">初期設定に戻す</button>
   </div>
 </div>
@@ -394,7 +394,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-dasshutsu')">脱出</button>
   <div id="menu-dasshutsu" class="escape-submenu">
-    <div class="escape-sub-left">バックアップファイルをメールで送ります</div>
+    <div class="escape-sub-left">メールを打ち出します</div>
     <div class="escape-sub-right"><button onclick="executeEscape('dasshutsu')">決定</button></div>
   </div>
 
@@ -500,47 +500,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <div id="reader-content" style="font-size: 1.2rem; line-height: 2.0; white-space: pre-wrap; padding-bottom: 50px;"></div>
 </div>
 
-<div id="panel-manual" class="panel" style="z-index: 250;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
-    <h2 style="margin: 0; border: none; padding: 0;">取扱説明書</h2>
-    <button onclick="document.getElementById('panel-manual').classList.remove('active')" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
-  </div>
-  
-  <div style="font-size: 1.05rem; line-height: 1.8; padding-bottom: 30px; color: var(--color-A);">
-    <p>「さいきよ」は、ブラウザの記憶領域のみを使用する、完全オフライン稼働の記録アプリです。</p>
-    
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">1. 空間の切り替え</h3>
-    <p>画面右上の [tanka] / [memo] ボタンで、完全に独立した2つのデータ空間を行き来できます。用途に合わせて使い分けてください。</p>
-
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">2. 詠む・探す</h3>
-    <ul style="padding-left: 20px; margin-bottom: 15px;">
-    <li><strong>入力窓と検索窓は兼用です。</strong></li>
-      <li><strong>入力・タグ:</strong> 下部のテキストエリアから本文とタグ（空白区切り）を即座に記録します。</li>
-      <li><strong>検索:</strong> 「検索」ボタンで、本文・タグ・メモ・日付から瞬時にデータを呼び出します。</li>
-    </ul>
-
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">3. 編む（編集室）</h3>
-    <p>タイムラインの要素をダブルタップ、または「編む」で複数選択して起動します。</p>
-    <ul style="padding-left: 20px; margin-bottom: 15px;">
-      <li><strong>ステータス管理:</strong> 「作品 / アーカイブ」「既発表 / 未発表」を振り分けます。</li>
-      <li><strong>リスト化:</strong> 選択した要素から「新しいリスト（連作）」を構築し、順序の入れ替えや一括コピーを行います。</li>
-    </ul>
-
-    <h3 style="border-bottom: 1px dashed var(--color-A); padding-bottom: 5px; margin-top: 25px;">4. 発着（データ管理）</h3>
-    <p>データは端末内にのみ存在するため、定期的な退避が必須です。お勧めは、ファイルを自分宛ての空メールに添付して送ることです。</p>
-    <ul style="padding-left: 20px; margin-bottom: 15px;">
-      <li><strong>脱出・排出・分身:</strong> 全データ、または指定したデータをバックアップファイルとして端末やメール等へ退避します。</li>
-      <li><strong>搬入・密輸:</strong> 退避したバックアップファイルの読み込み、またはテキストデータの一括流し込みを行います。</li>
-      <li><strong>重複:</strong> 内容とタグが完全一致する不要な重複データを切除します（※tanka空間限定）。</li>
-    </ul>
-  </div>
-</div>
-
 <script>
 // ==========================================
 // 1. グローバル変数と定数の定義
 // ==========================================
-// 互換性のためtanka空間は従来のキーを使用、memo空間は新規キー
 const STORAGE_KEY_TANKA = 'saikiyo_data';
 const STORAGE_KEY_MEMO = 'saikiyo_data_memo';
 
@@ -560,7 +523,6 @@ const doubleTapThreshold = 300;
 
 let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNode, inputTagsNode, btnSpaceToggle;
 
-// D&D用状態変数（机専用）
 let deskDraggedItem = null;
 let deskPlaceholder = null;
 let deskPointerOffsetY = 0;
@@ -611,7 +573,6 @@ function saveConfig() {
   localStorage.setItem('saikiyo_config', JSON.stringify(config));
 }
 
-// 空間に応じて「重複」ボタンの表示を切り替える
 function updateJufukuVisibility() {
   const jufukuBtn = document.getElementById('btn-jufuku');
   const jufukuMenu = document.getElementById('menu-jufuku');
@@ -669,7 +630,6 @@ function applyConfig() {
 }
 
 function renderTimeline(forceBottom = false) {
-  // 自動ピン留めの判定：下から20px以内にいれば一番下にいると判定
   const isAtBottom = (tlContainer.scrollHeight - tlContainer.scrollTop) <= (tlContainer.clientHeight + 20);
   const previousScrollTop = tlContainer.scrollTop;
 
@@ -715,7 +675,6 @@ function renderTimeline(forceBottom = false) {
   tlContainer.appendChild(fragment);
   executeUnifiedSearch();
   
-  // スマートスクロールの実行
   if (forceBottom || isAtBottom) {
     tlContainer.scrollTop = tlContainer.scrollHeight;
   } else {
@@ -753,7 +712,6 @@ function executeUnifiedSearch() {
   });
 }
 
-// D&D対応：机のアイテムレンダリング
 function renderListItems(itemIds) {
   const container = document.getElementById('list-items');
   container.innerHTML = ''; 
@@ -864,7 +822,6 @@ window.closePanels = function() {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); 
 }
 
-// 編集室のインラインメニュー状態をリセットする処理
 window.cleanupAmuInline = function() {
   document.querySelectorAll('.amu-inline-ctrl').forEach(el => el.remove());
   document.querySelectorAll('.amu-action-btn.selected').forEach(b => b.classList.remove('selected'));
@@ -872,16 +829,10 @@ window.cleanupAmuInline = function() {
 
 window.toggleAmuAction = function(btn) {
   const isSelected = btn.classList.contains('selected');
-  
-  // まず他の開いているインラインメニューを閉じる
   cleanupAmuInline();
-
-  // すでに開いていたボタンを押した場合は閉じるだけで終了
   if (isSelected) return;
-
   btn.classList.add('selected');
 
-  // その場に「取消」「決定」ボタンを生成して直下に挿入
   const ctrlDiv = document.createElement('div');
   ctrlDiv.className = 'amu-inline-ctrl';
   ctrlDiv.style.display = 'flex';
@@ -896,7 +847,6 @@ window.toggleAmuAction = function(btn) {
   btn.parentNode.insertBefore(ctrlDiv, btn.nextSibling);
 }
 
-// 単一のアクションを実行する
 window.executeSingleAmuAction = function(type, val, submitBtn) {
   submitBtn.innerText = 'できたよ！';
   submitBtn.style.pointerEvents = 'none';
@@ -904,7 +854,6 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
   if (cancelBtn) cancelBtn.style.pointerEvents = 'none';
   document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
 
-  // 1. メモの保存処理（すべてのアクションで共通実行）
   const memoInputValue = document.getElementById('amu-memo-input').value.trim();
   const isMemoEdited = memoInputValue !== "" || selectedIds.size === 1; 
   if (isMemoEdited) {
@@ -916,7 +865,6 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
     });
   }
 
-  // 2. 個別アクションの処理
   let needTag = false, needCopy = false, needCreateList = false, needImage = false;
 
   if (type === 'status') {
@@ -939,7 +887,6 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
 
   saveData();
 
-  // 意図的遅延（1秒）
   setTimeout(() => {
     submitBtn.innerText = '決定';
     submitBtn.style.pointerEvents = 'auto';
@@ -997,7 +944,6 @@ window.removeListItem = function(btn) {
   }
 }
 
-// 机専用：D&D物理演算イベントハンドラ
 function handleListPointerDown(e) {
   if (e.target.tagName === 'BUTTON') return;
   if (e.button !== 0 && e.type !== 'touchstart') return;
@@ -1012,7 +958,6 @@ function handleListPointerDown(e) {
   deskPlaceholder.style.height = `${rect.height}px`;
   
   listContainer.insertBefore(deskPlaceholder, deskDraggedItem);
-  
   deskPointerOffsetY = e.clientY - rect.top;
   
   deskDraggedItem.classList.add('dragging');
@@ -1115,7 +1060,6 @@ window.openImageGeneratorFromAmu = function() {
 
   const targetPath = 'tanzaku.html'; 
   const url = `${targetPath}?text=${encodeURIComponent(txt)}`;
-  
   window.open(url, '_blank');
 };
 
@@ -1168,6 +1112,7 @@ window.toggleEscapeMenu = function(menuId) {
   });
   document.getElementById(menuId).classList.toggle('open');
 }
+
 window.executeEscape = async function(type) {
   if (type === 'dasshutsu') { 
     const targetData = data;
@@ -1179,8 +1124,6 @@ window.executeEscape = async function(type) {
     const d = new Date();
     const p = n => String(n).padStart(2, '0');
     const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
-    // Androidの検閲を突破するため、拡張子を .txt に設定
-    // ※空間名（tanka/memo）をファイル名に含めて混同を防止
     const fileName = `saikiyo_${currentSpace}_backup_${ts}.txt`;
     const jsonStr = JSON.stringify(targetData, null, 2);
 
@@ -1197,7 +1140,6 @@ window.executeEscape = async function(type) {
         localStorage.setItem('saikiyo_last_save_time', Date.now().toString());
         window.closePanels();
       } else {
-        // 万が一共有シート自体が出ない特殊環境のみダウンロード保存
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1258,6 +1200,7 @@ window.executeEscape = async function(type) {
     window.closePanels();
   }
 };
+
 window.escapeAction = function(type, e) {
   if (type === 'import') {
     const file = e.target.files[0]; 
@@ -1415,7 +1358,7 @@ window.executeChushutsuAction = function(actionType) {
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
-  a.download = `${ts}.json`;
+  a.download = `saikiyo_${currentSpace}_${ts}.json`;
   a.click(); 
   URL.revokeObjectURL(url);
 
@@ -1441,17 +1384,16 @@ function attachEventListeners() {
     tlContainer.scrollTo({ top: tlContainer.scrollHeight, behavior: 'smooth' });
   });
 
-  // [tanka] / [memo] 空間トグルボタン
   btnSpaceToggle.addEventListener('click', () => {
-    saveData(); // 現在の空間のデータを念のため保存
+    saveData();
     currentSpace = currentSpace === 'tanka' ? 'memo' : 'tanka';
     localStorage.setItem('saikiyo_space', currentSpace);
     btnSpaceToggle.innerText = currentSpace;
     
-    updateJufukuVisibility(); // 空間に応じたUIの切り替え
-    loadData(); // 新しい空間のデータをロード
-    exitSelectionMode(); // 選択状態等をリセット
-    renderTimeline(true); // 強制的に一番下にスクロールして表示
+    updateJufukuVisibility();
+    loadData();
+    exitSelectionMode();
+    renderTimeline(true);
   });
   
   btnEscape.addEventListener('click', () => { 
@@ -1529,7 +1471,7 @@ function attachEventListeners() {
         btnSearch.style.opacity = '1';
       }
       saveData();
-      renderTimeline(true); // 新規送信時は必ず一番下にスクロール
+      renderTimeline(true);
     } else if (hasSelection) {
       let expandedIds = [];
       let singleMemo = ''; 
@@ -1558,7 +1500,7 @@ function attachEventListeners() {
       previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
       memoInputNode.value = singleMemo; 
       
-      cleanupAmuInline(); // パネルを開く前に念のためインライン状態をリセット
+      cleanupAmuInline();
       document.getElementById('panel-amu-actions').classList.add('active');
     }
   });
@@ -1698,7 +1640,6 @@ function initApp() {
   inputTagsNode = document.getElementById('input-tags');
   btnSpaceToggle = document.getElementById('btn-space-toggle');
 
-  // 空間の初期化
   currentSpace = localStorage.getItem('saikiyo_space') || 'tanka';
   btnSpaceToggle.innerText = currentSpace;
   updateJufukuVisibility();
@@ -1775,7 +1716,6 @@ window.executeTextImport = function() {
 }
 
 window.removeDuplicates = function() {
-  // memo空間では重複機能は無効化されているため、念のための安全装置
   if (currentSpace === 'memo') return;
 
   const seen = new Map(); 
@@ -1820,9 +1760,6 @@ window.removeDuplicates = function() {
   window.closePanels();
 };
 
-// ==========================================
-// 唯一の起動トリガー
-// ==========================================
 document.addEventListener('DOMContentLoaded', initApp);
 </script>
 
@@ -1841,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 <div id="panel-first-boot" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:var(--color-B); z-index:10001; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
   <h2 style="color:var(--color-A); margin-bottom:20px; text-align:center;">初期セットアップ</h2>
-  <p style="color:var(--color-A); margin-bottom:20px; text-align:center; line-height:1.6;">アプリをロックする「合言葉（扉）」機能を使用しますか？<br><span style="font-size:0.9rem;">※後から設定画面で変更可能です</span></p>
+  <p style="color:var(--color-A); margin-bottom:20px; text-align:center; line-height:1.6;">アプリをロックする（扉）機能を使用しますか？<br><span style="font-size:0.9rem;">※後から設定画面で変更可能です</span></p>
   
   <div id="first-boot-choices" style="display:flex; gap:10px; width:100%; max-width:300px;">
     <button onclick="skipFirstBoot()" style="padding:15px; flex:1; font-size:1.1rem; background:var(--color-B); color:var(--color-A); border:2px solid var(--color-A); border-radius:var(--border-radius); cursor:pointer; font-weight:bold;">使わない</button>
