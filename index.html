@@ -250,7 +250,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <div>
       <button id="btn-menu">≡</button>
       <button id="btn-fullscreen">⛶</button>
-      <button id="btn-space-toggle" style="margin-left: 10px;">[tanka]</button>
+      <button id="btn-space-toggle" style="margin-left: 10px;">tanka</button>
     </div>
     <div id="header-title">さいきよ</div>
   </header>
@@ -1446,7 +1446,7 @@ function attachEventListeners() {
     saveData(); // 現在の空間のデータを念のため保存
     currentSpace = currentSpace === 'tanka' ? 'memo' : 'tanka';
     localStorage.setItem('saikiyo_space', currentSpace);
-    btnSpaceToggle.innerText = `[${currentSpace}]`;
+    btnSpaceToggle.innerText = currentSpace;
     
     updateJufukuVisibility(); // 空間に応じたUIの切り替え
     loadData(); // 新しい空間のデータをロード
@@ -1700,7 +1700,7 @@ function initApp() {
 
   // 空間の初期化
   currentSpace = localStorage.getItem('saikiyo_space') || 'tanka';
-  btnSpaceToggle.innerText = `[${currentSpace}]`;
+  btnSpaceToggle.innerText = currentSpace;
   updateJufukuVisibility();
 
   loadData();
