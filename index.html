@@ -16,7 +16,7 @@
    2026.08.15 スマートスクロール（自動ピン留め）対応版
    2026.08.15 空間分割（tanka/memoマルチテナント）対応版
    2026.08.16 取扱説明書外部化（案A）対応版
-   2026.08.17 OR検索実装＆リストD&D挙動抑制対応版
+   2026.08.17 AND/OR複合検索＆リストD&D挙動抑制対応版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -693,13 +693,13 @@ function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
   if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
 
-  // 1. 入力文字列の強制正規化（全角縦線・罫線を半角パイプへ置換）
-  const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').toLowerCase();
-  const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').toLowerCase();
+  // 1. 入力文字列の強制正規化（全角縦線・罫線を半角パイプへ、全角スペースを半角スペースへ置換）
+  const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
+  const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
 
   // 2. OR条件による分割処理
-  const contentKeywords = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
-  const tagKeywords = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
+  const contentOrGroups = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
+  const tagOrGroups = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
 
   items.forEach(item => {
     const id = Number(item.dataset.id);
@@ -711,14 +711,22 @@ function executeUnifiedSearch() {
     const memo = (targetData.memo || '').toLowerCase();
     const dateStr = formatTime(id).toLowerCase();
 
-    // 内容、メモ、日付のいずれかにマッチするか（OR検索）
-    const contentMatch = contentKeywords.length === 0 || contentKeywords.some(keyword => {
-      return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
+    // 3. AND・OR複合検索ロジック (内容・メモ・日付)
+    const contentMatch = contentOrGroups.length === 0 || contentOrGroups.some(group => {
+      // AND条件（スペース）で分割
+      const andKeywords = group.split(/\s+/).filter(Boolean);
+      // グループ内のすべてのキーワードが含まれているかチェック
+      return andKeywords.every(keyword => {
+        return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
+      });
     });
 
-    // タグがマッチするか（OR検索）
-    const tagMatch = tagKeywords.length === 0 || tagKeywords.some(tagKeyword => {
-      return tags.includes(tagKeyword);
+    // 4. AND・OR複合検索ロジック (タグ)
+    const tagMatch = tagOrGroups.length === 0 || tagOrGroups.some(group => {
+      const andKeywords = group.split(/\s+/).filter(Boolean);
+      return andKeywords.every(keyword => {
+        return tags.includes(keyword);
+      });
     });
 
     if (contentMatch && tagMatch) {
