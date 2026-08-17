@@ -16,7 +16,8 @@
    2026.08.15 スマートスクロール（自動ピン留め）対応版
    2026.08.15 空間分割（tanka/memoマルチテナント）対応版
    2026.08.16 取扱説明書外部化（案A）対応版
-   2026.08.17 AND/OR複合検索＆リストD&D挙動抑制対応版
+   2026.08.17 AND/OR複合検索＆リストD&D完全手触り特化（ひらひら根絶）版
+   2026.08.17 運用メニュー「管制」への全面ネーミング換装版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -185,11 +186,13 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 }
 #panel-list-editor textarea { resize: none; }
 #list-items { border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); border-radius: var(--border-radius); position: relative; }
-/* D&D対応リストアイテム */
+
+/* D&D対応リストアイテム - 物理的な手触り（ひらひら廃止） */
 .list-item-edit { 
   display: flex; align-items: center; gap: 8px; margin-bottom: 5px; border: 1px solid var(--color-A); padding: 8px; 
   background: var(--color-B); border-radius: var(--border-radius); cursor: grab; user-select: none; touch-action: none;
   box-sizing: border-box;
+  transition: none !important; /* ひらひらを強制無効化 */
 }
 .list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 15px; pointer-events: none; }
 .list-item-edit .item-num { width: 24px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; pointer-events: none; flex-shrink: 0; }
@@ -202,9 +205,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   background-color: var(--color-C); border: 1px dashed var(--color-A); border-radius: var(--border-radius); box-sizing: border-box; margin-bottom: 5px;
 }
 
-/* ドラッグ中の実体 */
+/* ドラッグ中の実体 - 装飾的な浮き上がりや影を全廃 */
 .list-item-edit.dragging {
-  position: fixed; pointer-events: none; opacity: 0.95; transform: scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 1000;
+  position: fixed; pointer-events: none; opacity: 1; transform: none; box-shadow: none; z-index: 1000;
   border: 2px solid var(--color-A); background: var(--color-B);
 }
 
@@ -262,7 +265,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
     <textarea id="input-tags" rows="1" placeholder="タグは空白区切り" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
     <div class="buttons">
-      <button id="btn-escape" data-action="escape">発着</button>
+      <button id="btn-escape" data-action="escape">管制</button>
       <button id="btn-amu" disabled>取消</button>
       <button id="btn-send">送る</button>
       <button id="btn-search">検索</button>
@@ -389,17 +392,17 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
 <div id="panel-escape" class="panel">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
-    <h2 style="margin: 0; border: none; padding: 0;">発着ターミナル</h2>
+    <h2 style="margin: 0; border: none; padding: 0;">管制</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-dasshutsu')">脱出</button>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-dasshutsu')">射出</button>
   <div id="menu-dasshutsu" class="escape-submenu">
     <div class="escape-sub-left">メールを打ち出します</div>
     <div class="escape-sub-right"><button onclick="executeEscape('dasshutsu')">決定</button></div>
   </div>
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-haishutsu')">排出</button>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-haishutsu')">撤収</button>
   <div id="menu-haishutsu" class="escape-submenu">
     <div class="escape-sub-left">
       <label><input type="radio" name="haishutsu-target" value="archive" checked> アーカイブのみ</label>
@@ -412,7 +415,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-hannyu')">搬入</button>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-hannyu')">回収</button>
   <div id="menu-hannyu" class="escape-submenu">
     <div class="escape-sub-left">バックアップファイルを差分取り込みします</div>
     <div class="escape-sub-right"><button onclick="document.getElementById('import-file').click()">決定</button></div>
@@ -427,7 +430,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunshin')">分身</button>
+  <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunshin')">退避</button>
   <div id="menu-bunshin" class="escape-submenu">
     <div class="escape-sub-left">
       <label><input type="radio" name="bunshin-target" value="archive"> アーカイブのみ</label>
@@ -440,7 +443,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <button class="panel-btn" onclick="toggleEscapeMenu('menu-chushutsu')">抽出</button>
   <div id="menu-chushutsu" class="escape-submenu">
-    <div style="font-size: 0.95rem; margin-bottom: 10px; color: var(--color-A);">期間を決めて排出、分身します</div>
+    <div style="font-size: 0.95rem; margin-bottom: 10px; color: var(--color-A);">期間を決めて撤収、退避します</div>
 
     <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 15px;">
       <input type="datetime-local" id="chushutsu-start" class="dropdown" style="flex: 1; padding: 10px;">
@@ -449,8 +452,8 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     </div>
 
     <div style="display: flex; gap: 10px;">
-      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A);" onclick="executeChushutsuAction('bunshin')">期間を分身</button>
-      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A); color: var(--color-B); background: var(--color-A);" onclick="executeChushutsuAction('haishutsu')">期間を排出</button>
+      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A);" onclick="executeChushutsuAction('bunshin')">期間を退避</button>
+      <button class="panel-btn" style="margin: 0; padding: 15px; flex: 1; border-color: var(--color-A); color: var(--color-B); background: var(--color-A);" onclick="executeChushutsuAction('haishutsu')">期間を撤収</button>
     </div>
   </div>
 
@@ -531,6 +534,7 @@ let deskDragTimer = null;
 let deskDragStartX = 0;
 let deskDragStartY = 0;
 let deskIsDragging = false;
+let lastMoveTime = 0;
 
 // ==========================================
 // 2. ユーティリティ・データ操作関数
@@ -693,11 +697,9 @@ function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
   if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
 
-  // 1. 入力文字列の強制正規化（全角縦線・罫線を半角パイプへ、全角スペースを半角スペースへ置換）
   const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
   const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
 
-  // 2. OR条件による分割処理
   const contentOrGroups = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
   const tagOrGroups = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
 
@@ -711,17 +713,13 @@ function executeUnifiedSearch() {
     const memo = (targetData.memo || '').toLowerCase();
     const dateStr = formatTime(id).toLowerCase();
 
-    // 3. AND・OR複合検索ロジック (内容・メモ・日付)
     const contentMatch = contentOrGroups.length === 0 || contentOrGroups.some(group => {
-      // AND条件（スペース）で分割
       const andKeywords = group.split(/\s+/).filter(Boolean);
-      // グループ内のすべてのキーワードが含まれているかチェック
       return andKeywords.every(keyword => {
         return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
       });
     });
 
-    // 4. AND・OR複合検索ロジック (タグ)
     const tagMatch = tagOrGroups.length === 0 || tagOrGroups.some(group => {
       const andKeywords = group.split(/\s+/).filter(Boolean);
       return andKeywords.every(keyword => {
@@ -806,7 +804,7 @@ function updateButtonsState() {
 
     btnSearch.disabled = false; 
 
-    btnEscape.innerText = '発着';
+    btnEscape.innerText = '管制';
     btnEscape.disabled = false;
     btnEscape.classList.remove('active-btn');
     btnEscape.dataset.action = 'escape'; 
@@ -970,7 +968,7 @@ window.removeListItem = function(btn) {
 }
 
 // ------------------------------------------
-// リストドラッグ＆ドロップ制御（長押し判定導入）
+// リストドラッグ＆ドロップ制御（長押し判定導入＆ひらひら根絶スロットル）
 // ------------------------------------------
 function handleListPointerDown(e) {
   if (e.target.tagName === 'BUTTON') return;
@@ -1053,35 +1051,25 @@ function handleListPointerMove(e) {
   if (!deskIsDragging || !deskDraggedItem) return;
   e.preventDefault();
 
+  const now = Date.now();
+  if (now - lastMoveTime < 16) return; // スロットル処理でフリーズ回避
+  lastMoveTime = now;
+
   deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
   const listContainer = document.getElementById('list-items');
   const elements = document.elementsFromPoint(e.clientX, e.clientY);
   const target = elements.find(el => el.classList && el.classList.contains('list-item-edit') && el.parentNode === listContainer);
 
-  if (target && target !== deskPlaceholder) {
-    const items = Array.from(listContainer.children).filter(c => c !== deskPlaceholder);
-    const rects = items.map(item => ({ item, rect: item.getBoundingClientRect() }));
-
+  if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
     const targetRect = target.getBoundingClientRect();
+    
+    // 直線的かつ即座に入れ替える。アニメーション（ひらひら）は一切行わない
     if (e.clientY < targetRect.top + (targetRect.height / 2)) {
       listContainer.insertBefore(deskPlaceholder, target);
     } else {
       listContainer.insertBefore(deskPlaceholder, target.nextSibling);
     }
-
-    rects.forEach(({ item, rect }) => {
-      const newRect = item.getBoundingClientRect();
-      const dy = rect.top - newRect.top;
-      if (dy !== 0) {
-        item.style.transform = `translateY(${dy}px)`;
-        item.style.transition = 'none';
-        requestAnimationFrame(() => {
-          item.style.transform = '';
-          item.style.transition = 'transform 0.15s ease-out';
-        });
-      }
-    });
   }
 }
 
@@ -1195,7 +1183,7 @@ window.executeEscape = async function(type) {
   if (type === 'dasshutsu') { 
     const targetData = data;
     if (!targetData || targetData.length === 0) {
-      alert('脱出するデータがありません');
+      alert('射出するデータがありません');
       return;
     }
 
@@ -1231,7 +1219,7 @@ window.executeEscape = async function(type) {
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
-        alert('脱出エラー: ' + err.message);
+        alert('射出エラー: ' + err.message);
       }
     }
 
@@ -1265,8 +1253,8 @@ window.executeEscape = async function(type) {
 
     if (type === 'haishutsu') {
       const msg = targetVal === 'all'
-        ? `すべてのデータをファイルに退避しました。\nさらに、基地（${currentSpace}）から全データを完全に消去し、排出を完了しますか？`
-        : `対象データ（${targetData.length}件）をファイルに退避しました。\nさらに、基地（${currentSpace}）からこのデータだけを完全に消去しますか？`;
+        ? `すべてのデータをファイルに退避しました。\nさらに、基地（${currentSpace}）から全データを完全に消去し、撤収を完了しますか？`
+        : `対象データ（${targetData.length}件）をファイルに退避しました。\nさらに、基地（${currentSpace}）からこのデータだけを完全に消去して撤収しますか？`;
 
       if (window.confirm(msg)) {
         const targetIds = new Set(targetData.map(d => d.id));
@@ -1424,7 +1412,7 @@ window.executeChushutsuAction = function(actionType) {
   const targetData = data.filter(d => d.id >= startMs && d.id <= endMs);
   if (targetData.length === 0) return alert('指定期間内にデータは存在しません。');
 
-  const actionName = actionType === 'haishutsu' ? 'ファイルに出力してアプリから完全に消去（排出）' : 'ファイルに出力（分身）';
+  const actionName = actionType === 'haishutsu' ? 'ファイルに出力してアプリから完全に消去（撤収）' : 'ファイルに出力（退避）';
   const msg = `指定期間内（${targetData.length}件）のデータを${actionName}しますか？`;
   if (!window.confirm(msg)) return;
 
@@ -1447,7 +1435,7 @@ window.executeChushutsuAction = function(actionType) {
   }
 
   window.closePanels();
-  alert(actionType === 'haishutsu' ? '指定期間の排出が完了しました。' : '指定期間の分身が完了しました。');
+  alert(actionType === 'haishutsu' ? '指定期間の撤収が完了しました。' : '指定期間の退避が完了しました。');
 };
 
 // ==========================================
