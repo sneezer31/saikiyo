@@ -18,6 +18,7 @@
    2026.08.16 取扱説明書外部化（案A）対応版
    2026.08.17 AND/OR複合検索＆リストD&D完全手触り特化（ひらひら根絶）版
    2026.08.17 運用メニュー「管制」への全面ネーミング換装版
+   2026.08.18 カスタムスクロールバー＆自動エッジスクロール対応版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -175,6 +176,22 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   background: var(--color-A); color: var(--color-B); padding: 15px; margin-bottom: 10px;
   max-height: 25vh; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap;
   border-radius: var(--border-radius);
+}
+
+/* --- リストエディタ用・常時表示スクロールバー --- */
+#panel-list-editor {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-A) transparent;
+}
+#panel-list-editor::-webkit-scrollbar {
+  width: 6px;
+}
+#panel-list-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+#panel-list-editor::-webkit-scrollbar-thumb {
+  background-color: var(--color-A);
+  border-radius: 3px;
 }
 
 #panel-list-editor { display: none; }
@@ -535,6 +552,12 @@ let deskDragStartX = 0;
 let deskDragStartY = 0;
 let deskIsDragging = false;
 let lastMoveTime = 0;
+
+// 自動スクロール用の追加変数
+let deskLastClientX = 0;
+let deskLastClientY = 0;
+let autoScrollSpeed = 0;
+let autoScrollRAF = null;
 
 // ==========================================
 // 2. ユーティリティ・データ操作関数
@@ -968,7 +991,7 @@ window.removeListItem = function(btn) {
 }
 
 // ------------------------------------------
-// リストドラッグ＆ドロップ制御（長押し判定導入＆ひらひら根絶スロットル）
+// リストドラッグ＆ドロップ制御（自動エッジスクロール対応）
 // ------------------------------------------
 function handleListPointerDown(e) {
   if (e.target.tagName === 'BUTTON') return;
@@ -979,12 +1002,10 @@ function handleListPointerDown(e) {
   deskDragStartY = e.clientY;
   deskIsDragging = false;
 
-  // 長押し（250ms）でドラッグモードへ移行
   deskDragTimer = setTimeout(() => {
     startDrag(e);
   }, 250);
 
-  // 長押し前に指が動いた（スクロールした）らキャンセルする判定
   document.addEventListener('pointermove', checkDragThreshold, { passive: true });
   document.addEventListener('pointerup', handleDragEndPre);
   document.addEventListener('pointercancel', handleDragEndPre);
@@ -995,7 +1016,6 @@ function checkDragThreshold(e) {
   const dx = Math.abs(e.clientX - deskDragStartX);
   const dy = Math.abs(e.clientY - deskDragStartY);
   
-  // 10px以上動いた場合はスクロール操作とみなし、ドラッグ待機をキャンセル
   if (dx > 10 || dy > 10) {
     clearTimeout(deskDragTimer);
     deskDragTimer = null;
@@ -1039,33 +1059,24 @@ function startDrag(e) {
 
   document.body.appendChild(deskDraggedItem);
 
-  // 端末が対応していれば持ち上がった感触（バイブ）を返す
   if (navigator.vibrate) navigator.vibrate(40);
+
+  deskLastClientX = e.clientX;
+  deskLastClientY = e.clientY;
 
   document.addEventListener('pointermove', handleListPointerMove, { passive: false });
   document.addEventListener('pointerup', handleListPointerUp);
   document.addEventListener('pointercancel', handleListPointerUp);
 }
 
-function handleListPointerMove(e) {
-  if (!deskIsDragging || !deskDraggedItem) return;
-  e.preventDefault();
-
-  const now = Date.now();
-  if (now - lastMoveTime < 16) return; // スロットル処理でフリーズ回避
-  lastMoveTime = now;
-
-  deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
-
+function checkDragIntersection(x, y) {
   const listContainer = document.getElementById('list-items');
-  const elements = document.elementsFromPoint(e.clientX, e.clientY);
+  const elements = document.elementsFromPoint(x, y);
   const target = elements.find(el => el.classList && el.classList.contains('list-item-edit') && el.parentNode === listContainer);
 
   if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
     const targetRect = target.getBoundingClientRect();
-    
-    // 直線的かつ即座に入れ替える。アニメーション（ひらひら）は一切行わない
-    if (e.clientY < targetRect.top + (targetRect.height / 2)) {
+    if (y < targetRect.top + (targetRect.height / 2)) {
       listContainer.insertBefore(deskPlaceholder, target);
     } else {
       listContainer.insertBefore(deskPlaceholder, target.nextSibling);
@@ -1073,8 +1084,54 @@ function handleListPointerMove(e) {
   }
 }
 
+function startAutoScroll() {
+  if (autoScrollSpeed === 0 || !deskIsDragging) {
+    autoScrollRAF = null;
+    return;
+  }
+  const panel = document.getElementById('panel-list-editor');
+  panel.scrollTop += autoScrollSpeed;
+  checkDragIntersection(deskLastClientX, deskLastClientY);
+  autoScrollRAF = requestAnimationFrame(startAutoScroll);
+}
+
+function handleListPointerMove(e) {
+  if (!deskIsDragging || !deskDraggedItem) return;
+  e.preventDefault();
+
+  const now = Date.now();
+  if (now - lastMoveTime < 16) return; 
+  lastMoveTime = now;
+
+  deskLastClientX = e.clientX;
+  deskLastClientY = e.clientY;
+  deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
+
+  // エッジスクロール判定（画面上下端から100px以内）
+  const threshold = 100;
+  if (e.clientY < threshold) {
+    autoScrollSpeed = -12; // 上方向へのスクロール速度
+  } else if (window.innerHeight - e.clientY < threshold) {
+    autoScrollSpeed = 12; // 下方向へのスクロール速度
+  } else {
+    autoScrollSpeed = 0;
+  }
+
+  // スクロールループの起動
+  if (autoScrollSpeed !== 0 && !autoScrollRAF) {
+    startAutoScroll();
+  }
+
+  checkDragIntersection(deskLastClientX, deskLastClientY);
+}
+
 function handleListPointerUp(e) {
   if (!deskIsDragging || !deskDraggedItem) return;
+
+  // 自動スクロールの停止
+  autoScrollSpeed = 0;
+  cancelAnimationFrame(autoScrollRAF);
+  autoScrollRAF = null;
 
   const listContainer = document.getElementById('list-items');
   listContainer.insertBefore(deskDraggedItem, deskPlaceholder);
