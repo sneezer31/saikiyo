@@ -19,7 +19,7 @@
    2026.08.17 AND/OR複合検索＆リストD&D完全手触り特化（ひらひら根絶）版
    2026.08.17 運用メニュー「管制」への全面ネーミング換装版
    2026.08.18 カスタムスクロールバー＆自動エッジスクロール対応版
-   2026.08.19 メモ単独更新バグ修正＆OS非依存8px自前スクロールバー実装版
+   2026.08.19 メモUI一新＆Pull-to-Refresh(強制再読み込み)根絶版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -74,6 +74,7 @@ html, body {
   background-color: var(--color-B);
   color: var(--color-A);
   font-family: var(--font-family);
+  overscroll-behavior-y: none; /* スマホの引っ張って更新（リロード）を完全無効化 */
 }
 
 body {
@@ -183,6 +184,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 #panel-list-editor {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  overscroll-behavior-y: none;
 }
 #panel-list-editor::-webkit-scrollbar {
   display: none;
@@ -386,8 +388,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
-
-  <textarea id="amu-memo-input" rows="2" placeholder="メモを一括で上書きする（空欄で消去）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
 
   <button class="panel-btn amu-action-btn" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:20px;">メモだけを更新する</button>
 
@@ -940,33 +940,49 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
   if (cancelBtn) cancelBtn.style.pointerEvents = 'none';
   document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
 
-  const memoInputValue = document.getElementById('amu-memo-input').value.trim();
-  const isMemoEdited = memoInputValue !== "" || selectedIds.size === 1; 
-  if (isMemoEdited) {
-    data.forEach(d => {
-      if (selectedIds.has(d.id)) {
-        if (selectedIds.size > 1 && memoInputValue === "") return;
-        d.memo = memoInputValue;
-      }
-    });
-  }
-
-  let needTag = false, needCopy = false, needCreateList = false, needImage = false;
+  let needTag = false, needCopy = false, needCreateList = false, needImage = false, needMemo = false;
 
   if (type === 'status') {
     data.forEach(d => { if(selectedIds.has(d.id)) d.status = val === 'archive' ? 'アーカイブ' : '作品'; });
   } else if (type === 'publish') {
     data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = val === 'published' ? '既発表' : '未発表'; });
-  } else if (type === 'memo') {
-    // 単独メモ更新ボタンからの遷移。上部で既に d.memo = memoInputValue が処理されているため追加処理は不要。
+  } else if (type === 'memo') { 
+    needMemo = true; 
   } else if (type === 'tag') { needTag = true; }
   else if (type === 'copy') { needCopy = true; }
   else if (type === 'create_list') { needCreateList = true; }
   else if (type === 'image') { needImage = true; }
 
+  if (needMemo) {
+    let defaultMemo = '';
+    if (selectedIds.size === 1) {
+      const singleId = Array.from(selectedIds)[0];
+      const singleTarget = data.find(d => d.id === singleId);
+      if (singleTarget && singleTarget.memo) defaultMemo = singleTarget.memo;
+    }
+    const m = prompt('複数選択時のメモは一括上書き保存で、一首一首の既存メモは消えます', defaultMemo);
+    if (m !== null) {
+      const cleanMemo = m.trim();
+      data.forEach(d => { if(selectedIds.has(d.id)) d.memo = cleanMemo; });
+    } else {
+      cleanupAmuInline();
+      document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'auto');
+      return; // キャンセル時は即座に離脱して処理を安全に終了
+    }
+  }
+
   if (needTag) {
     const t = prompt('共通で付与するタグを入力（空白なし）');
-    if (t) { data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(t)) d.tags.push(t); } }); }
+    if (t !== null) { 
+      const cleanTag = t.trim();
+      if (cleanTag) {
+        data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(cleanTag)) d.tags.push(cleanTag); } }); 
+      }
+    } else {
+      cleanupAmuInline();
+      document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'auto');
+      return;
+    }
   }
   if (needCopy) {
     let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
@@ -1657,7 +1673,6 @@ function attachEventListeners() {
       renderTimeline(true);
     } else if (hasSelection) {
       let expandedIds = [];
-      let singleMemo = ''; 
 
       selectedIds.forEach(id => {
         const target = data.find(d => d.id === id);
@@ -1667,21 +1682,10 @@ function attachEventListeners() {
         }
       });
 
-      const memoInputNode = document.getElementById('amu-memo-input');
-      if (selectedIds.size === 1) {
-        const singleId = Array.from(selectedIds)[0];
-        const singleTarget = data.find(d => d.id === singleId);
-        if (singleTarget && singleTarget.memo) singleMemo = singleTarget.memo;
-        memoInputNode.placeholder = "メモを編集（空欄で消去）";
-      } else {
-        memoInputNode.placeholder = "複数選択時：入力すると全件のメモを一括上書きします（これまでの消えます）";
-      }
-
       const previewArea = document.getElementById('amu-preview');
       const previewSet = new Set(expandedIds);
 
       previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
-      memoInputNode.value = singleMemo; 
 
       cleanupAmuInline();
       document.getElementById('panel-amu-actions').classList.add('active');
