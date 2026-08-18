@@ -19,6 +19,7 @@
    2026.08.17 AND/OR複合検索＆リストD&D完全手触り特化（ひらひら根絶）版
    2026.08.17 運用メニュー「管制」への全面ネーミング換装版
    2026.08.18 カスタムスクロールバー＆自動エッジスクロール対応版
+   2026.08.19 メモ単独更新バグ修正＆OS非依存8px自前スクロールバー実装版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -178,20 +179,13 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   border-radius: var(--border-radius);
 }
 
-/* --- リストエディタ用・常時表示スクロールバー --- */
+/* --- ネイティブスクロールバーの隠蔽（リスト机用） --- */
 #panel-list-editor {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-A) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 #panel-list-editor::-webkit-scrollbar {
-  width: 6px;
-}
-#panel-list-editor::-webkit-scrollbar-track {
-  background: transparent;
-}
-#panel-list-editor::-webkit-scrollbar-thumb {
-  background-color: var(--color-A);
-  border-radius: 3px;
+  display: none;
 }
 
 #panel-list-editor { display: none; }
@@ -209,7 +203,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   display: flex; align-items: center; gap: 8px; margin-bottom: 5px; border: 1px solid var(--color-A); padding: 8px; 
   background: var(--color-B); border-radius: var(--border-radius); cursor: grab; user-select: none; touch-action: none;
   box-sizing: border-box;
-  transition: none !important; /* ひらひらを強制無効化 */
+  transition: none !important;
 }
 .list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 15px; pointer-events: none; }
 .list-item-edit .item-num { width: 24px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; pointer-events: none; flex-shrink: 0; }
@@ -393,7 +387,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
 
-  <textarea id="amu-memo-input" rows="2" placeholder="メモを一括で上書きする（空欄で消去）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+  <textarea id="amu-memo-input" rows="2" placeholder="メモを一括で上書きする（空欄で消去）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+
+  <button class="panel-btn amu-action-btn" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:20px;">メモだけを更新する</button>
 
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
@@ -500,6 +496,11 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <div id="panel-list-editor" class="panel">
+  <!-- 自前の強靭な8pxスクロールバー（OSの都合を完全無視するDOM） -->
+  <div id="list-editor-custom-scroll" style="position: fixed; top: 0; right: 0; width: 8px; height: 100dvh; pointer-events: none; z-index: 1000; display: none;">
+    <div id="list-editor-custom-thumb" style="width: 100%; background-color: var(--color-A); position: absolute; right: 0; top: 0; border-radius: 4px;"></div>
+  </div>
+
  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">リストをつくる机</h2>
     <button onclick="closeListEditor()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
@@ -640,6 +641,11 @@ window.applyColors = function(mainA, subC, bgB) {
   if (manualMain) manualMain.value = mainA.substring(0, 7);
   if (manualSub) manualSub.value = subC.substring(0, 7);
   if (manualBg) manualBg.value = bgB.substring(0, 7);
+  
+  // 色が変更された際、カスタムスクロールバーも即座に再描画する
+  if (typeof window.updateCustomScrollbar === 'function') {
+    requestAnimationFrame(window.updateCustomScrollbar);
+  }
 };
 
 function applyConfig() {
@@ -787,6 +793,39 @@ function updateListNumbers() {
   });
 }
 
+// OSに依存しない自前スクロールバーの同期処理
+window.updateCustomScrollbar = function() {
+  const panel = document.getElementById('panel-list-editor');
+  const track = document.getElementById('list-editor-custom-scroll');
+  const thumb = document.getElementById('list-editor-custom-thumb');
+  
+  if (!panel || !track || !thumb) return;
+  if (!panel.classList.contains('active')) {
+    track.style.display = 'none';
+    return;
+  }
+
+  const scrollH = panel.scrollHeight;
+  const clientH = panel.clientHeight;
+
+  // スクロール不要な場合は隠す
+  if (scrollH <= clientH) {
+    track.style.display = 'none';
+    return;
+  }
+  track.style.display = 'block';
+
+  // つまみの高さを計算（最低20pxは担保）
+  const thumbH = Math.max(20, (clientH / scrollH) * clientH);
+  // 現在のスクロール割合
+  const scrollRatio = panel.scrollTop / (scrollH - clientH);
+  // つまみのY座標を計算
+  const thumbTop = scrollRatio * (clientH - thumbH);
+
+  thumb.style.height = `${thumbH}px`;
+  thumb.style.top = `${thumbTop}px`;
+};
+
 // ==========================================
 // 4. UI状態制御関数
 // ==========================================
@@ -866,6 +905,7 @@ function exitSelectionMode() {
 // ==========================================
 window.closePanels = function() { 
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); 
+  // パネルが閉じることで自前スクロールバーも自動的にCSSの親子関係で見えなくなります
 }
 
 window.cleanupAmuInline = function() {
@@ -917,6 +957,8 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
     data.forEach(d => { if(selectedIds.has(d.id)) d.status = val === 'archive' ? 'アーカイブ' : '作品'; });
   } else if (type === 'publish') {
     data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = val === 'published' ? '既発表' : '未発表'; });
+  } else if (type === 'memo') {
+    // 単独メモ更新ボタンからの遷移。上部で既に d.memo = memoInputValue が処理されているため追加処理は不要。
   } else if (type === 'tag') { needTag = true; }
   else if (type === 'copy') { needCopy = true; }
   else if (type === 'create_list') { needCreateList = true; }
@@ -980,6 +1022,9 @@ window.openListEditor = function(listId, initialItemIds = []) {
     document.getElementById('list-tags').value = '';
     renderListItems(initialItemIds);
   }
+  
+  // DOM描画後に自前スクロールバーの長さを同期
+  setTimeout(window.updateCustomScrollbar, 50);
 }
 
 window.removeListItem = function(btn) {
@@ -987,6 +1032,8 @@ window.removeListItem = function(btn) {
   if (itemEl) {
     itemEl.remove();
     updateListNumbers();
+    // 要素削除で高さが変わるため自前スクロールバーを再計算
+    setTimeout(window.updateCustomScrollbar, 50);
   }
 }
 
@@ -1092,6 +1139,7 @@ function startAutoScroll() {
   const panel = document.getElementById('panel-list-editor');
   panel.scrollTop += autoScrollSpeed;
   checkDragIntersection(deskLastClientX, deskLastClientY);
+  // スクロールが発生すると panel の scroll イベントが発火し、自前スクロールバーも同期されます
   autoScrollRAF = requestAnimationFrame(startAutoScroll);
 }
 
@@ -1130,8 +1178,10 @@ function handleListPointerUp(e) {
 
   // 自動スクロールの停止
   autoScrollSpeed = 0;
-  cancelAnimationFrame(autoScrollRAF);
-  autoScrollRAF = null;
+  if (autoScrollRAF) {
+    cancelAnimationFrame(autoScrollRAF);
+    autoScrollRAF = null;
+  }
 
   const listContainer = document.getElementById('list-items');
   listContainer.insertBefore(deskDraggedItem, deskPlaceholder);
@@ -1501,6 +1551,16 @@ window.executeChushutsuAction = function(actionType) {
 function attachEventListeners() {
   tlContainer.addEventListener('scroll', () => {
     localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
+  });
+
+  // リスト編集机のスクロール時に自前スクロールバーを再計算
+  document.getElementById('panel-list-editor').addEventListener('scroll', () => {
+    requestAnimationFrame(window.updateCustomScrollbar);
+  });
+
+  // ブラウザのリサイズ時にも自前スクロールバーを再計算
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(window.updateCustomScrollbar);
   });
 
   document.getElementById('header-title').addEventListener('click', () => {
