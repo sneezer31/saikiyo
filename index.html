@@ -20,6 +20,7 @@
    2026.08.17 運用メニュー「管制」への全面ネーミング換装版
    2026.08.18 カスタムスクロールバー＆自動エッジスクロール対応版
    2026.08.19 メモUI一新＆Pull-to-Refresh(強制再読み込み)根絶版
+   2026.08.19 メモ封鎖・タグ差分更新（完全目視UI）対応版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -74,7 +75,7 @@ html, body {
   background-color: var(--color-B);
   color: var(--color-A);
   font-family: var(--font-family);
-  overscroll-behavior-y: none; /* スマホの引っ張って更新（リロード）を完全無効化 */
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -178,6 +179,19 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   background: var(--color-A); color: var(--color-B); padding: 15px; margin-bottom: 10px;
   max-height: 25vh; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap;
   border-radius: var(--border-radius);
+}
+
+/* 編集室UI：メモ封鎖時のグレーアウト設定 */
+#amu-memo-input:disabled {
+  background-color: var(--color-C);
+  color: var(--color-A);
+  opacity: 0.6;
+}
+#amu-btn-memo:disabled {
+  background-color: var(--color-C);
+  color: var(--color-A);
+  border-color: var(--color-C);
+  pointer-events: none;
 }
 
 /* --- ネイティブスクロールバーの隠蔽（リスト机用） --- */
@@ -387,18 +401,29 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
 
   <div id="amu-preview" class="preview-area"></div>
-  <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
+  <button class="panel-btn inverted" style="margin-bottom:20px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
 
-  
+  <!-- メモ入力＆更新エリア -->
+  <div style="margin-bottom: 20px;">
+    <textarea id="amu-memo-input" rows="3" placeholder="メモ（複数選択時は編集不可）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+    <button class="panel-btn amu-action-btn" id="amu-btn-memo" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">メモを更新する</button>
+  </div>
+
+  <!-- タグ入力＆更新エリア -->
+  <div style="margin-bottom: 20px;">
+    <textarea id="amu-tag-input" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: none; overflow: hidden; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+    <button class="panel-btn amu-action-btn" id="amu-btn-tag" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">タグを更新する</button>
+  </div>
+
+  <hr style="border-color: var(--color-A); margin: 30px 0;">
 
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
 
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
-  <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">一括でタグをつける</button>
-  <button class="panel-btn amu-action-btn" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:20px;">メモを更新する</button>
-  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードにコピー</button>
+
+  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   <button class="panel-btn amu-action-btn" data-type="image" data-val="true" onclick="toggleAmuAction(this)">画像を作る</button>
 </div>
@@ -496,7 +521,6 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 </div>
 
 <div id="panel-list-editor" class="panel">
-  <!-- 自前の強靭な8pxスクロールバー（OSの都合を完全無視するDOM） -->
   <div id="list-editor-custom-scroll" style="position: fixed; top: 0; right: 0; width: 8px; height: 100dvh; pointer-events: none; z-index: 1000; display: none;">
     <div id="list-editor-custom-thumb" style="width: 100%; background-color: var(--color-A); position: absolute; right: 0; top: 0; border-radius: 4px;"></div>
   </div>
@@ -554,7 +578,6 @@ let deskDragStartY = 0;
 let deskIsDragging = false;
 let lastMoveTime = 0;
 
-// 自動スクロール用の追加変数
 let deskLastClientX = 0;
 let deskLastClientY = 0;
 let autoScrollSpeed = 0;
@@ -642,7 +665,6 @@ window.applyColors = function(mainA, subC, bgB) {
   if (manualSub) manualSub.value = subC.substring(0, 7);
   if (manualBg) manualBg.value = bgB.substring(0, 7);
   
-  // 色が変更された際、カスタムスクロールバーも即座に再描画する
   if (typeof window.updateCustomScrollbar === 'function') {
     requestAnimationFrame(window.updateCustomScrollbar);
   }
@@ -793,7 +815,6 @@ function updateListNumbers() {
   });
 }
 
-// OSに依存しない自前スクロールバーの同期処理
 window.updateCustomScrollbar = function() {
   const panel = document.getElementById('panel-list-editor');
   const track = document.getElementById('list-editor-custom-scroll');
@@ -808,18 +829,14 @@ window.updateCustomScrollbar = function() {
   const scrollH = panel.scrollHeight;
   const clientH = panel.clientHeight;
 
-  // スクロール不要な場合は隠す
   if (scrollH <= clientH) {
     track.style.display = 'none';
     return;
   }
   track.style.display = 'block';
 
-  // つまみの高さを計算（最低20pxは担保）
   const thumbH = Math.max(20, (clientH / scrollH) * clientH);
-  // 現在のスクロール割合
   const scrollRatio = panel.scrollTop / (scrollH - clientH);
-  // つまみのY座標を計算
   const thumbTop = scrollRatio * (clientH - thumbH);
 
   thumb.style.height = `${thumbH}px`;
@@ -905,7 +922,6 @@ function exitSelectionMode() {
 // ==========================================
 window.closePanels = function() { 
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); 
-  // パネルが閉じることで自前スクロールバーも自動的にCSSの親子関係で見えなくなります
 }
 
 window.cleanupAmuInline = function() {
@@ -940,50 +956,48 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
   if (cancelBtn) cancelBtn.style.pointerEvents = 'none';
   document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'none');
 
-  let needTag = false, needCopy = false, needCreateList = false, needImage = false, needMemo = false;
+  let needCopy = false, needCreateList = false, needImage = false;
 
   if (type === 'status') {
     data.forEach(d => { if(selectedIds.has(d.id)) d.status = val === 'archive' ? 'アーカイブ' : '作品'; });
   } else if (type === 'publish') {
     data.forEach(d => { if(selectedIds.has(d.id)) d.publish_status = val === 'published' ? '既発表' : '未発表'; });
-  } else if (type === 'memo') { 
-    needMemo = true; 
-  } else if (type === 'tag') { needTag = true; }
-  else if (type === 'copy') { needCopy = true; }
-  else if (type === 'create_list') { needCreateList = true; }
-  else if (type === 'image') { needImage = true; }
-
-  if (needMemo) {
-    let defaultMemo = '';
+  } else if (type === 'memo') {
     if (selectedIds.size === 1) {
+      const cleanMemo = document.getElementById('amu-memo-input').value.trim();
       const singleId = Array.from(selectedIds)[0];
-      const singleTarget = data.find(d => d.id === singleId);
-      if (singleTarget && singleTarget.memo) defaultMemo = singleTarget.memo;
+      const target = data.find(d => d.id === singleId);
+      if (target) target.memo = cleanMemo;
     }
-    const m = prompt('複数選択時のメモは一括上書き保存で、一首一首の既存メモは消えます', defaultMemo);
-    if (m !== null) {
-      const cleanMemo = m.trim();
-      data.forEach(d => { if(selectedIds.has(d.id)) d.memo = cleanMemo; });
-    } else {
-      cleanupAmuInline();
-      document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'auto');
-      return; // キャンセル時は即座に離脱して処理を安全に終了
-    }
+  } else if (type === 'tag') {
+    const newTagStr = document.getElementById('amu-tag-input').value.trim();
+    const newTags = newTagStr ? newTagStr.split(/\s+/) : [];
+    const newTagSet = new Set(newTags);
+    
+    const originalTagStr = document.getElementById('amu-tag-input').dataset.original || '';
+    const originalTags = originalTagStr ? originalTagStr.split(/\s+/) : [];
+    const originalTagSet = new Set(originalTags);
+
+    const tagsToRemove = new Set([...originalTagSet].filter(x => !newTagSet.has(x)));
+    const tagsToAdd = new Set([...newTagSet].filter(x => !originalTagSet.has(x)));
+
+    data.forEach(d => {
+      if(selectedIds.has(d.id)) {
+        if (!d.tags) d.tags = [];
+        d.tags = d.tags.filter(t => !tagsToRemove.has(t));
+        tagsToAdd.forEach(t => {
+          if (!d.tags.includes(t)) d.tags.push(t);
+        });
+      }
+    });
+  } else if (type === 'copy') {
+    needCopy = true;
+  } else if (type === 'create_list') {
+    needCreateList = true;
+  } else if (type === 'image') {
+    needImage = true;
   }
 
-  if (needTag) {
-    const t = prompt('共通で付与するタグを入力（空白なし）');
-    if (t !== null) { 
-      const cleanTag = t.trim();
-      if (cleanTag) {
-        data.forEach(d => { if(selectedIds.has(d.id)) { if(!d.tags) d.tags = []; if(!d.tags.includes(cleanTag)) d.tags.push(cleanTag); } }); 
-      }
-    } else {
-      cleanupAmuInline();
-      document.querySelectorAll('.amu-action-btn').forEach(b => b.style.pointerEvents = 'auto');
-      return;
-    }
-  }
   if (needCopy) {
     let txt = data.filter(d => selectedIds.has(d.id)).map(d => d.content).join('\n\n');
     physicalCopy(txt);
@@ -1012,6 +1026,8 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
       openImageGeneratorFromAmu();
       cleanupAmuInline();
     } else {
+      // メモ・タグ更新の場合はパネルを閉じずに再描画用データ更新のみでもよいが、
+      // 確実な状態リセットのために閉じる。
       window.closePanels(); 
       exitSelectionMode();
       cleanupAmuInline();
@@ -1039,7 +1055,6 @@ window.openListEditor = function(listId, initialItemIds = []) {
     renderListItems(initialItemIds);
   }
   
-  // DOM描画後に自前スクロールバーの長さを同期
   setTimeout(window.updateCustomScrollbar, 50);
 }
 
@@ -1048,7 +1063,6 @@ window.removeListItem = function(btn) {
   if (itemEl) {
     itemEl.remove();
     updateListNumbers();
-    // 要素削除で高さが変わるため自前スクロールバーを再計算
     setTimeout(window.updateCustomScrollbar, 50);
   }
 }
@@ -1155,7 +1169,6 @@ function startAutoScroll() {
   const panel = document.getElementById('panel-list-editor');
   panel.scrollTop += autoScrollSpeed;
   checkDragIntersection(deskLastClientX, deskLastClientY);
-  // スクロールが発生すると panel の scroll イベントが発火し、自前スクロールバーも同期されます
   autoScrollRAF = requestAnimationFrame(startAutoScroll);
 }
 
@@ -1171,17 +1184,15 @@ function handleListPointerMove(e) {
   deskLastClientY = e.clientY;
   deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-  // エッジスクロール判定（画面上下端から100px以内）
   const threshold = 100;
   if (e.clientY < threshold) {
-    autoScrollSpeed = -12; // 上方向へのスクロール速度
+    autoScrollSpeed = -12; 
   } else if (window.innerHeight - e.clientY < threshold) {
-    autoScrollSpeed = 12; // 下方向へのスクロール速度
+    autoScrollSpeed = 12; 
   } else {
     autoScrollSpeed = 0;
   }
 
-  // スクロールループの起動
   if (autoScrollSpeed !== 0 && !autoScrollRAF) {
     startAutoScroll();
   }
@@ -1192,7 +1203,6 @@ function handleListPointerMove(e) {
 function handleListPointerUp(e) {
   if (!deskIsDragging || !deskDraggedItem) return;
 
-  // 自動スクロールの停止
   autoScrollSpeed = 0;
   if (autoScrollRAF) {
     cancelAnimationFrame(autoScrollRAF);
@@ -1569,12 +1579,10 @@ function attachEventListeners() {
     localStorage.setItem('saikiyo_scroll_pos', tlContainer.scrollTop);
   });
 
-  // リスト編集机のスクロール時に自前スクロールバーを再計算
   document.getElementById('panel-list-editor').addEventListener('scroll', () => {
     requestAnimationFrame(window.updateCustomScrollbar);
   });
 
-  // ブラウザのリサイズ時にも自前スクロールバーを再計算
   window.addEventListener('resize', () => {
     requestAnimationFrame(window.updateCustomScrollbar);
   });
@@ -1673,14 +1681,42 @@ function attachEventListeners() {
       renderTimeline(true);
     } else if (hasSelection) {
       let expandedIds = [];
+      let unionTags = new Set();
+      let singleMemo = ''; 
 
       selectedIds.forEach(id => {
         const target = data.find(d => d.id === id);
         if (target) {
           if (target.type === 'list' && target.items) { expandedIds.push(...target.items); } 
           else { expandedIds.push(id); }
+          
+          if (target.tags) {
+            target.tags.forEach(t => unionTags.add(t));
+          }
         }
       });
+
+      const memoInputNode = document.getElementById('amu-memo-input');
+      const memoBtnNode = document.getElementById('amu-btn-memo');
+      const tagInputNode = document.getElementById('amu-tag-input');
+
+      if (selectedIds.size === 1) {
+        const singleId = Array.from(selectedIds)[0];
+        const singleTarget = data.find(d => d.id === singleId);
+        if (singleTarget && singleTarget.memo) singleMemo = singleTarget.memo;
+        memoInputNode.value = singleMemo;
+        memoInputNode.disabled = false;
+        memoInputNode.placeholder = "メモを編集（空欄で保存すれば消去）";
+        memoBtnNode.disabled = false;
+      } else {
+        memoInputNode.value = "";
+        memoInputNode.disabled = true;
+        memoInputNode.placeholder = "複数選択時にはメモの更新はできません";
+        memoBtnNode.disabled = true;
+      }
+      
+      tagInputNode.value = Array.from(unionTags).join(' ');
+      tagInputNode.dataset.original = tagInputNode.value;
 
       const previewArea = document.getElementById('amu-preview');
       const previewSet = new Set(expandedIds);
@@ -1952,7 +1988,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 <div id="alert-168h" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
   <div style="background:var(--color-B); color:var(--color-A); padding:30px; border-radius:var(--border-radius); text-align:center; font-size:1.5rem; font-weight:bold; border: 2px solid var(--color-A);">
-    <p>ヘイ！どうしたんだい？セーブしなよ</p>
+    <p>どうしたんだい？セーブしなよ</p>
     <button onclick="document.getElementById('alert-168h').style.display='none'" style="margin-top:20px; padding:10px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">OK</button>
   </div>
 </div>
