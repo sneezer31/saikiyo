@@ -416,15 +416,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 
   <!-- メモ入力＆更新エリア -->
   <div style="margin-bottom: 8px;">
-  <textarea id="amu-memo-input" rows="3" ...></textarea>
-  <button class="panel-btn amu-action-btn" id="amu-btn-memo" data-type="memo" data-val="true" onclick="toggleAmuAction(this)">メモを更新する</button>
-</div>
+    <textarea id="amu-memo-input" rows="3" placeholder="メモ（複数選択時は編集不可）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+    <button class="panel-btn amu-action-btn" id="amu-btn-memo" data-type="memo" data-val="true" onclick="toggleAmuAction(this)">メモを更新する</button>
+  </div>
 
   <!-- タグ入力＆更新エリア -->
   <div style="margin-bottom: 8px;">
-  <textarea id="amu-tag-input" rows="1" ...></textarea>
-  <button class="panel-btn amu-action-btn" id="amu-btn-tag" data-type="tag" data-val="true" onclick="toggleAmuAction(this)">タグを更新する</button>
-</div>
+    <textarea id="amu-tag-input" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: none; overflow: hidden; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+    <button class="panel-btn amu-action-btn" id="amu-btn-tag" data-type="tag" data-val="true" onclick="toggleAmuAction(this)">タグを更新する</button>
+  </div>
 
   <hr style="border-color: var(--color-A); margin: 20px 0;">
 
