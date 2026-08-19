@@ -403,17 +403,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:20px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
 
-  <!-- メモ入力＆更新エリア -->
-  <div style="margin-bottom: 20px;">
-    <textarea id="amu-memo-input" rows="3" placeholder="メモ（複数選択時は編集不可）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
-    <button class="panel-btn amu-action-btn" id="amu-btn-memo" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">メモを更新する</button>
-  </div>
-
-  <!-- タグ入力＆更新エリア -->
-  <div style="margin-bottom: 20px;">
-    <textarea id="amu-tag-input" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: none; overflow: hidden; margin-bottom: 10px; box-sizing: border-box;"></textarea>
-    <button class="panel-btn amu-action-btn" id="amu-btn-tag" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">タグを更新する</button>
-  </div>
+ 
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
@@ -423,7 +413,17 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
 
-  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">クリップボードにコピー</button>
+  <button cla <!-- メモ入力＆更新エリア -->
+  <div style="margin-bottom: 20px;">
+    <textarea id="amu-memo-input" rows="3" placeholder="メモ（複数選択時は編集不可）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+    <button class="panel-btn amu-action-btn" id="amu-btn-memo" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">メモを更新する</button>
+  </div>
+
+  <!-- タグ入力＆更新エリア -->
+  <div style="margin-bottom: 20px;">
+    <textarea id="amu-tag-input" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: none; overflow: hidden; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+    <button class="panel-btn amu-action-btn" id="amu-btn-tag" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">タグを更新する</button>
+  </div>ss="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   <button class="panel-btn amu-action-btn" data-type="image" data-val="true" onclick="toggleAmuAction(this)">画像を作る</button>
 </div>
