@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>さいきよ（BKSHK）ポータル</title>
+<style>
+  :root {
+    --color-A: #111111;
+    --color-B: #FFFFFF;
+    --color-C: #E0E0E0;
+    --font-family: sans-serif;
+  }
+
+  body {
+    background-color: var(--color-B);
+    color: var(--color-A);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+  }
+
+  header {
+    width: 100%;
+    background-color: var(--color-C);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-A);
+    box-sizing: border-box;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+
+  main {
+    max-width: 600px;
+    width: 100%;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    flex: 1;
+  }
+
+  .statement {
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--color-A);
+  }
+
+  .tool-card {
+    border: 1px solid var(--color-A);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: var(--color-B);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 0px var(--color-C);
+  }
+
+  .tool-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--color-A);
+    padding-bottom: 5px;
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    background-color: var(--color-A);
+    color: var(--color-B);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    box-sizing: border-box;
+    border: 1px solid var(--color-A);
+  }
+
+  .btn:hover {
+    background-color: var(--color-B);
+    color: var(--color-A);
+  }
+
+  .teaser {
+    margin-top: 50px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid var(--color-C);
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .teaser h2 {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0 0 10px 0;
+  }
+
+  .teaser p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+  }
+
+  footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+    border-top: 1px solid var(--color-C);
+    margin-top: auto;
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>さいきよ</h1>
+    <div class="subtitle">短歌実作者のためにつくりました。</div>
+  </header>
+
+  <main>
+    <div class="statement">
+      <p>OSのお節介な挙動や、不要な装飾を削ぎ落としました。<br>
+      独立したツールです。アカウント登録やサーバー保存等のユーザー管理機構は一切存在しません。</p>
+    </div>
+
+    <!-- ツール1：画像生成 -->
+    <div class="tool-card">
+      <div class="tool-title">さいきよ‐たてがき</div>
+      <div class="tool-desc">
+        短歌のテキストを入力し、縦書きの画像（短冊）を一瞬で生成します。<br>
+        X（旧Twitter）等への作品放流に最適化されています。
+      </div>
+      <a href="tanzaku.html" class="btn">画像を作る</a>
+    </div>
+
+    <!-- ツール2：連作ジェネレーター -->
+    <div class="tool-card">
+      <div class="tool-title">さいきよ‐れんさく</div>
+      <div class="tool-desc">
+        複数の短歌を放り込み、長押しによるドラッグ＆ドロップで連作の陣形（並び順）を素早く構築・俯瞰します。
+      </div>
+      <a href="rensaku.html" class="btn">連作を組む</a>
+    </div>
+
+    <!-- ティザー：母艦 -->
+    <div class="teaser">
+      <h2>【開発中】さいきよ-母艦（BKSHK）</h2>
+      <p>過去作の整理と文脈の保存に特化した、表現の戦術母艦。<br>第一期テスターは短歌の管理に困ってるわけない人に頼んでしまったので、第二期は困ってる人を探しています。</p>
+    </div>
+
+  </main>
+
+  <footer>
+    &copy; 2026 BKSHK Project. All rights reserved.
+  </footer>
+
+</body>
+</html>
