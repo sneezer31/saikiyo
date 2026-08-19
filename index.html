@@ -21,6 +21,7 @@
    2026.08.18 カスタムスクロールバー＆自動エッジスクロール対応版
    2026.08.19 メモUI一新＆Pull-to-Refresh(強制再読み込み)根絶版
    2026.08.19 メモ封鎖・タグ差分更新（完全目視UI）対応版
+   2026.08.19 編集室UI配置最適化（アーカイブ最上段）版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -399,9 +400,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <h2 style="margin: 0; border: none; padding: 0;">編集室</h2>
     <button onclick="closePanels(); exitSelectionMode(); cleanupAmuInline();" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
+
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:20px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
-  <hr style="border-color: var(--color-A); margin: 30px 0;">
 
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
@@ -409,8 +410,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
 
-  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">クリップボードにコピー</button>
- 
+  <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px; margin-bottom:20px;">クリップボードにコピー</button>
+
+  <hr style="border-color: var(--color-A); margin: 20px 0;">
+
   <!-- メモ入力＆更新エリア -->
   <div style="margin-bottom: 20px;">
     <textarea id="amu-memo-input" rows="3" placeholder="メモ（複数選択時は編集不可）" spellcheck="false" autocomplete="new-password" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
@@ -422,7 +425,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <textarea id="amu-tag-input" rows="1" placeholder="タグ（空白区切り）" autocomplete="new-password" spellcheck="false" style="width: 100%; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 16px; border-radius: var(--border-radius); resize: none; overflow: hidden; margin-bottom: 10px; box-sizing: border-box;"></textarea>
     <button class="panel-btn amu-action-btn" id="amu-btn-tag" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:0;">タグを更新する</button>
   </div>
- 
+
+  <hr style="border-color: var(--color-A); margin: 20px 0;">
+
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   <button class="panel-btn amu-action-btn" data-type="image" data-val="true" onclick="toggleAmuAction(this)">画像を作る</button>
 </div>
@@ -1025,8 +1030,6 @@ window.executeSingleAmuAction = function(type, val, submitBtn) {
       openImageGeneratorFromAmu();
       cleanupAmuInline();
     } else {
-      // メモ・タグ更新の場合はパネルを閉じずに再描画用データ更新のみでもよいが、
-      // 確実な状態リセットのために閉じる。
       window.closePanels(); 
       exitSelectionMode();
       cleanupAmuInline();
