@@ -22,6 +22,7 @@
    2026.08.19 メモUI一新＆Pull-to-Refresh(強制再読み込み)根絶版
    2026.08.19 メモ封鎖・タグ差分更新（完全目視UI）対応版
    2026.08.19 編集室UI配置最適化（アーカイブ最上段）版
+   2026.08.19 検索フリーズ根絶（排他制御）版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -752,41 +753,45 @@ function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
   if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
 
-  const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
-  const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
+  // 検索フリーズ対策：処理完了までボタンをロック
+  btnSearch.style.pointerEvents = 'none';
 
-  const contentOrGroups = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
-  const tagOrGroups = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
+  requestAnimationFrame(() => {
+    const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
+    const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
 
-  items.forEach(item => {
-    const id = Number(item.dataset.id);
-    const targetData = data.find(d => d.id === id);
-    if (!targetData) return;
+    const contentOrGroups = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
+    const tagOrGroups = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
 
-    const content = (targetData.content || '').toLowerCase();
-    const tags = (targetData.tags ? targetData.tags.join(' ') : '').toLowerCase();
-    const memo = (targetData.memo || '').toLowerCase();
-    const dateStr = formatTime(id).toLowerCase();
+    items.forEach(item => {
+      const id = Number(item.dataset.id);
+      const targetData = data.find(d => d.id === id);
+      if (!targetData) return;
 
-    const contentMatch = contentOrGroups.length === 0 || contentOrGroups.some(group => {
-      const andKeywords = group.split(/\s+/).filter(Boolean);
-      return andKeywords.every(keyword => {
-        return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
+      const content = (targetData.content || '').toLowerCase();
+      const tags = (targetData.tags ? targetData.tags.join(' ') : '').toLowerCase();
+      const memo = (targetData.memo || '').toLowerCase();
+      const dateStr = formatTime(id).toLowerCase();
+
+      const contentMatch = contentOrGroups.length === 0 || contentOrGroups.some(group => {
+        const andKeywords = group.split(/\s+/).filter(Boolean);
+        return andKeywords.every(keyword => {
+          return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
+        });
       });
-    });
 
-    const tagMatch = tagOrGroups.length === 0 || tagOrGroups.some(group => {
-      const andKeywords = group.split(/\s+/).filter(Boolean);
-      return andKeywords.every(keyword => {
-        return tags.includes(keyword);
+      const tagMatch = tagOrGroups.length === 0 || tagOrGroups.some(group => {
+        const andKeywords = group.split(/\s+/).filter(Boolean);
+        return andKeywords.every(keyword => {
+          return tags.includes(keyword);
+        });
       });
-    });
 
-    if (contentMatch && tagMatch) {
-      item.style.display = '';
-    } else {
-      item.style.display = 'none';
-    }
+      item.style.display = (contentMatch && tagMatch) ? '' : 'none';
+    });
+    
+    // 処理完了後にロック解除
+    btnSearch.style.pointerEvents = 'auto';
   });
 }
 
@@ -1661,6 +1666,8 @@ function attachEventListeners() {
       btnSearch.style.opacity = '1'; 
       inputContentNode.value = ''; 
       inputTagsNode.value = '';   
+      // 解除時に全件を再表示する処理
+      document.querySelectorAll('#timeline-container .item').forEach(i => i.style.display = '');
     }
   });
 
@@ -1678,6 +1685,7 @@ function attachEventListeners() {
         isSearchLinked = false;
         btnSearch.innerText = '検索';
         btnSearch.style.opacity = '1';
+        document.querySelectorAll('#timeline-container .item').forEach(i => i.style.display = '');
       }
       saveData();
       renderTimeline(true);
