@@ -2,44 +2,70 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>さいきよ‐れんさく</title>
 <style>
   :root { --bg-color: #F8F8F8; --text-color: #111111; --primary: #2C7C73; --btn-bg: #FFFFFF; }
-  body { margin: 0; padding: 0; font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); }
   
-  .screen { display: none; padding: 20px; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; box-sizing: border-box; }
+  /* 引っ張って更新（Pull-to-Refresh）の根絶 */
+  html, body { 
+    margin: 0; padding: 0; height: 100dvh; overflow: hidden;
+    font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color);
+    overscroll-behavior: none; 
+  }
+  
+  #app-container {
+    display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto;
+  }
+
+  .screen { display: none; padding: 20px; flex-direction: column; gap: 15px; flex: 1; box-sizing: border-box; overflow: hidden; }
   .screen.active { display: flex; }
 
-  h2 { margin: 0 0 10px 0; font-size: 1.6rem; border-bottom: 2px solid var(--primary); padding-bottom: 5px; text-align: center; }
-  .sub-title { margin: 0; font-size: 1.1rem; font-weight: bold; }
+  h2 { margin: 0 0 10px 0; font-size: 1.6rem; border-bottom: 2px solid var(--primary); padding-bottom: 5px; text-align: center; flex-shrink: 0; }
+  .sub-title { margin: 0; font-size: 1.1rem; font-weight: bold; flex-shrink: 0; }
 
   /* フォーム要素 */
-  textarea { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; border: 1px solid #999; border-radius: 4px; resize: vertical; }
-  #input-text { height: 200px; }
+  textarea { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; border: 1px solid #999; border-radius: 4px; resize: none; flex: 1; }
   
-  /* プレビューエリア（箱を無くし、シームレスな表示へ） */
-  #preview-area { font-size: 1.1rem; line-height: 2; padding: 10px; white-space: pre-wrap; word-wrap: break-word; }
+  /* プレビューエリア */
+  #preview-area { font-size: 1.1rem; line-height: 2; padding: 10px; white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; flex: 1; }
 
-  .settings-group { border: 1px solid #CCC; padding: 15px; border-radius: 4px; background: #FFF; display: flex; flex-direction: column; gap: 10px; }
+  .settings-group { border: 1px solid #CCC; padding: 15px; border-radius: 4px; background: #FFF; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
   .radio-row { display: flex; gap: 15px; align-items: center; font-size: 0.95rem; }
   .radio-label { font-weight: bold; width: 80px; flex-shrink: 0; }
 
   /* ボタン */
-  .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+  .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-shrink: 0; }
   button { padding: 14px; font-size: 1.1rem; font-weight: bold; background: var(--btn-bg); color: var(--text-color); border: 2px solid var(--text-color); cursor: pointer; border-radius: 4px; flex: 1; }
   button.primary { background: var(--primary); color: #FFF; border-color: var(--primary); }
   button:active { opacity: 0.7; }
 
-  /* ソートエリア */
-  #sort-area {
-    display: flex; gap: 10px; padding: 15px; background: #EAEAEA; border: 1px inset #CCC; border-radius: 8px; position: relative;
+  /* ソートエリアのラッパー（スクロールバーの基準） */
+  .sort-wrapper {
+    position: relative; flex: 1; overflow: hidden; border: 1px inset #CCC; border-radius: 8px; background: #EAEAEA;
   }
+
+  /* 実際のソートエリア */
+  #sort-area {
+    display: flex; gap: 10px; padding: 15px; box-sizing: border-box;
+    width: 100%; height: 100%;
+    scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: none;
+  }
+  #sort-area::-webkit-scrollbar { display: none; }
   
+  /* 自前スクロールバー（OS完全無視） */
+  #custom-scrollbar {
+    position: absolute; pointer-events: none; z-index: 100; display: none;
+  }
+  #custom-thumb {
+    background-color: var(--primary); border-radius: 4px; position: absolute; border: 1px solid rgba(255,255,255,0.5); box-sizing: border-box;
+  }
+
   /* 短冊の基本スタイル */
   .tanzaku {
     background-color: #FFF; border: 1px solid #666; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    padding: 10px; cursor: grab; user-select: none; touch-action: none;
+    padding: 10px; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
+    transition: none !important;
   }
   
   /* 抜け殻（プレースホルダー） */
@@ -47,38 +73,22 @@
     background-color: rgba(0,0,0,0.05); border: 1px dashed #999; border-radius: 2px; box-shadow: none;
   }
 
-  /* ドラッグ中の実体 */
+  /* ドラッグ中の実体（ひらひらを殺し、枠線と背景のみで浮遊感を出す） */
   .dragging {
-    position: fixed; pointer-events: none; opacity: 0.9; transform: scale(1.02); box-shadow: 5px 10px 20px rgba(0,0,0,0.25); z-index: 1000;
+    position: fixed; pointer-events: none; opacity: 1; transform: none; box-shadow: none; z-index: 1000;
+    border: 2px solid var(--primary); background: #FFF;
   }
 
-  /* 動的スタイル適用 */
+  /* 書体 */
   .font-mincho { font-family: 'Shippori Mincho', serif; }
   .font-gothic { font-family: sans-serif; }
   
-  /* 縦書きモード */
-  .dir-vertical { flex-direction: row-reverse; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; min-height: 250px; }
+  /* 縦書きモード（右から左へ） */
+  .dir-vertical { flex-direction: row-reverse; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; justify-content: flex-start; }
   .dir-vertical .tanzaku, .dir-vertical .placeholder { writing-mode: vertical-rl; padding: 15px 10px; line-height: 2; flex-shrink: 0; }
   
-  /* 縦書きモード時の水平スクロールバーを、スマホの指で掴める太さに強制拡張 */
-  .dir-vertical::-webkit-scrollbar {
-    height: 30px; 
-  }
-  .dir-vertical::-webkit-scrollbar-track {
-    background: #DDDDDD; 
-    border-radius: 4px;
-  }
-  .dir-vertical::-webkit-scrollbar-thumb {
-    background: #888888; 
-    border-radius: 4px;
-    border: 2px solid #DDDDDD; 
-  }
-  .dir-vertical::-webkit-scrollbar-thumb:active {
-    background: var(--primary); 
-  }
-
-  /* 横書きモード */
-  .dir-horizontal { flex-direction: column; overflow-y: auto; }
+  /* 横書きモード（上から下へ） */
+  .dir-horizontal { flex-direction: column; flex-wrap: nowrap; overflow-y: auto; overflow-x: hidden; }
   .dir-horizontal .tanzaku, .dir-horizontal .placeholder { writing-mode: horizontal-tb; width: 100%; box-sizing: border-box; line-height: 1.5; flex-shrink: 0; }
 
   /* 折り返し設定 */
@@ -90,54 +100,59 @@
 </head>
 <body>
 
-<div id="screen1" class="screen active">
-  <h2>さいきよ‐れんさく</h2>
-  
-  <div class="settings-group">
-    <div class="radio-row">
-      <span class="radio-label">書体</span>
-      <label><input type="radio" name="font" value="gothic" checked> ゴシック</label>
-      <label><input type="radio" name="font" value="mincho"> 明朝</label>
+<div id="app-container">
+  <div id="screen1" class="screen active">
+    <h2>さいきよ‐れんさく</h2>
+    
+    <div class="settings-group">
+      <div class="radio-row">
+        <span class="radio-label">書体</span>
+        <label><input type="radio" name="font" value="gothic" checked> ゴシック</label>
+        <label><input type="radio" name="font" value="mincho"> 明朝</label>
+      </div>
+      <div class="radio-row">
+        <span class="radio-label">方向</span>
+        <label><input type="radio" name="direction" value="horizontal" checked> 横書き</label>
+        <label><input type="radio" name="direction" value="vertical"> 縦書き</label>
+      </div>
+      <div class="radio-row">
+        <span class="radio-label">表示</span>
+        <label><input type="radio" name="wrap" value="false" checked> 初句のみ</label>
+        <label><input type="radio" name="wrap" value="true"> 全文</label>
+      </div>
     </div>
-    <div class="radio-row">
-      <span class="radio-label">方向</span>
-      <label><input type="radio" name="direction" value="horizontal" checked> 横書き</label>
-      <label><input type="radio" name="direction" value="vertical"> 縦書き</label>
-    </div>
-    <div class="radio-row">
-      <span class="radio-label">表示</span>
-      <label><input type="radio" name="wrap" value="false" checked> 初句のみ</label>
-      <label><input type="radio" name="wrap" value="true"> 全文</label>
+
+    <textarea id="input-text" placeholder="ここに連作を入力してください。&#10;（1首ごとに1行の空行を入れてください）"></textarea>
+    
+    <div class="btn-group">
+      <button type="button" class="primary" onclick="goToScreen2()">次へ</button>
     </div>
   </div>
 
-  <textarea id="input-text" placeholder="ここに連作を入力してください。&#10;（1首ごとに1行の空行を入れてください）"></textarea>
-  
-  <div class="btn-group">
-    <button type="button" class="primary" onclick="goToScreen2()">次へ</button>
+  <div id="screen2" class="screen">
+    <h2>さいきよ‐れんさく</h2>
+    <div class="sub-title">並べ替え（長押しで移動）</div>
+    <div class="sort-wrapper">
+      <div id="sort-area"></div>
+      <div id="custom-scrollbar"><div id="custom-thumb"></div></div>
+    </div>
+    
+    <div class="btn-group">
+      <button type="button" onclick="goToScreen(1)">戻る</button>
+      <button type="button" class="primary" onclick="goToScreen3()">次へ</button>
+    </div>
   </div>
-</div>
 
-<div id="screen2" class="screen">
-  <h2>さいきよ‐れんさく</h2>
-  <div class="sub-title">並べ替え</div>
-  <div id="sort-area"></div>
-  
-  <div class="btn-group">
-    <button type="button" onclick="goToScreen(1)">戻る</button>
-    <button type="button" class="primary" onclick="goToScreen3()">次へ</button>
-  </div>
-</div>
-
-<div id="screen3" class="screen">
-  <h2>さいきよ‐れんさく</h2>
-  <div class="sub-title">出力結果</div>
-  
-  <div id="preview-area"></div>
-  
-  <div class="btn-group">
-    <button type="button" onclick="goToScreen(2)">戻る</button>
-    <button type="button" class="primary" onclick="copyToClipboard()">決定（コピー）</button>
+  <div id="screen3" class="screen">
+    <h2>さいきよ‐れんさく</h2>
+    <div class="sub-title">出力結果</div>
+    
+    <div id="preview-area"></div>
+    
+    <div class="btn-group">
+      <button type="button" onclick="goToScreen(2)">戻る</button>
+      <button type="button" class="primary" onclick="copyToClipboard()">決定（コピー）</button>
+    </div>
   </div>
 </div>
 
@@ -152,16 +167,33 @@
   const previewArea = document.getElementById('preview-area');
   
   let finalResultText = "";
-  let draggedItem = null;
-  let placeholder = null;
   let currentDirection = 'horizontal';
-  let pointerOffsetX = 0;
-  let pointerOffsetY = 0;
+
+  // D&D用変数
+  let deskDraggedItem = null;
+  let deskPlaceholder = null;
+  let deskPointerOffsetX = 0;
+  let deskPointerOffsetY = 0;
+  let deskDragTimer = null;
+  let deskDragStartX = 0;
+  let deskDragStartY = 0;
+  let deskIsDragging = false;
+  let lastMoveTime = 0;
+
+  // 自動エッジスクロール用変数
+  let deskLastClientX = 0;
+  let deskLastClientY = 0;
+  let autoScrollSpeedX = 0;
+  let autoScrollSpeedY = 0;
+  let autoScrollRAF = null;
 
   function goToScreen(screenNumber) {
     screens.forEach((screen, index) => {
       screen.classList.toggle('active', index === screenNumber - 1);
     });
+    if (screenNumber === 2) {
+      setTimeout(updateCustomScrollbar, 50);
+    }
   }
 
   function goToScreen2() {
@@ -187,11 +219,12 @@
       tanzaku.addEventListener('pointerdown', handlePointerDown);
       sortArea.appendChild(tanzaku);
     });
+    
     goToScreen(2);
   }
 
   function goToScreen3() {
-    const tanzakus = Array.from(sortArea.children).filter(el => !el.classList.contains('placeholder') && !el.classList.contains('dragging'));
+    const tanzakus = Array.from(sortArea.children).filter(el => !el.classList.contains('placeholder') && !el.classList.contains('dragging') && el.id !== 'custom-scrollbar');
     finalResultText = tanzakus.map(el => el.textContent).join('\n\n');
     
     const font = document.querySelector('input[name="font"]:checked').value;
@@ -202,108 +235,268 @@
   }
 
   function copyToClipboard() {
-    navigator.clipboard.writeText(finalResultText).then(() => {
+    const ta = document.createElement('textarea');
+    ta.value = finalResultText;
+    ta.style.position = 'fixed'; 
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { 
+      document.execCommand('copy'); 
       alert("クリップボードにコピーしました！");
-    }).catch(err => {
-      alert("コピーに失敗しました。");
-      console.error(err);
-    });
+    } catch(e) { 
+      alert("コピーに失敗しました。"); 
+    }
+    document.body.removeChild(ta);
   }
 
-  function handlePointerDown(e) {
-    if (e.button !== 0 && e.type !== 'touchstart') return;
-    e.preventDefault();
+  // 強靭なカスタムスクロールバーの同期エンジン
+  function updateCustomScrollbar() {
+    const track = document.getElementById('custom-scrollbar');
+    const thumb = document.getElementById('custom-thumb');
+    if (!track || !thumb || !screens[1].classList.contains('active')) return;
 
-    draggedItem = this;
-    const rect = draggedItem.getBoundingClientRect();
-    
-    placeholder = document.createElement('div');
-    placeholder.className = 'placeholder';
     if (currentDirection === 'horizontal') {
-      placeholder.style.height = `${rect.height}px`;
+      // 縦スクロール
+      const sH = sortArea.scrollHeight;
+      const cH = sortArea.clientHeight;
+      if (sH <= cH) { track.style.display = 'none'; return; }
+      
+      track.style.display = 'block';
+      track.style.top = '0'; track.style.bottom = '0';
+      track.style.right = '2px'; track.style.left = 'auto';
+      track.style.width = '8px'; track.style.height = '100%';
+
+      const thumbH = Math.max(20, (cH / sH) * cH);
+      const ratio = sortArea.scrollTop / (sH - cH);
+      thumb.style.width = '100%';
+      thumb.style.height = `${thumbH}px`;
+      thumb.style.top = `${ratio * (cH - thumbH)}px`;
+      thumb.style.left = '0';
     } else {
-      placeholder.style.width = `${rect.width}px`;
+      // 横スクロール（右から左へ進む）
+      const sW = sortArea.scrollWidth;
+      const cW = sortArea.clientWidth;
+      if (sW <= cW) { track.style.display = 'none'; return; }
+
+      track.style.display = 'block';
+      track.style.left = '0'; track.style.right = '0';
+      track.style.bottom = '2px'; track.style.top = 'auto';
+      track.style.height = '8px'; track.style.width = '100%';
+
+      const thumbW = Math.max(20, (cW / sW) * cW);
+      // 右から左へのスクロール比率を計算
+      let scrollRatio = Math.abs(sortArea.scrollLeft) / (sW - cW);
+      if (scrollRatio > 1) scrollRatio = 1;
+
+      thumb.style.height = '100%';
+      thumb.style.width = `${thumbW}px`;
+      thumb.style.top = '0';
+      thumb.style.right = `${scrollRatio * (cW - thumbW)}px`;
+      thumb.style.left = 'auto';
     }
+  }
+
+  sortArea.addEventListener('scroll', () => {
+    requestAnimationFrame(updateCustomScrollbar);
+  });
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(updateCustomScrollbar);
+  });
+
+  // ドラッグ＆ドロップ（長押し始動）エンジン
+  function handlePointerDown(e) {
+    if (e.target.tagName === 'BUTTON') return;
+    if (e.button !== 0 && e.type !== 'touchstart') return;
     
-    sortArea.insertBefore(placeholder, draggedItem);
+    deskDraggedItem = this;
+    deskDragStartX = e.clientX;
+    deskDragStartY = e.clientY;
+    deskIsDragging = false;
+
+    deskDragTimer = setTimeout(() => {
+      startDrag(e);
+    }, 250); // 250ミリ秒の長押しで発動
+
+    document.addEventListener('pointermove', checkDragThreshold, { passive: true });
+    document.addEventListener('pointerup', handleDragEndPre);
+    document.addEventListener('pointercancel', handleDragEndPre);
+  }
+
+  function checkDragThreshold(e) {
+    if (!deskDraggedItem || deskIsDragging) return;
+    const dx = Math.abs(e.clientX - deskDragStartX);
+    const dy = Math.abs(e.clientY - deskDragStartY);
     
-    pointerOffsetX = e.clientX - rect.left;
-    pointerOffsetY = e.clientY - rect.top;
+    // スクロールの意図とみなし、タイマーを破壊する
+    if (dx > 10 || dy > 10) {
+      clearTimeout(deskDragTimer);
+      deskDragTimer = null;
+      deskDraggedItem = null;
+      removePreDragListeners();
+    }
+  }
+
+  function handleDragEndPre() {
+    clearTimeout(deskDragTimer);
+    deskDragTimer = null;
+    deskDraggedItem = null;
+    removePreDragListeners();
+  }
+
+  function removePreDragListeners() {
+    document.removeEventListener('pointermove', checkDragThreshold);
+    document.removeEventListener('pointerup', handleDragEndPre);
+    document.removeEventListener('pointercancel', handleDragEndPre);
+  }
+
+  function startDrag(e) {
+    deskIsDragging = true;
+    removePreDragListeners();
     
-    draggedItem.classList.add('dragging');
-    draggedItem.style.width = `${rect.width}px`;
-    draggedItem.style.height = `${rect.height}px`;
-    draggedItem.style.left = `${rect.left}px`;
-    draggedItem.style.top = `${rect.top}px`;
+    const rect = deskDraggedItem.getBoundingClientRect();
+
+    deskPlaceholder = document.createElement('div');
+    deskPlaceholder.className = 'placeholder';
+    if (currentDirection === 'horizontal') {
+      deskPlaceholder.style.height = `${rect.height}px`;
+    } else {
+      deskPlaceholder.style.width = `${rect.width}px`;
+    }
+
+    sortArea.insertBefore(deskPlaceholder, deskDraggedItem);
     
-    document.body.appendChild(draggedItem);
+    deskPointerOffsetX = e.clientX - rect.left;
+    deskPointerOffsetY = e.clientY - rect.top;
+
+    deskDraggedItem.classList.add('dragging');
+    deskDraggedItem.style.width = `${rect.width}px`;
+    deskDraggedItem.style.height = `${rect.height}px`;
+    deskDraggedItem.style.left = `${rect.left}px`;
+    deskDraggedItem.style.top = `${rect.top}px`;
+
+    document.body.appendChild(deskDraggedItem);
+
+    if (navigator.vibrate) navigator.vibrate(40);
+
+    deskLastClientX = e.clientX;
+    deskLastClientY = e.clientY;
 
     document.addEventListener('pointermove', handlePointerMove, { passive: false });
     document.addEventListener('pointerup', handlePointerUp);
     document.addEventListener('pointercancel', handlePointerUp);
   }
 
-  function handlePointerMove(e) {
-    if (!draggedItem) return;
-    e.preventDefault();
+  function checkDragIntersection(x, y) {
+    const elements = document.elementsFromPoint(x, y);
+    const target = elements.find(el => el.classList && el.classList.contains('tanzaku') && el.parentNode === sortArea);
 
-    draggedItem.style.left = `${e.clientX - pointerOffsetX}px`;
-    draggedItem.style.top = `${e.clientY - pointerOffsetY}px`;
-
-    const elements = document.elementsFromPoint(e.clientX, e.clientY);
-    const target = elements.find(el => el.classList.contains('tanzaku') && el.parentNode === sortArea);
-
-    if (target && target !== placeholder) {
-      const items = Array.from(sortArea.children).filter(c => c !== placeholder);
-      const rects = items.map(item => ({ item, rect: item.getBoundingClientRect() }));
-
+    if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
       const targetRect = target.getBoundingClientRect();
+      
       if (currentDirection === 'vertical') {
-        if (e.clientX > targetRect.left + (targetRect.width / 2)) {
-          sortArea.insertBefore(placeholder, target);
+        // 縦書き：右から左へ並ぶので、ターゲットの中央より右か左かで判定
+        if (x > targetRect.left + (targetRect.width / 2)) {
+          sortArea.insertBefore(deskPlaceholder, target);
         } else {
-          sortArea.insertBefore(placeholder, target.nextSibling);
+          sortArea.insertBefore(deskPlaceholder, target.nextSibling);
         }
       } else {
-        if (e.clientY < targetRect.top + (targetRect.height / 2)) {
-          sortArea.insertBefore(placeholder, target);
+        // 横書き：上から下
+        if (y < targetRect.top + (targetRect.height / 2)) {
+          sortArea.insertBefore(deskPlaceholder, target);
         } else {
-          sortArea.insertBefore(placeholder, target.nextSibling);
+          sortArea.insertBefore(deskPlaceholder, target.nextSibling);
         }
       }
-
-      rects.forEach(({ item, rect }) => {
-        const newRect = item.getBoundingClientRect();
-        const dx = rect.left - newRect.left;
-        const dy = rect.top - newRect.top;
-        if (dx !== 0 || dy !== 0) {
-          item.style.transform = `translate(${dx}px, ${dy}px)`;
-          item.style.transition = 'none';
-          requestAnimationFrame(() => {
-            item.style.transform = '';
-            item.style.transition = 'transform 0.15s ease-out';
-          });
-        }
-      });
     }
   }
 
-  function handlePointerUp(e) {
-    if (!draggedItem) return;
+  function startAutoScroll() {
+    if ((autoScrollSpeedX === 0 && autoScrollSpeedY === 0) || !deskIsDragging) {
+      autoScrollRAF = null;
+      return;
+    }
     
-    sortArea.insertBefore(draggedItem, placeholder);
-    placeholder.remove();
-    placeholder = null;
+    if (currentDirection === 'vertical') {
+      // スクロール速度を加算。横スクロール環境。
+      sortArea.scrollLeft += autoScrollSpeedX;
+    } else {
+      sortArea.scrollTop += autoScrollSpeedY;
+    }
+    
+    checkDragIntersection(deskLastClientX, deskLastClientY);
+    autoScrollRAF = requestAnimationFrame(startAutoScroll);
+  }
 
-    draggedItem.classList.remove('dragging');
-    draggedItem.style = '';
+  function handlePointerMove(e) {
+    if (!deskIsDragging || !deskDraggedItem) return;
+    e.preventDefault();
+
+    const now = Date.now();
+    if (now - lastMoveTime < 16) return; 
+    lastMoveTime = now;
+
+    deskLastClientX = e.clientX;
+    deskLastClientY = e.clientY;
     
+    deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
+    deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
+
+    // エッジスクロール判定（画面端から100px以内）
+    const threshold = 100;
+    
+    if (currentDirection === 'vertical') {
+      if (e.clientX < threshold) {
+        autoScrollSpeedX = -12; 
+      } else if (window.innerWidth - e.clientX < threshold) {
+        autoScrollSpeedX = 12; 
+      } else {
+        autoScrollSpeedX = 0;
+      }
+    } else {
+      if (e.clientY < threshold) {
+        autoScrollSpeedY = -12; 
+      } else if (window.innerHeight - e.clientY < threshold) {
+        autoScrollSpeedY = 12; 
+      } else {
+        autoScrollSpeedY = 0;
+      }
+    }
+
+    if ((autoScrollSpeedX !== 0 || autoScrollSpeedY !== 0) && !autoScrollRAF) {
+      startAutoScroll();
+    }
+
+    checkDragIntersection(deskLastClientX, deskLastClientY);
+  }
+
+  function handlePointerUp(e) {
+    if (!deskIsDragging || !deskDraggedItem) return;
+
+    autoScrollSpeedX = 0;
+    autoScrollSpeedY = 0;
+    if (autoScrollRAF) {
+      cancelAnimationFrame(autoScrollRAF);
+      autoScrollRAF = null;
+    }
+
+    sortArea.insertBefore(deskDraggedItem, deskPlaceholder);
+    deskPlaceholder.remove();
+    deskPlaceholder = null;
+
+    deskDraggedItem.classList.remove('dragging');
+    deskDraggedItem.style = '';
+
     document.removeEventListener('pointermove', handlePointerMove);
     document.removeEventListener('pointerup', handlePointerUp);
     document.removeEventListener('pointercancel', handlePointerUp);
-    draggedItem = null;
+    
+    deskDraggedItem = null;
+    deskIsDragging = false;
+    
+    updateCustomScrollbar();
   }
 </script>
-
 </body>
 </html>
