@@ -389,15 +389,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <div id="amu-preview" class="preview-area"></div>
   <button class="panel-btn inverted" style="margin-bottom:10px; padding:10px;" onclick="openExpandedReaderFromAmu()">広げて読む</button>
 
-  <button class="panel-btn amu-action-btn" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:20px;">メモだけを更新する</button>
+  
 
   <button class="panel-btn amu-action-btn" data-type="status" data-val="archive" onclick="toggleAmuAction(this)">アーカイブに送る</button>
   <button class="panel-btn amu-action-btn" data-type="status" data-val="work" onclick="toggleAmuAction(this)">作品に送る</button>
 
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="published" onclick="toggleAmuAction(this)" style="margin-top:10px;">既発表にする</button>
   <button class="panel-btn amu-action-btn" data-type="publish" data-val="unpublished" onclick="toggleAmuAction(this)">未発表にする</button>
-
   <button class="panel-btn amu-action-btn" data-type="tag" data-val="true" onclick="toggleAmuAction(this)" style="margin-top:10px;">一括でタグをつける</button>
+  <button class="panel-btn amu-action-btn" data-type="memo" data-val="true" onclick="toggleAmuAction(this)" style="margin-bottom:20px;">メモを更新する</button>
   <button class="panel-btn amu-action-btn" data-type="copy" data-val="true" onclick="toggleAmuAction(this)">クリップボードにコピー</button>
   <button class="panel-btn amu-action-btn" data-type="create_list" data-val="true" onclick="toggleAmuAction(this)">新しいリストを編む</button>
   <button class="panel-btn amu-action-btn" data-type="image" data-val="true" onclick="toggleAmuAction(this)">画像を作る</button>
@@ -1952,7 +1952,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 <div id="alert-168h" style="display:none; position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
   <div style="background:var(--color-B); color:var(--color-A); padding:30px; border-radius:var(--border-radius); text-align:center; font-size:1.5rem; font-weight:bold; border: 2px solid var(--color-A);">
-    <p>どうしたんだい？セーブしなよ</p>
+    <p>ヘイ！どうしたんだい？セーブしなよ</p>
     <button onclick="document.getElementById('alert-168h').style.display='none'" style="margin-top:20px; padding:10px 40px; font-size:1.2rem; background:var(--color-A); color:var(--color-B); border:none; border-radius:var(--border-radius); cursor:pointer;">OK</button>
   </div>
 </div>
