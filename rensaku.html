@@ -64,7 +64,7 @@
   /* 短冊の基本スタイル */
   .tanzaku {
     background-color: #FFF; border: 1px solid #666; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    padding: 10px; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    padding: 10px; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
     transition: none !important;
   }
   
@@ -316,7 +316,7 @@
 
     deskDragTimer = setTimeout(() => {
       startDrag(e);
-    }, 400); // ★400に変更済み
+    }, 250); // 250ミリ秒の長押しで発動
 
     document.addEventListener('pointermove', checkDragThreshold, { passive: true });
     document.addEventListener('pointerup', handleDragEndPre);
@@ -328,8 +328,8 @@
     const dx = Math.abs(e.clientX - deskDragStartX);
     const dy = Math.abs(e.clientY - deskDragStartY);
     
-    // ★15に変更済み
-    if (dx > 15 || dy > 15) {
+    // スクロールの意図とみなし、タイマーを破壊する
+    if (dx > 10 || dy > 10) {
       clearTimeout(deskDragTimer);
       deskDragTimer = null;
       deskDraggedItem = null;
