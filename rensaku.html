@@ -61,13 +61,13 @@
     background-color: var(--primary); border-radius: 4px; position: absolute; border: 1px solid rgba(255,255,255,0.5); box-sizing: border-box;
   }
 
-   /* 短冊の基本スタイル */
+  /* 短冊の基本スタイル */
   .tanzaku {
     background-color: #FFF; border: 1px solid #666; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
     padding: 10px; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: manipulation;
     transition: none !important;
   }
-
+  
   /* 抜け殻（プレースホルダー） */
   .placeholder {
     background-color: rgba(0,0,0,0.05); border: 1px dashed #999; border-radius: 2px; box-shadow: none;
@@ -305,7 +305,6 @@
   });
 
   // ドラッグ＆ドロップ（長押し始動）エンジン
- // ドラッグ＆ドロップ（長押し始動）エンジン
   function handlePointerDown(e) {
     if (e.target.tagName === 'BUTTON') return;
     if (e.button !== 0 && e.type !== 'touchstart') return;
@@ -317,18 +316,19 @@
 
     deskDragTimer = setTimeout(() => {
       startDrag(e);
-    }, 400); // 400に変更
+    }, 400); // ★400に変更済み
 
     document.addEventListener('pointermove', checkDragThreshold, { passive: true });
     document.addEventListener('pointerup', handleDragEndPre);
     document.addEventListener('pointercancel', handleDragEndPre);
   }
+
   function checkDragThreshold(e) {
     if (!deskDraggedItem || deskIsDragging) return;
     const dx = Math.abs(e.clientX - deskDragStartX);
     const dy = Math.abs(e.clientY - deskDragStartY);
     
-    // 15に変更
+    // ★15に変更済み
     if (dx > 15 || dy > 15) {
       clearTimeout(deskDragTimer);
       deskDragTimer = null;
@@ -336,6 +336,7 @@
       removePreDragListeners();
     }
   }
+
   function handleDragEndPre() {
     clearTimeout(deskDragTimer);
     deskDragTimer = null;
