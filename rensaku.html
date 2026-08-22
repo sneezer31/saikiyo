@@ -7,8 +7,7 @@
 <style>
   :root { --bg-color: #F8F8F8; --text-color: #111111; --primary: #2C7C73; --btn-bg: #FFFFFF; }
   
-
-  /* 引っ張って更新（Pull-to-Refresh）の根絶 */
+  /* 引っ張って更新の根絶 */
   html, body { 
     margin: 0; padding: 0; height: 100dvh; overflow: hidden;
     font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color);
@@ -19,44 +18,55 @@
     display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto;
   }
 
-  .screen { display: none; padding: 20px; flex-direction: column; gap: 15px; flex: 1; box-sizing: border-box; overflow: hidden; }
+  /* 画面全体をスクロール可能（ビロンと伸びる）にする */
+  .screen { 
+    display: none; padding: 20px; flex-direction: column; gap: 15px; flex: 1; 
+    box-sizing: border-box; overflow-y: auto; overflow-x: hidden; 
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
   .screen.active { display: flex; }
 
   h2 { margin: 0 0 10px 0; font-size: 1.6rem; border-bottom: 2px solid var(--primary); padding-bottom: 5px; text-align: center; flex-shrink: 0; }
   .sub-title { margin: 0; font-size: 1.1rem; font-weight: bold; flex-shrink: 0; }
 
   /* フォーム要素 */
-  textarea { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; border: 1px solid #999; border-radius: 4px; resize: none; flex: 1; }
+  textarea { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; border: 1px solid #999; border-radius: 4px; resize: none; flex: 1; min-height: 30vh; }
   
   /* プレビューエリア */
-  #preview-area { font-size: 1.1rem; line-height: 2; padding: 10px; white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; flex: 1; }
+  #preview-area { font-size: 1.1rem; line-height: 2; padding: 10px; white-space: pre-wrap; word-wrap: break-word; flex: 1; }
 
   .settings-group { border: 1px solid #CCC; padding: 15px; border-radius: 4px; background: #FFF; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
   .radio-row { display: flex; gap: 15px; align-items: center; font-size: 0.95rem; }
   .radio-label { font-weight: bold; width: 80px; flex-shrink: 0; }
 
   /* ボタン */
-  .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-shrink: 0; }
+  .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-shrink: 0; margin-bottom: 20px; }
   button { padding: 14px; font-size: 1.1rem; font-weight: bold; background: var(--btn-bg); color: var(--text-color); border: 2px solid var(--text-color); cursor: pointer; border-radius: 4px; flex: 1; }
   button.primary { background: var(--primary); color: #FFF; border-color: var(--primary); }
   button:active { opacity: 0.7; }
 
-  /* ソートエリアのラッパー */
+  /* ソートエリアのラッパー（枠を撤廃） */
   .sort-wrapper {
-    position: relative; flex: 1; overflow: hidden; border: 1px inset #CCC; border-radius: 8px; background: #EAEAEA;
+    position: relative; width: 100%; flex-shrink: 0;
   }
+  /* 横書き時は縦にビロンと伸びる */
+  .sort-wrapper.dir-horizontal { height: auto; overflow: visible; }
+  /* 縦書き時は横にビロンと伸びて、横スクロールさせる */
+  .sort-wrapper.dir-vertical { 
+    overflow-x: auto; overflow-y: hidden; padding-bottom: 10px;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .sort-wrapper.dir-vertical::-webkit-scrollbar { display: none; }
 
   /* 実際のソートエリア */
   #sort-area {
-    display: flex; gap: 10px; padding: 15px; box-sizing: border-box;
-    width: 100%; height: 100%;
-    scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: none;
+    display: flex; gap: 10px; box-sizing: border-box; width: 100%;
   }
-  #sort-area::-webkit-scrollbar { display: none; }
-  
-  /* 自前スクロールバー */
+
+  /* カスタムスクロールバー（全画面用） */
   #custom-scrollbar {
-    position: absolute; pointer-events: none; z-index: 100; display: none;
+    position: fixed; pointer-events: none; z-index: 100; display: none;
   }
   #custom-thumb {
     background-color: var(--primary); border-radius: 4px; position: absolute; border: 1px solid rgba(255,255,255,0.5); box-sizing: border-box;
@@ -108,8 +118,8 @@
   .tanzaku.font-gothic { font-family: sans-serif; }
   
   /* 親コンテナのレイアウト方向 */
-  #sort-area.dir-vertical { flex-direction: row-reverse; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; justify-content: flex-start; }
-  #sort-area.dir-horizontal { flex-direction: column; flex-wrap: nowrap; overflow-y: auto; overflow-x: hidden; }
+  #sort-area.dir-vertical { flex-direction: row-reverse; flex-wrap: nowrap; justify-content: flex-start; width: max-content; }
+  #sort-area.dir-horizontal { flex-direction: column; flex-wrap: nowrap; }
 
   /* 短冊自身のテキスト方向 */
   .tanzaku.dir-vertical, .placeholder.dir-vertical { writing-mode: vertical-rl; padding: 15px 10px; line-height: 2; flex-shrink: 0; }
@@ -155,9 +165,8 @@
   <div id="screen2" class="screen">
     <h2>さいきよ‐れんさく</h2>
     <div class="sub-title">並べ替え（右端の「☰」を掴んで移動）</div>
-    <div class="sort-wrapper">
+    <div id="sort-wrapper" class="sort-wrapper">
       <div id="sort-area"></div>
-      <div id="custom-scrollbar"><div id="custom-thumb"></div></div>
     </div>
     
     <div class="btn-group">
@@ -179,6 +188,8 @@
   </div>
 </div>
 
+<div id="custom-scrollbar"><div id="custom-thumb"></div></div>
+
 <script>
   const screens = [
     document.getElementById('screen1'),
@@ -186,6 +197,7 @@
     document.getElementById('screen3')
   ];
   const inputText = document.getElementById('input-text');
+  const sortWrapper = document.getElementById('sort-wrapper');
   const sortArea = document.getElementById('sort-area');
   const previewArea = document.getElementById('preview-area');
   
@@ -229,8 +241,8 @@
     currentDirection = document.querySelector('input[name="direction"]:checked').value;
     const wrap = document.querySelector('input[name="wrap"]:checked').value;
 
-    sortArea.className = '';
-    sortArea.classList.add(`dir-${currentDirection}`);
+    sortWrapper.className = `sort-wrapper dir-${currentDirection}`;
+    sortArea.className = `dir-${currentDirection}`;
     sortArea.innerHTML = '';
 
     poems.forEach((poem, index) => {
@@ -261,8 +273,7 @@
   }
 
   function goToScreen3() {
-    const tanzakus = Array.from(sortArea.children).filter(el => !el.classList.contains('placeholder') && !el.classList.contains('dragging') && el.id !== 'custom-scrollbar');
-    // 出力結果には番号を含めず、テキストのみを回収する
+    const tanzakus = Array.from(sortArea.children).filter(el => !el.classList.contains('placeholder') && !el.classList.contains('dragging'));
     finalResultText = tanzakus.map(el => el.querySelector('.tanzaku-text').textContent).join('\n\n');
     
     const font = document.querySelector('input[name="font"]:checked').value;
@@ -296,39 +307,49 @@
     });
   }
 
+  // 画面全体（.screen）に追従するカスタムスクロールバー
   function updateCustomScrollbar() {
     const track = document.getElementById('custom-scrollbar');
     const thumb = document.getElementById('custom-thumb');
-    if (!track || !thumb || !screens[1].classList.contains('active')) return;
+    if (!track || !thumb || !screens[1].classList.contains('active')) {
+      if(track) track.style.display = 'none';
+      return;
+    }
 
     if (currentDirection === 'horizontal') {
-      const sH = sortArea.scrollHeight;
-      const cH = sortArea.clientHeight;
+      const container = screens[1]; // 横書き時は画面全体が縦に伸びてスクロールする
+      const sH = container.scrollHeight;
+      const cH = container.clientHeight;
       if (sH <= cH) { track.style.display = 'none'; return; }
       
       track.style.display = 'block';
       track.style.top = '0'; track.style.bottom = '0';
-      track.style.right = '2px'; track.style.left = 'auto';
-      track.style.width = '8px'; track.style.height = '100%';
+      track.style.right = '4px'; track.style.left = 'auto';
+      track.style.width = '6px'; track.style.height = '100%';
 
       const thumbH = Math.max(20, (cH / sH) * cH);
-      const ratio = sortArea.scrollTop / (sH - cH);
+      const ratio = container.scrollTop / (sH - cH);
       thumb.style.width = '100%';
       thumb.style.height = `${thumbH}px`;
       thumb.style.top = `${ratio * (cH - thumbH)}px`;
       thumb.style.left = '0';
     } else {
-      const sW = sortArea.scrollWidth;
-      const cW = sortArea.clientWidth;
+      const container = sortWrapper; // 縦書き時はsort-wrapperが横スクロールする
+      const sW = container.scrollWidth;
+      const cW = container.clientWidth;
       if (sW <= cW) { track.style.display = 'none'; return; }
 
       track.style.display = 'block';
-      track.style.left = '0'; track.style.right = '0';
-      track.style.bottom = '2px'; track.style.top = 'auto';
-      track.style.height = '8px'; track.style.width = '100%';
+      const rect = container.getBoundingClientRect();
+      track.style.left = rect.left + 'px'; 
+      track.style.right = 'auto';
+      track.style.bottom = (window.innerHeight - rect.bottom) + 'px'; 
+      track.style.top = 'auto';
+      track.style.height = '6px'; 
+      track.style.width = rect.width + 'px';
 
       const thumbW = Math.max(20, (cW / sW) * cW);
-      let scrollRatio = Math.abs(sortArea.scrollLeft) / (sW - cW);
+      let scrollRatio = Math.abs(container.scrollLeft) / (sW - cW);
       if (scrollRatio > 1) scrollRatio = 1;
 
       thumb.style.height = '100%';
@@ -339,7 +360,8 @@
     }
   }
 
-  sortArea.addEventListener('scroll', () => { requestAnimationFrame(updateCustomScrollbar); });
+  screens[1].addEventListener('scroll', () => { if(currentDirection==='horizontal') requestAnimationFrame(updateCustomScrollbar); });
+  sortWrapper.addEventListener('scroll', () => { if(currentDirection==='vertical') requestAnimationFrame(updateCustomScrollbar); });
   window.addEventListener('resize', () => { requestAnimationFrame(updateCustomScrollbar); });
 
   function handlePointerDown(e) {
@@ -466,9 +488,9 @@
     }
     
     if (currentDirection === 'vertical') {
-      sortArea.scrollBy({ left: autoScrollSpeedX });
+      sortWrapper.scrollBy({ left: autoScrollSpeedX });
     } else {
-      sortArea.scrollBy({ top: autoScrollSpeedY });
+      screens[1].scrollBy({ top: autoScrollSpeedY });
     }
     
     checkDragIntersection();
@@ -489,27 +511,27 @@
     deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
     deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-    const threshold = 80;
+    const threshold = 100;
     
     if (currentDirection === 'vertical') {
+      // 縦書き（横スクロール）時は、画面の左右の端で判定
       if (e.clientX < threshold) {
         let ratio = 1 - (e.clientX / threshold);
-        autoScrollSpeedX = -(3 + ratio * 5); 
+        autoScrollSpeedX = -(3 + ratio * 8); 
       } else if (window.innerWidth - e.clientX < threshold) {
-        let dist = window.innerWidth - e.clientX;
-        let ratio = 1 - (dist / threshold);
-        autoScrollSpeedX = (3 + ratio * 5); 
+        let ratio = 1 - ((window.innerWidth - e.clientX) / threshold);
+        autoScrollSpeedX = (3 + ratio * 8); 
       } else {
         autoScrollSpeedX = 0;
       }
     } else {
+      // 横書き（縦スクロール）時は、画面の上下の端で判定
       if (e.clientY < threshold) {
         let ratio = 1 - (e.clientY / threshold);
-        autoScrollSpeedY = -(3 + ratio * 5); 
+        autoScrollSpeedY = -(3 + ratio * 8); 
       } else if (window.innerHeight - e.clientY < threshold) {
-        let dist = window.innerHeight - e.clientY;
-        let ratio = 1 - (dist / threshold);
-        autoScrollSpeedY = (3 + ratio * 5); 
+        let ratio = 1 - ((window.innerHeight - e.clientY) / threshold);
+        autoScrollSpeedY = (3 + ratio * 8); 
       } else {
         autoScrollSpeedY = 0;
       }
