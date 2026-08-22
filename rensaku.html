@@ -202,6 +202,8 @@
   let deskDragTimer = null;
   let deskDragStartX = 0;
   let deskDragStartY = 0;
+  let deskOriginalRectLeft = 0;
+  let deskOriginalRectTop = 0;
   let deskIsDragging = false;
   let lastMoveTime = 0;
 
@@ -393,6 +395,8 @@
     removePreDragListeners();
     
     const rect = deskDraggedItem.getBoundingClientRect();
+    deskOriginalRectLeft = rect.left;
+    deskOriginalRectTop = rect.top;
 
     deskPlaceholder = document.createElement('div');
     deskPlaceholder.className = `placeholder dir-${currentDirection}`;
@@ -426,23 +430,27 @@
     document.addEventListener('pointercancel', handlePointerUp);
   }
 
-  function checkDragIntersection(x, y) {
+  function checkDragIntersection() {
     if (!deskDraggedItem || !deskPlaceholder) return;
     
-    const elements = document.elementsFromPoint(x, y);
+    // 軸固定の恩恵：指が左右(上下)にブレても、最初に掴んだ真っ直ぐなラインをスキャンする
+    const checkX = currentDirection === 'vertical' ? deskLastClientX : deskDragStartX;
+    const checkY = currentDirection === 'horizontal' ? deskLastClientY : deskDragStartY;
+    
+    const elements = document.elementsFromPoint(checkX, checkY);
     const target = elements.find(el => el.classList && el.classList.contains('tanzaku') && el.parentNode === sortArea);
 
     if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
       const targetRect = target.getBoundingClientRect();
       
       if (currentDirection === 'vertical') {
-        if (x > targetRect.left + (targetRect.width / 2)) {
+        if (checkX > targetRect.left + (targetRect.width / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
         } else {
           sortArea.insertBefore(deskPlaceholder, target.nextSibling);
         }
       } else {
-        if (y < targetRect.top + (targetRect.height / 2)) {
+        if (checkY < targetRect.top + (targetRect.height / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
         } else {
           sortArea.insertBefore(deskPlaceholder, target.nextSibling);
@@ -463,7 +471,7 @@
       sortArea.scrollBy({ top: autoScrollSpeedY });
     }
     
-    checkDragIntersection(deskLastClientX, deskLastClientY);
+    checkDragIntersection();
     autoScrollRAF = requestAnimationFrame(startAutoScroll);
   }
 
@@ -478,12 +486,17 @@
     deskLastClientX = e.clientX;
     deskLastClientY = e.clientY;
     
-    deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
-    deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
+    // 短冊の描画位置を進行方向の軸のみに固定
+    if (currentDirection === 'horizontal') {
+      deskDraggedItem.style.left = `${deskOriginalRectLeft}px`;
+      deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
+    } else {
+      deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
+      deskDraggedItem.style.top = `${deskOriginalRectTop}px`;
+    }
 
-    // ★修正箇所：スクロール発動の判定基準を「画面端」から「コンテナ枠の内側」に変更
     const sortRect = sortArea.getBoundingClientRect();
-    const threshold = 60; // 枠の端から60px以内に入ったら発動
+    const threshold = 60; 
     
     if (currentDirection === 'vertical') {
       if (e.clientX < sortRect.left + threshold) {
@@ -515,7 +528,7 @@
       startAutoScroll();
     }
 
-    checkDragIntersection(deskLastClientX, deskLastClientY);
+    checkDragIntersection();
   }
 
   function handlePointerUp(e) {
