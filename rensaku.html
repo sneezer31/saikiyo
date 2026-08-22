@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head></head>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>さいきよ‐れんさく</title>
@@ -61,18 +61,20 @@
     background-color: var(--primary); border-radius: 4px; position: absolute; border: 1px solid rgba(255,255,255,0.5); box-sizing: border-box;
   }
 
-  /* 短冊の基本スタイル（スクロールを許可し、Flex配置にする） */
+  /* 短冊の基本スタイル */
   .tanzaku {
     background-color: #FFF; border: 1px solid #666; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
     padding: 10px; user-select: none; -webkit-user-select: none;
-    touch-action: manipulation; /* 短冊上のネイティブスクロールを完全解放 */
+    touch-action: manipulation;
     transition: none !important;
     display: flex; gap: 10px; align-items: flex-start; justify-content: space-between;
+    box-sizing: border-box;
   }
   
   /* 抜け殻（プレースホルダー） */
   .placeholder {
     background-color: rgba(0,0,0,0.05); border: 1px dashed #999; border-radius: 2px; box-shadow: none;
+    box-sizing: border-box;
   }
 
   /* ドラッグ中の実体 */
@@ -81,36 +83,40 @@
     border: 2px solid var(--primary); background: #FFF;
   }
 
-  /* ドラッグ専用ハンドル（ハンバーガーアイコン）を右端用に最適化 */
+  /* 番号（連番） */
+  .item-num {
+    font-weight: bold; color: #999; font-size: 14px; flex-shrink: 0;
+    pointer-events: none; padding-top: 2px;
+  }
+  .dir-vertical .item-num { padding-top: 0; padding-right: 2px; }
+
+  /* ドラッグ専用ハンドル */
   .drag-handle {
     cursor: grab; font-size: 1.4rem; color: #999; line-height: 1; flex-shrink: 0; 
     padding: 8px 12px; background-color: rgba(0,0,0,0.05); border-radius: 4px;
     display: flex; align-items: center; justify-content: center;
-    touch-action: none; /* ハンドル上だけスクロールを物理的に禁止 */
+    touch-action: none;
   }
   .drag-handle:active { color: var(--primary); background-color: rgba(0,0,0,0.1); }
   
   /* 短歌テキスト部分 */
-  .tanzaku-text {
-    flex: 1;
-  }
+  .tanzaku-text { flex: 1; }
 
   /* 書体 */
-  .font-mincho { font-family: 'Shippori Mincho', serif; }
-  .font-gothic { font-family: sans-serif; }
+  .tanzaku.font-mincho { font-family: 'Shippori Mincho', serif; }
+  .tanzaku.font-gothic { font-family: sans-serif; }
   
-  /* 縦書きモード（右から左へ） */
-  .dir-vertical { flex-direction: row-reverse; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; justify-content: flex-start; }
-  .dir-vertical .tanzaku, .dir-vertical .placeholder { writing-mode: vertical-rl; padding: 15px 10px; line-height: 2; flex-shrink: 0; }
-  
-  /* 横書きモード（上から下へ） */
-  .dir-horizontal { flex-direction: column; flex-wrap: nowrap; overflow-y: auto; overflow-x: hidden; }
-  .dir-horizontal .tanzaku, .dir-horizontal .placeholder { writing-mode: horizontal-tb; width: 100%; box-sizing: border-box; line-height: 1.5; flex-shrink: 0; }
+  /* 親コンテナのレイアウト方向 */
+  #sort-area.dir-vertical { flex-direction: row-reverse; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; justify-content: flex-start; }
+  #sort-area.dir-horizontal { flex-direction: column; flex-wrap: nowrap; overflow-y: auto; overflow-x: hidden; }
 
-  /* 折り返し設定（テキスト部分に適用） */
-  .wrap-false .tanzaku-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .wrap-true .tanzaku-text { white-space: pre-wrap; word-break: break-all; }
+  /* 短冊自身のテキスト方向 */
+  .tanzaku.dir-vertical, .placeholder.dir-vertical { writing-mode: vertical-rl; padding: 15px 10px; line-height: 2; flex-shrink: 0; }
+  .tanzaku.dir-horizontal, .placeholder.dir-horizontal { writing-mode: horizontal-tb; width: 100%; line-height: 1.5; flex-shrink: 0; }
 
+  /* 折り返し設定 */
+  .tanzaku.wrap-false .tanzaku-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tanzaku.wrap-true .tanzaku-text { white-space: pre-wrap; word-break: break-all; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap" rel="stylesheet">
 </head>
@@ -185,15 +191,16 @@
   let finalResultText = "";
   let currentDirection = 'horizontal';
 
-  // D&D用変数
   let deskDraggedItem = null;
   let deskPlaceholder = null;
   let deskPointerOffsetX = 0;
   let deskPointerOffsetY = 0;
+  let deskDragTimer = null;
+  let deskDragStartX = 0;
+  let deskDragStartY = 0;
   let deskIsDragging = false;
   let lastMoveTime = 0;
 
-  // 自動エッジスクロール用変数
   let deskLastClientX = 0;
   let deskLastClientY = 0;
   let autoScrollSpeedX = 0;
@@ -222,27 +229,30 @@
     const wrap = document.querySelector('input[name="wrap"]:checked').value;
 
     sortArea.className = '';
-    sortArea.classList.add(`font-${font}`, `dir-${currentDirection}`, `wrap-${wrap}`);
+    sortArea.classList.add(`dir-${currentDirection}`);
     sortArea.innerHTML = '';
 
-    poems.forEach(poem => {
+    poems.forEach((poem, index) => {
       const tanzaku = document.createElement('div');
-      tanzaku.className = 'tanzaku';
+      tanzaku.className = `tanzaku font-${font} dir-${currentDirection} wrap-${wrap}`;
       
-      // 物理ハンドルの生成とイベント付与
+      const numDiv = document.createElement('div');
+      numDiv.className = 'item-num';
+      numDiv.textContent = index + 1;
+
       const handle = document.createElement('div');
       handle.className = 'drag-handle';
-      handle.innerHTML = '&#9776;'; // ☰アイコン
-      handle.addEventListener('pointerdown', handlePointerDown);
+      handle.innerHTML = '&#9776;';
       
-      // テキスト部分の生成
       const textDiv = document.createElement('div');
       textDiv.className = 'tanzaku-text';
       textDiv.textContent = poem;
 
-      // 順番を逆に（テキストを先に、ハンドルを後に＝右・下に配置）
+      tanzaku.appendChild(numDiv);
       tanzaku.appendChild(textDiv);
       tanzaku.appendChild(handle);
+
+      tanzaku.addEventListener('pointerdown', handlePointerDown);
       sortArea.appendChild(tanzaku);
     });
     
@@ -250,8 +260,8 @@
   }
 
   function goToScreen3() {
-    // プレースホルダー等を除外し、テキスト部分（.tanzaku-text）から短歌を回収する
     const tanzakus = Array.from(sortArea.children).filter(el => !el.classList.contains('placeholder') && !el.classList.contains('dragging') && el.id !== 'custom-scrollbar');
+    // 出力結果には番号を含めず、テキストのみを回収する
     finalResultText = tanzakus.map(el => el.querySelector('.tanzaku-text').textContent).join('\n\n');
     
     const font = document.querySelector('input[name="font"]:checked').value;
@@ -275,6 +285,14 @@
       alert("コピーに失敗しました。"); 
     }
     document.body.removeChild(ta);
+  }
+
+  function updateListNumbers() {
+    const tanzakus = Array.from(sortArea.querySelectorAll('.tanzaku:not(.dragging)'));
+    tanzakus.forEach((el, index) => {
+      const numEl = el.querySelector('.item-num');
+      if (numEl) numEl.textContent = index + 1;
+    });
   }
 
   function updateCustomScrollbar() {
@@ -323,25 +341,59 @@
   sortArea.addEventListener('scroll', () => { requestAnimationFrame(updateCustomScrollbar); });
   window.addEventListener('resize', () => { requestAnimationFrame(updateCustomScrollbar); });
 
-  // ドラッグ始動
   function handlePointerDown(e) {
     if (e.button !== 0 && e.type !== 'touchstart') return;
-    e.preventDefault(); // ハンドル上のスクロール等デフォルト動作を遮断
-    
-    // .drag-handle を起点に、親要素の .tanzaku をドラッグ対象とする
-    deskDraggedItem = this.closest('.tanzaku');
+    if (!e.target.classList.contains('drag-handle')) return;
+
+    deskDraggedItem = this;
+    deskDragStartX = e.clientX;
+    deskDragStartY = e.clientY;
     deskIsDragging = false;
+
+    deskDragTimer = setTimeout(() => {
+      startDrag(e);
+    }, 250);
+
+    document.addEventListener('pointermove', checkDragThreshold, { passive: true });
+    document.addEventListener('pointerup', handleDragEndPre);
+    document.addEventListener('pointercancel', handleDragEndPre);
+  }
+
+  function checkDragThreshold(e) {
+    if (!deskDraggedItem || deskIsDragging) return;
+    const dx = Math.abs(e.clientX - deskDragStartX);
+    const dy = Math.abs(e.clientY - deskDragStartY);
     
-    startDrag(e);
+    if (dx > 10 || dy > 10) {
+      clearTimeout(deskDragTimer);
+      deskDragTimer = null;
+      deskDraggedItem = null;
+      removePreDragListeners();
+    }
+  }
+
+  function handleDragEndPre() {
+    clearTimeout(deskDragTimer);
+    deskDragTimer = null;
+    deskDraggedItem = null;
+    removePreDragListeners();
+  }
+
+  function removePreDragListeners() {
+    document.removeEventListener('pointermove', checkDragThreshold);
+    document.removeEventListener('pointerup', handleDragEndPre);
+    document.removeEventListener('pointercancel', handleDragEndPre);
   }
 
   function startDrag(e) {
     deskIsDragging = true;
+    removePreDragListeners();
     
     const rect = deskDraggedItem.getBoundingClientRect();
 
     deskPlaceholder = document.createElement('div');
-    deskPlaceholder.className = 'placeholder';
+    deskPlaceholder.className = `placeholder dir-${currentDirection}`;
+    
     if (currentDirection === 'horizontal') {
       deskPlaceholder.style.height = `${rect.height}px`;
     } else {
@@ -350,7 +402,6 @@
 
     sortArea.insertBefore(deskPlaceholder, deskDraggedItem);
     
-    // ハンドル上のタッチ位置から、カード全体の相対位置を計算
     deskPointerOffsetX = e.clientX - rect.left;
     deskPointerOffsetY = e.clientY - rect.top;
 
@@ -372,21 +423,33 @@
     document.addEventListener('pointercancel', handlePointerUp);
   }
 
-  function checkDragIntersection(x, y) {
-    const elements = document.elementsFromPoint(x, y);
-    const target = elements.find(el => el.classList && el.classList.contains('tanzaku') && el.parentNode === sortArea);
+  function checkDragIntersection() {
+    if (!deskDraggedItem || !deskPlaceholder) return;
+    const rect = deskDraggedItem.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
+    let target = null;
+    const siblings = Array.from(sortArea.children);
+    for (let el of siblings) {
+      if (!el.classList.contains('tanzaku') || el === deskDraggedItem) continue;
+      const r = el.getBoundingClientRect();
+      if (centerX >= r.left && centerX <= r.right && centerY >= r.top && centerY <= r.bottom) {
+        target = el;
+        break;
+      }
+    }
+
+    if (target) {
       const targetRect = target.getBoundingClientRect();
-      
       if (currentDirection === 'vertical') {
-        if (x > targetRect.left + (targetRect.width / 2)) {
+        if (centerX > targetRect.left + (targetRect.width / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
         } else {
           sortArea.insertBefore(deskPlaceholder, target.nextSibling);
         }
       } else {
-        if (y < targetRect.top + (targetRect.height / 2)) {
+        if (centerY < targetRect.top + (targetRect.height / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
         } else {
           sortArea.insertBefore(deskPlaceholder, target.nextSibling);
@@ -402,12 +465,12 @@
     }
     
     if (currentDirection === 'vertical') {
-      sortArea.scrollLeft += autoScrollSpeedX;
+      sortArea.scrollBy({ left: autoScrollSpeedX });
     } else {
-      sortArea.scrollTop += autoScrollSpeedY;
+      sortArea.scrollBy({ top: autoScrollSpeedY });
     }
     
-    checkDragIntersection(deskLastClientX, deskLastClientY);
+    checkDragIntersection();
     autoScrollRAF = requestAnimationFrame(startAutoScroll);
   }
 
@@ -425,7 +488,6 @@
     deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
     deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-    // 本丸の可変速アクセル式スクロールロジックを完全移植
     const threshold = 80;
     
     if (currentDirection === 'vertical') {
@@ -456,7 +518,7 @@
       startAutoScroll();
     }
 
-    checkDragIntersection(deskLastClientX, deskLastClientY);
+    checkDragIntersection();
   }
 
   function handlePointerUp(e) {
@@ -483,6 +545,7 @@
     deskDraggedItem = null;
     deskIsDragging = false;
     
+    updateListNumbers();
     updateCustomScrollbar();
   }
 </script>
