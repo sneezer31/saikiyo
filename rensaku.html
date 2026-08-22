@@ -429,14 +429,12 @@
   function checkDragIntersection(x, y) {
     if (!deskDraggedItem || !deskPlaceholder) return;
     
-    // 本家完全互換の物理判定（指の真下にある要素を直接探す）
     const elements = document.elementsFromPoint(x, y);
     const target = elements.find(el => el.classList && el.classList.contains('tanzaku') && el.parentNode === sortArea);
 
     if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
       const targetRect = target.getBoundingClientRect();
       
-      // 縦書き（右から左へ並ぶ）と横書き（上から下へ並ぶ）で挿入位置の基準を切り替える
       if (currentDirection === 'vertical') {
         if (x > targetRect.left + (targetRect.width / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
@@ -483,27 +481,31 @@
     deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
     deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-    const threshold = 80;
+    // ★修正箇所：スクロール発動の判定基準を「画面端」から「コンテナ枠の内側」に変更
+    const sortRect = sortArea.getBoundingClientRect();
+    const threshold = 60; // 枠の端から60px以内に入ったら発動
     
     if (currentDirection === 'vertical') {
-      if (e.clientX < threshold) {
-        let ratio = 1 - (e.clientX / threshold);
-        autoScrollSpeedX = -(3 + ratio * 5); 
-      } else if (window.innerWidth - e.clientX < threshold) {
-        let dist = window.innerWidth - e.clientX;
+      if (e.clientX < sortRect.left + threshold) {
+        let dist = Math.max(0, e.clientX - sortRect.left);
         let ratio = 1 - (dist / threshold);
-        autoScrollSpeedX = (3 + ratio * 5); 
+        autoScrollSpeedX = -(3 + ratio * 8); 
+      } else if (e.clientX > sortRect.right - threshold) {
+        let dist = Math.max(0, sortRect.right - e.clientX);
+        let ratio = 1 - (dist / threshold);
+        autoScrollSpeedX = (3 + ratio * 8); 
       } else {
         autoScrollSpeedX = 0;
       }
     } else {
-      if (e.clientY < threshold) {
-        let ratio = 1 - (e.clientY / threshold);
-        autoScrollSpeedY = -(3 + ratio * 5); 
-      } else if (window.innerHeight - e.clientY < threshold) {
-        let dist = window.innerHeight - e.clientY;
+      if (e.clientY < sortRect.top + threshold) {
+        let dist = Math.max(0, e.clientY - sortRect.top);
         let ratio = 1 - (dist / threshold);
-        autoScrollSpeedY = (3 + ratio * 5); 
+        autoScrollSpeedY = -(3 + ratio * 8); 
+      } else if (e.clientY > sortRect.bottom - threshold) {
+        let dist = Math.max(0, sortRect.bottom - e.clientY);
+        let ratio = 1 - (dist / threshold);
+        autoScrollSpeedY = (3 + ratio * 8); 
       } else {
         autoScrollSpeedY = 0;
       }
