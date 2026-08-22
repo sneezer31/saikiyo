@@ -26,6 +26,7 @@
    2026.08.22 内部コード完全日本語同期版（kansei/settei/mitsuyu/henshushitsu）
    2026.08.22 リスト机D&Dスクロール干渉解消（番号持ち手化）版
    2026.08.22 データ表示フィルター拡張版（未発表/リスト/タグ無し）
+   2026.08.22 推敲デスク機能（3段階トグル検索固定）実装版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -582,7 +583,10 @@ let selectedIds = new Set();
 let currentListId = null; 
 let config = { view: 'wrap', filter: 'work', font: 'sans-serif', radius: 'square' };
 let appTitle = 'さいきよ';
-let isSearchLinked = false; 
+
+// 検索・推敲デスク用の状態管理変数
+let searchMode = 'idle'; // 'idle', 'searching', 'suiko'
+let suikoVisibleIds = new Set();
 let searchTimeout = null;
 
 let lastTapTime = 0; 
@@ -771,44 +775,60 @@ function renderTimeline(forceBottom = false) {
 
 function executeUnifiedSearch() {
   const items = document.querySelectorAll('#timeline-container .item');
-  if (!isSearchLinked) { items.forEach(item => item.style.display = ''); return; }
+  if (searchMode === 'idle') { 
+    items.forEach(item => item.style.display = ''); 
+    return; 
+  }
 
   // 検索フリーズ対策：処理完了までボタンをロック
   btnSearch.style.pointerEvents = 'none';
 
   requestAnimationFrame(() => {
-    const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
-    const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
-
-    const contentOrGroups = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
-    const tagOrGroups = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
-
-    items.forEach(item => {
-      const id = Number(item.dataset.id);
-      const targetData = data.find(d => d.id === id);
-      if (!targetData) return;
-
-      const content = (targetData.content || '').toLowerCase();
-      const tags = (targetData.tags ? targetData.tags.join(' ') : '').toLowerCase();
-      const memo = (targetData.memo || '').toLowerCase();
-      const dateStr = formatTime(id).toLowerCase();
-
-      const contentMatch = contentOrGroups.length === 0 || contentOrGroups.some(group => {
-        const andKeywords = group.split(/\s+/).filter(Boolean);
-        return andKeywords.every(keyword => {
-          return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
-        });
+    if (searchMode === 'suiko') {
+      // 推敲モード：記録されているIDの要素だけを表示する
+      items.forEach(item => {
+        const id = Number(item.dataset.id);
+        if (suikoVisibleIds.has(id)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
       });
+    } else if (searchMode === 'searching') {
+      // リアルタイム検索モード
+      const safeKeyword = inputContentNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
+      const safeTagKeyword = inputTagsNode.value.replace(/[｜│]/g, '|').replace(/ /g, ' ').toLowerCase();
 
-      const tagMatch = tagOrGroups.length === 0 || tagOrGroups.some(group => {
-        const andKeywords = group.split(/\s+/).filter(Boolean);
-        return andKeywords.every(keyword => {
-          return tags.includes(keyword);
+      const contentOrGroups = safeKeyword.split('|').map(k => k.trim()).filter(Boolean);
+      const tagOrGroups = safeTagKeyword.split('|').map(k => k.trim()).filter(Boolean);
+
+      items.forEach(item => {
+        const id = Number(item.dataset.id);
+        const targetData = data.find(d => d.id === id);
+        if (!targetData) return;
+
+        const content = (targetData.content || '').toLowerCase();
+        const tags = (targetData.tags ? targetData.tags.join(' ') : '').toLowerCase();
+        const memo = (targetData.memo || '').toLowerCase();
+        const dateStr = formatTime(id).toLowerCase();
+
+        const contentMatch = contentOrGroups.length === 0 || contentOrGroups.some(group => {
+          const andKeywords = group.split(/\s+/).filter(Boolean);
+          return andKeywords.every(keyword => {
+            return content.includes(keyword) || memo.includes(keyword) || dateStr.includes(keyword);
+          });
         });
-      });
 
-      item.style.display = (contentMatch && tagMatch) ? '' : 'none';
-    });
+        const tagMatch = tagOrGroups.length === 0 || tagOrGroups.some(group => {
+          const andKeywords = group.split(/\s+/).filter(Boolean);
+          return andKeywords.every(keyword => {
+            return tags.includes(keyword);
+          });
+        });
+
+        item.style.display = (contentMatch && tagMatch) ? '' : 'none';
+      });
+    }
     
     // 処理完了後にロック解除
     btnSearch.style.pointerEvents = 'auto';
@@ -1664,32 +1684,49 @@ function attachEventListeners() {
   });
 
   inputContentNode.addEventListener('input', () => {
-    if (isSearchLinked) {
+    if (searchMode === 'searching') {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(executeUnifiedSearch, 250); 
     }
   });
 
   inputTagsNode.addEventListener('input', () => {
-    if (isSearchLinked) {
+    if (searchMode === 'searching') {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(executeUnifiedSearch, 250);
     }
   });
 
   btnSearch.addEventListener('click', () => {
-    if (!isSearchLinked) {
-      isSearchLinked = true; 
-      btnSearch.innerText = '解除'; 
-      btnSearch.style.opacity = '0.5'; 
+    if (searchMode === 'idle') {
+      searchMode = 'searching'; 
+      btnSearch.innerText = '推敲'; 
+      btnSearch.style.background = 'var(--color-B)';
+      btnSearch.style.color = 'var(--color-A)';
       executeUnifiedSearch();
-    } else {
-      isSearchLinked = false; 
-      btnSearch.innerText = '検索'; 
-      btnSearch.style.opacity = '1'; 
+    } else if (searchMode === 'searching') {
+      searchMode = 'suiko'; 
+      btnSearch.innerText = '解除'; 
+      // スタイルは反転を維持
+
+      suikoVisibleIds.clear();
+      document.querySelectorAll('#timeline-container .item').forEach(item => {
+        if (item.style.display !== 'none') {
+          suikoVisibleIds.add(Number(item.dataset.id));
+        }
+      });
+
       inputContentNode.value = ''; 
       inputTagsNode.value = '';   
-      // 解除時に全件を再表示する処理
+    } else if (searchMode === 'suiko') {
+      searchMode = 'idle'; 
+      btnSearch.innerText = '検索'; 
+      btnSearch.style.background = '';
+      btnSearch.style.color = '';
+      suikoVisibleIds.clear();
+
+      inputContentNode.value = ''; 
+      inputTagsNode.value = '';   
       document.querySelectorAll('#timeline-container .item').forEach(i => i.style.display = '');
     }
   });
@@ -1702,14 +1739,22 @@ function attachEventListeners() {
       const content = inputContentNode.value.trim();
       if (!content) return;
       const tags = inputTagsNode.value.trim().split(/\s+/).filter(Boolean);
-      data.push({ id: Date.now(), type: 'tanka', content: content, status: '作品', publish_status: '未発表', tags: tags });
+      
+      const newItemId = Date.now();
+      data.push({ id: newItemId, type: 'tanka', content: content, status: '作品', publish_status: '未発表', tags: tags });
+      
       inputContentNode.value = ''; inputTagsNode.value = '';
-      if (isSearchLinked) {
-        isSearchLinked = false;
+      
+      if (searchMode === 'searching') {
+        searchMode = 'idle';
         btnSearch.innerText = '検索';
-        btnSearch.style.opacity = '1';
+        btnSearch.style.background = '';
+        btnSearch.style.color = '';
         document.querySelectorAll('#timeline-container .item').forEach(i => i.style.display = '');
+      } else if (searchMode === 'suiko') {
+        suikoVisibleIds.add(newItemId); // 推敲デスクに新しい短歌を合流させる
       }
+      
       saveData();
       renderTimeline(true);
     } else if (hasSelection) {
