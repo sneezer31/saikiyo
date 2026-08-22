@@ -24,6 +24,7 @@
    2026.08.19 編集室UI配置最適化（アーカイブ最上段）版
    2026.08.19 検索フリーズ根絶（排他制御）版
    2026.08.22 内部コード完全日本語同期版（kansei/settei/mitsuyu/henshushitsu）
+   2026.08.22 リスト机D&Dスクロール干渉解消（番号持ち手化）版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -217,15 +218,23 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 #panel-list-editor textarea { resize: none; }
 #list-items { border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); border-radius: var(--border-radius); position: relative; }
 
-/* D&D対応リストアイテム - 物理的な手触り（ひらひら廃止） */
+/* D&D対応リストアイテム - スクロール干渉解消版 */
 .list-item-edit { 
   display: flex; align-items: center; gap: 8px; margin-bottom: 5px; border: 1px solid var(--color-A); padding: 8px; 
-  background: var(--color-B); border-radius: var(--border-radius); cursor: grab; user-select: none; touch-action: none;
+  background: var(--color-B); border-radius: var(--border-radius);
   box-sizing: border-box;
   transition: none !important;
 }
-.list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 15px; pointer-events: none; }
-.list-item-edit .item-num { width: 24px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; pointer-events: none; flex-shrink: 0; }
+.list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 15px; }
+
+/* 番号部分を持ち手（ドラッグハンドル）に設定 */
+.list-item-edit .item-num {
+  width: 32px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; flex-shrink: 0;
+  background-color: var(--color-C); padding: 6px 0; border-radius: 4px;
+  cursor: grab; user-select: none; touch-action: none;
+}
+.list-item-edit.dragging .item-num { cursor: grabbing; }
+
 .list-item-edit button.btn-remove { 
   background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 4px 10px; cursor: pointer; font-weight: bold; border-radius: var(--border-radius); flex-shrink: 0;
 }
@@ -1082,6 +1091,9 @@ function handleListPointerDown(e) {
   if (e.target.tagName === 'BUTTON') return;
   if (e.button !== 0 && e.type !== 'touchstart') return;
   
+  // 追加：番号部分（.item-num）以外を触った場合はドラッグを開始しない
+  if (!e.target.classList.contains('item-num')) return;
+
   deskDraggedItem = this;
   deskDragStartX = e.clientX;
   deskDragStartY = e.clientY;
