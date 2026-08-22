@@ -99,7 +99,7 @@
   }
   .drag-handle:active { color: var(--primary); background-color: rgba(0,0,0,0.1); }
   
-  /* ★修正箇所：短歌テキスト部分が限界突破しないように min-width と min-height を指定 */
+  /* 短歌テキスト部分 */
   .tanzaku-text { 
     flex: 1; 
     min-width: 0; 
@@ -426,42 +426,25 @@
     document.addEventListener('pointercancel', handlePointerUp);
   }
 
-  function checkDragIntersection() {
+  function checkDragIntersection(x, y) {
     if (!deskDraggedItem || !deskPlaceholder) return;
-    const rect = deskDraggedItem.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    
+    // 本家完全互換の物理判定（指の真下にある要素を直接探す）
+    const elements = document.elementsFromPoint(x, y);
+    const target = elements.find(el => el.classList && el.classList.contains('tanzaku') && el.parentNode === sortArea);
 
-    let target = null;
-    const siblings = Array.from(sortArea.children);
-    for (let el of siblings) {
-      if (!el.classList.contains('tanzaku') || el === deskDraggedItem) continue;
-      const r = el.getBoundingClientRect();
-      
-      // ★修正箇所：交差判定の縛りを緩和。進行方向の軸のみで重なりを評価する。
-      if (currentDirection === 'horizontal') {
-        if (centerY >= r.top && centerY <= r.bottom) {
-          target = el;
-          break;
-        }
-      } else {
-        if (centerX >= r.left && centerX <= r.right) {
-          target = el;
-          break;
-        }
-      }
-    }
-
-    if (target) {
+    if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
       const targetRect = target.getBoundingClientRect();
+      
+      // 縦書き（右から左へ並ぶ）と横書き（上から下へ並ぶ）で挿入位置の基準を切り替える
       if (currentDirection === 'vertical') {
-        if (centerX > targetRect.left + (targetRect.width / 2)) {
+        if (x > targetRect.left + (targetRect.width / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
         } else {
           sortArea.insertBefore(deskPlaceholder, target.nextSibling);
         }
       } else {
-        if (centerY < targetRect.top + (targetRect.height / 2)) {
+        if (y < targetRect.top + (targetRect.height / 2)) {
           sortArea.insertBefore(deskPlaceholder, target);
         } else {
           sortArea.insertBefore(deskPlaceholder, target.nextSibling);
@@ -482,7 +465,7 @@
       sortArea.scrollBy({ top: autoScrollSpeedY });
     }
     
-    checkDragIntersection();
+    checkDragIntersection(deskLastClientX, deskLastClientY);
     autoScrollRAF = requestAnimationFrame(startAutoScroll);
   }
 
@@ -530,7 +513,7 @@
       startAutoScroll();
     }
 
-    checkDragIntersection();
+    checkDragIntersection(deskLastClientX, deskLastClientY);
   }
 
   function handlePointerUp(e) {
