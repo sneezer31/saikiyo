@@ -50,6 +50,7 @@
     display: flex; gap: 10px; padding: 15px; box-sizing: border-box;
     width: 100%; height: 100%;
     scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: none;
+    overflow-anchor: none; /* ★ブラウザのスクロール補正暴走を強制停止 */
   }
   #sort-area::-webkit-scrollbar { display: none; }
   
@@ -433,7 +434,6 @@
   function checkDragIntersection() {
     if (!deskDraggedItem || !deskPlaceholder) return;
     
-    // 軸固定の恩恵：指が左右(上下)にブレても、最初に掴んだ真っ直ぐなラインをスキャンする
     const checkX = currentDirection === 'vertical' ? deskLastClientX : deskDragStartX;
     const checkY = currentDirection === 'horizontal' ? deskLastClientY : deskDragStartY;
     
@@ -486,7 +486,6 @@
     deskLastClientX = e.clientX;
     deskLastClientY = e.clientY;
     
-    // 短冊の描画位置を進行方向の軸のみに固定
     if (currentDirection === 'horizontal') {
       deskDraggedItem.style.left = `${deskOriginalRectLeft}px`;
       deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
