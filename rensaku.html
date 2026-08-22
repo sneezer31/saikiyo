@@ -144,7 +144,7 @@
       <div class="radio-row">
         <span class="radio-label">表示</span>
         <label><input type="radio" name="wrap" value="false" checked>折り返しなし</label>
-        <label><input type="radio" name="wrap" value="true"> 全文表示</label>
+        <label><input type="radio" name="wrap" value="true"> 全文</label>
       </div>
     </div>
 
@@ -437,9 +437,18 @@
     for (let el of siblings) {
       if (!el.classList.contains('tanzaku') || el === deskDraggedItem) continue;
       const r = el.getBoundingClientRect();
-      if (centerX >= r.left && centerX <= r.right && centerY >= r.top && centerY <= r.bottom) {
-        target = el;
-        break;
+      
+      // ★修正箇所：交差判定の縛りを緩和。進行方向の軸のみで重なりを評価する。
+      if (currentDirection === 'horizontal') {
+        if (centerY >= r.top && centerY <= r.bottom) {
+          target = el;
+          break;
+        }
+      } else {
+        if (centerX >= r.left && centerX <= r.right) {
+          target = el;
+          break;
+        }
       }
     }
 
