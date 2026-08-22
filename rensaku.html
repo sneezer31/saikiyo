@@ -67,7 +67,7 @@
     padding: 10px; user-select: none; -webkit-user-select: none;
     touch-action: manipulation; /* 短冊上のネイティブスクロールを完全解放 */
     transition: none !important;
-    display: flex; gap: 10px; align-items: flex-start;
+    display: flex; gap: 10px; align-items: flex-start; justify-content: space-between;
   }
   
   /* 抜け殻（プレースホルダー） */
@@ -81,12 +81,14 @@
     border: 2px solid var(--primary); background: #FFF;
   }
 
-  /* ドラッグ専用ハンドル（ハンバーガーアイコン） */
+  /* ドラッグ専用ハンドル（ハンバーガーアイコン）を右端用に最適化 */
   .drag-handle {
-    cursor: grab; font-size: 1.4rem; color: #CCC; line-height: 1; flex-shrink: 0; padding: 2px;
+    cursor: grab; font-size: 1.4rem; color: #999; line-height: 1; flex-shrink: 0; 
+    padding: 8px 12px; background-color: rgba(0,0,0,0.05); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
     touch-action: none; /* ハンドル上だけスクロールを物理的に禁止 */
   }
-  .drag-handle:active { color: var(--primary); }
+  .drag-handle:active { color: var(--primary); background-color: rgba(0,0,0,0.1); }
   
   /* 短歌テキスト部分 */
   .tanzaku-text {
@@ -145,7 +147,7 @@
 
   <div id="screen2" class="screen">
     <h2>さいきよ‐れんさく</h2>
-    <div class="sub-title">並べ替え（「☰」を掴んで移動）</div>
+    <div class="sub-title">並べ替え（右端の「☰」を掴んで移動）</div>
     <div class="sort-wrapper">
       <div id="sort-area"></div>
       <div id="custom-scrollbar"><div id="custom-thumb"></div></div>
@@ -238,8 +240,9 @@
       textDiv.className = 'tanzaku-text';
       textDiv.textContent = poem;
 
-      tanzaku.appendChild(handle);
+      // 順番を逆に（テキストを先に、ハンドルを後に＝右・下に配置）
       tanzaku.appendChild(textDiv);
+      tanzaku.appendChild(handle);
       sortArea.appendChild(tanzaku);
     });
     
@@ -320,7 +323,7 @@
   sortArea.addEventListener('scroll', () => { requestAnimationFrame(updateCustomScrollbar); });
   window.addEventListener('resize', () => { requestAnimationFrame(updateCustomScrollbar); });
 
-  // ドラッグ始動（長押し不要、ハンドルを触った瞬間に即発動）
+  // ドラッグ始動
   function handlePointerDown(e) {
     if (e.button !== 0 && e.type !== 'touchstart') return;
     e.preventDefault(); // ハンドル上のスクロール等デフォルト動作を遮断
@@ -422,21 +425,28 @@
     deskDraggedItem.style.left = `${e.clientX - deskPointerOffsetX}px`;
     deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-    const threshold = 100;
+    // 本丸の可変速アクセル式スクロールロジックを完全移植
+    const threshold = 80;
     
     if (currentDirection === 'vertical') {
       if (e.clientX < threshold) {
-        autoScrollSpeedX = -12; 
+        let ratio = 1 - (e.clientX / threshold);
+        autoScrollSpeedX = -(3 + ratio * 5); 
       } else if (window.innerWidth - e.clientX < threshold) {
-        autoScrollSpeedX = 12; 
+        let dist = window.innerWidth - e.clientX;
+        let ratio = 1 - (dist / threshold);
+        autoScrollSpeedX = (3 + ratio * 5); 
       } else {
         autoScrollSpeedX = 0;
       }
     } else {
       if (e.clientY < threshold) {
-        autoScrollSpeedY = -12; 
+        let ratio = 1 - (e.clientY / threshold);
+        autoScrollSpeedY = -(3 + ratio * 5); 
       } else if (window.innerHeight - e.clientY < threshold) {
-        autoScrollSpeedY = 12; 
+        let dist = window.innerHeight - e.clientY;
+        let ratio = 1 - (dist / threshold);
+        autoScrollSpeedY = (3 + ratio * 5); 
       } else {
         autoScrollSpeedY = 0;
       }
