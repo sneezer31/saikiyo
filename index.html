@@ -27,6 +27,7 @@
    2026.08.22 リスト机D&Dスクロール干渉解消（番号持ち手化）版
    2026.08.22 データ表示フィルター拡張版（未発表/リスト/タグ無し）
    2026.08.22 推敲デスク機能（3段階トグル検索固定）実装版
+   2026.08.22 右端ハンバーガー持ち手化＆エッジスクロール可変速化版
    ========================================= */
 :root {
   --color-A: #111111;
@@ -220,26 +221,26 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 #panel-list-editor textarea { resize: none; }
 #list-items { border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); border-radius: var(--border-radius); position: relative; }
 
-/* D&D対応リストアイテム - スクロール干渉解消版 */
+/* D&D対応リストアイテム */
 .list-item-edit { 
   display: flex; align-items: center; gap: 8px; margin-bottom: 5px; border: 1px solid var(--color-A); padding: 8px; 
   background: var(--color-B); border-radius: var(--border-radius);
   box-sizing: border-box;
   transition: none !important;
 }
+/* 番号は単なる表示用に */
+.list-item-edit .item-num {
+  width: 24px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; flex-shrink: 0; pointer-events: none;
+}
 .list-item-edit span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-A); font-size: 15px; }
 
-/* 番号部分を持ち手（ドラッグハンドル）に設定 */
-.list-item-edit .item-num {
-  width: 32px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 14px; flex-shrink: 0;
+/* 新しい右端の持ち手（ハンバーガー） */
+.list-item-edit .item-drag-handle {
+  width: 44px; text-align: center; font-weight: bold; color: var(--color-A); font-size: 18px; flex-shrink: 0;
   background-color: var(--color-C); padding: 6px 0; border-radius: 4px;
   cursor: grab; user-select: none; touch-action: none;
 }
-.list-item-edit.dragging .item-num { cursor: grabbing; }
-
-.list-item-edit button.btn-remove { 
-  background: var(--color-B); border: 1px solid var(--color-A); color: var(--color-A); padding: 4px 10px; cursor: pointer; font-weight: bold; border-radius: var(--border-radius); flex-shrink: 0;
-}
+.list-item-edit.dragging .item-drag-handle { cursor: grabbing; }
 
 /* 抜け殻（プレースホルダー） */
 .list-item-placeholder {
@@ -550,7 +551,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <button onclick="closeListEditor()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
   
-  <p style="font-size: 1.1rem; color: var(--color-A); margin-top: 0; margin-bottom: 15px;">数字をタップしてドラッグアンドドロップしてください</p>
+  <p style="font-size: 1.1rem; color: var(--color-A); margin-top: 0; margin-bottom: 15px;">右端の「≡」をタップしてドラッグアンドドロップしてください</p>
   
   <input type="text" id="list-name" placeholder="無題" spellcheck="false" autocomplete="nope" autocorrect="off" autocapitalize="off" data-lpignore="true">
   <button class="panel-btn inverted" style="margin-bottom:5px; padding:10px;" onclick="openExpandedReaderFromList()">広げて読む</button>
@@ -848,7 +849,7 @@ function renderListItems(itemIds) {
     div.innerHTML = `
       <div class="item-num">${index+1}</div>
       <span>${escapeHTML(tanka.content)}</span>
-      <button type="button" class="btn-remove" onclick="removeListItem(this)">✕</button>
+      <div class="item-drag-handle">≡</div>
     `;
     div.addEventListener('pointerdown', handleListPointerDown);
     container.appendChild(div);
@@ -1105,24 +1106,14 @@ window.openListEditor = function(listId, initialItemIds = []) {
   setTimeout(window.updateCustomScrollbar, 50);
 }
 
-window.removeListItem = function(btn) {
-  const itemEl = btn.closest('.list-item-edit');
-  if (itemEl) {
-    itemEl.remove();
-    updateListNumbers();
-    setTimeout(window.updateCustomScrollbar, 50);
-  }
-}
-
 // ------------------------------------------
 // リストドラッグ＆ドロップ制御（自動エッジスクロール対応）
 // ------------------------------------------
 function handleListPointerDown(e) {
-  if (e.target.tagName === 'BUTTON') return;
   if (e.button !== 0 && e.type !== 'touchstart') return;
   
-  // 番号部分（.item-num）以外を触った場合はドラッグを開始しない
-  if (!e.target.classList.contains('item-num')) return;
+  // 右端のハンバーガー部分（.item-drag-handle）以外を触った場合はドラッグを開始しない
+  if (!e.target.classList.contains('item-drag-handle')) return;
 
   deskDraggedItem = this;
   deskDragStartX = e.clientX;
@@ -1234,11 +1225,16 @@ function handleListPointerMove(e) {
   deskLastClientY = e.clientY;
   deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-  const threshold = 100;
+  const threshold = 80; // 端からの判定エリア
   if (e.clientY < threshold) {
-    autoScrollSpeed = -12; 
+    // 上へスクロール (端に近づくほど速くなる、最大8程度に制限して暴走を防ぐ)
+    let ratio = 1 - (e.clientY / threshold);
+    autoScrollSpeed = -(3 + ratio * 5); 
   } else if (window.innerHeight - e.clientY < threshold) {
-    autoScrollSpeed = 12; 
+    // 下へスクロール
+    let dist = window.innerHeight - e.clientY;
+    let ratio = 1 - (dist / threshold);
+    autoScrollSpeed = (3 + ratio * 5); 
   } else {
     autoScrollSpeed = 0;
   }
