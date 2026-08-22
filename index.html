@@ -25,6 +25,7 @@
    2026.08.19 検索フリーズ根絶（排他制御）版
    2026.08.22 内部コード完全日本語同期版（kansei/settei/mitsuyu/henshushitsu）
    2026.08.22 リスト机D&Dスクロール干渉解消（番号持ち手化）版
+   2026.08.22 データ表示フィルター拡張版（未発表/リスト/タグ無し）
    ========================================= */
 :root {
   --color-A: #111111;
@@ -328,6 +329,9 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <label><input type="radio" name="filter-mode" value="work" checked> 作品のみ</label>
     <label><input type="radio" name="filter-mode" value="all"> 作品とアーカイブ</label>
     <label><input type="radio" name="filter-mode" value="archive"> アーカイブのみ</label>
+    <label><input type="radio" name="filter-mode" value="unpublished"> 未発表作のみ</label>
+    <label><input type="radio" name="filter-mode" value="list"> リストのみ</label>
+    <label><input type="radio" name="filter-mode" value="notag"> タグ無しのみ</label>
   </div>
 
   <div class="radio-group">
@@ -540,7 +544,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <div id="list-editor-custom-thumb" style="width: 100%; background-color: var(--color-A); position: absolute; right: 0; top: 0; border-radius: 4px;"></div>
   </div>
 
- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">リストをつくる机</h2>
     <button onclick="closeListEditor()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
@@ -716,6 +720,9 @@ function renderTimeline(forceBottom = false) {
   let filtered = data.filter(d => {
     if (config.filter === 'work' && d.status !== '作品') return false;
     if (config.filter === 'archive' && d.status !== 'アーカイブ') return false;
+    if (config.filter === 'unpublished' && d.publish_status !== '未発表') return false;
+    if (config.filter === 'list' && d.type !== 'list') return false;
+    if (config.filter === 'notag' && (d.tags && d.tags.length > 0)) return false;
     return true; 
   });
 
@@ -1094,7 +1101,7 @@ function handleListPointerDown(e) {
   if (e.target.tagName === 'BUTTON') return;
   if (e.button !== 0 && e.type !== 'touchstart') return;
   
-  // 追加：番号部分（.item-num）以外を触った場合はドラッグを開始しない
+  // 番号部分（.item-num）以外を触った場合はドラッグを開始しない
   if (!e.target.classList.contains('item-num')) return;
 
   deskDraggedItem = this;
