@@ -23,6 +23,7 @@
    2026.08.19 メモ封鎖・タグ差分更新（完全目視UI）対応版
    2026.08.19 編集室UI配置最適化（アーカイブ最上段）版
    2026.08.19 検索フリーズ根絶（排他制御）版
+   2026.08.22 内部コード完全日本語同期版（kansei/settei/mitsuyu/henshushitsu）
    ========================================= */
 :root {
   --color-A: #111111;
@@ -243,7 +244,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 .desk-ctrls { display: flex; gap: 5px; flex: none; margin-top: 10px; }
 .desk-ctrls button { flex: 1; padding: 16px 0; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); font-weight: bold; cursor: pointer; font-size: 18px; border-radius: var(--border-radius); }
 
-.escape-submenu {
+.kansei-submenu {
   display: none;
   background: var(--color-C);
   padding: 15px;
@@ -252,14 +253,14 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   color: var(--color-A);
   border: 1px solid var(--color-A);
 }
-.escape-submenu.open {
+.kansei-submenu.open {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
-.escape-sub-left { display: flex; flex-direction: column; gap: 10px; font-size: 1.1rem; }
-.escape-sub-right { display: flex; justify-content: flex-end; }
-.escape-sub-right button {
+.kansei-sub-left { display: flex; flex-direction: column; gap: 10px; font-size: 1.1rem; }
+.kansei-sub-right { display: flex; justify-content: flex-end; }
+.kansei-sub-right button {
   padding: 10px 20px;
   background: var(--color-A);
   color: var(--color-B);
@@ -281,7 +282,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
 <div id="app">
   <header>
     <div>
-      <button id="btn-menu">≡</button>
+      <button id="btn-settei">≡</button>
       <button id="btn-fullscreen">⛶</button>
       <button id="btn-space-toggle" style="margin-left: 10px;">tanka</button>
     </div>
@@ -294,7 +295,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     <textarea id="input-content" placeholder="・・・" spellcheck="false" autocomplete="new-password" autocorrect="off" autocapitalize="off" data-lpignore="true"></textarea>
     <textarea id="input-tags" rows="1" placeholder="タグは空白区切り" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" data-lpignore="true" style="resize: none; overflow: hidden; white-space: nowrap;"></textarea>
     <div class="buttons">
-      <button id="btn-escape" data-action="escape">管制</button>
+      <button id="btn-kansei" data-action="kansei">管制</button>
       <button id="btn-amu" disabled>取消</button>
       <button id="btn-send">送る</button>
       <button id="btn-search">検索</button>
@@ -303,7 +304,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
 </div>
 
-<div id="panel-menu" class="panel">
+<div id="panel-settei" class="panel">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">設定</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
@@ -396,7 +397,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
 </div>
 
-<div id="panel-amu-actions" class="panel">
+<div id="panel-henshushitsu" class="panel">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">編集室</h2>
     <button onclick="closePanels(); exitSelectionMode(); cleanupAmuInline();" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
@@ -433,59 +434,59 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   <button class="panel-btn amu-action-btn" data-type="image" data-val="true" onclick="toggleAmuAction(this)">画像を作る</button>
 </div>
 
-<div id="panel-escape" class="panel">
+<div id="panel-kansei" class="panel">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">管制</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
   </div>
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-dasshutsu')">射出</button>
-  <div id="menu-dasshutsu" class="escape-submenu">
-    <div class="escape-sub-left">メールを打ち出します</div>
-    <div class="escape-sub-right"><button onclick="executeEscape('dasshutsu')">決定</button></div>
+  <button class="panel-btn" onclick="toggleKanseiMenu('menu-dasshutsu')">射出</button>
+  <div id="menu-dasshutsu" class="kansei-submenu">
+    <div class="kansei-sub-left">メールを打ち出します</div>
+    <div class="kansei-sub-right"><button onclick="executeKansei('dasshutsu')">決定</button></div>
   </div>
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-haishutsu')">撤収</button>
-  <div id="menu-haishutsu" class="escape-submenu">
-    <div class="escape-sub-left">
+  <button class="panel-btn" onclick="toggleKanseiMenu('menu-haishutsu')">撤収</button>
+  <div id="menu-haishutsu" class="kansei-submenu">
+    <div class="kansei-sub-left">
       <label><input type="radio" name="haishutsu-target" value="archive" checked> アーカイブのみ</label>
       <label><input type="radio" name="haishutsu-target" value="work"> 作品のみ</label>
       <label><input type="radio" name="haishutsu-target" value="all"> アーカイブと作品</label>
       <div style="margin-top: 10px; font-size: 0.95rem;">コピーを作り基地から削除します</div>
     </div>
-    <div class="escape-sub-right"><button onclick="executeEscape('haishutsu')">決定</button></div>
+    <div class="kansei-sub-right"><button onclick="executeKansei('haishutsu')">決定</button></div>
   </div>
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-hannyu')">回収</button>
-  <div id="menu-hannyu" class="escape-submenu">
-    <div class="escape-sub-left">バックアップファイルを差分取り込みします</div>
-    <div class="escape-sub-right"><button onclick="document.getElementById('import-file').click()">決定</button></div>
+  <button class="panel-btn" onclick="toggleKanseiMenu('menu-hannyu')">回収</button>
+  <div id="menu-hannyu" class="kansei-submenu">
+    <div class="kansei-sub-left">バックアップファイルを差分取り込みします</div>
+    <div class="kansei-sub-right"><button onclick="document.getElementById('import-file').click()">決定</button></div>
   </div>
-  <input type="file" id="import-file" style="display:none" accept=".json,.txt" onchange="escapeAction('import', event)">
+  <input type="file" id="import-file" style="display:none" accept=".json,.txt" onchange="kanseiAction('import', event)">
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-mitsuyu')">密輸</button>
-  <div id="menu-mitsuyu" class="escape-submenu">
-    <div class="escape-sub-left">テキストを一括入力します</div>
-    <div class="escape-sub-right"><button onclick="openTextImportPanel()">決定</button></div>
+  <button class="panel-btn" onclick="toggleKanseiMenu('menu-mitsuyu')">密輸</button>
+  <div id="menu-mitsuyu" class="kansei-submenu">
+    <div class="kansei-sub-left">テキストを一括入力します</div>
+    <div class="kansei-sub-right"><button onclick="openMitsuyuPanel()">決定</button></div>
   </div>
 
   <hr style="border-color: var(--color-A); margin: 30px 0;">
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-bunshin')">退避</button>
-  <div id="menu-bunshin" class="escape-submenu">
-    <div class="escape-sub-left">
+  <button class="panel-btn" onclick="toggleKanseiMenu('menu-bunshin')">退避</button>
+  <div id="menu-bunshin" class="kansei-submenu">
+    <div class="kansei-sub-left">
       <label><input type="radio" name="bunshin-target" value="archive"> アーカイブのみ</label>
       <label><input type="radio" name="bunshin-target" value="work"> 作品のみ</label>
       <label><input type="radio" name="bunshin-target" value="all" checked> アーカイブと作品</label>
       <div style="margin-top: 10px; font-size: 0.95rem;">コピーファイルを作ります</div>
     </div>
-    <div class="escape-sub-right"><button onclick="executeEscape('bunshin')">決定</button></div>
+    <div class="kansei-sub-right"><button onclick="executeKansei('bunshin')">決定</button></div>
   </div>
 
-  <button class="panel-btn" onclick="toggleEscapeMenu('menu-chushutsu')">抽出</button>
-  <div id="menu-chushutsu" class="escape-submenu">
+  <button class="panel-btn" onclick="toggleKanseiMenu('menu-chushutsu')">抽出</button>
+  <div id="menu-chushutsu" class="kansei-submenu">
     <div style="font-size: 0.95rem; margin-bottom: 10px; color: var(--color-A);">期間を決めて撤収、退避します</div>
 
     <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 15px;">
@@ -501,15 +502,15 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   </div>
 
   <div id="wrap-jufuku">
-    <button class="panel-btn" id="btn-jufuku" onclick="toggleEscapeMenu('menu-jufuku')">重複</button>
-    <div id="menu-jufuku" class="escape-submenu">
-      <div class="escape-sub-left">内容が同じものを削除します</div>
-      <div class="escape-sub-right"><button onclick="removeDuplicates()">決定</button></div>
+    <button class="panel-btn" id="btn-jufuku" onclick="toggleKanseiMenu('menu-jufuku')">重複</button>
+    <div id="menu-jufuku" class="kansei-submenu">
+      <div class="kansei-sub-left">内容が同じものを削除します</div>
+      <div class="kansei-sub-right"><button onclick="removeDuplicates()">決定</button></div>
     </div>
   </div>
 </div>
 
-<div id="panel-import-text" class="panel">
+<div id="panel-mitsuyu" class="panel">
  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-A); padding-bottom: 5px;">
     <h2 style="margin: 0; border: none; padding: 0;">密輸</h2>
     <button onclick="closePanels()" style="background: transparent; border: none; color: var(--color-A); font-size: 1.2rem; font-weight: bold; cursor: pointer;">戻る</button>
@@ -518,10 +519,10 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
     複数のテキストを一度に読み込みます。<br>
     ※空行（改行2回）で自動的に別々のデータとして分割されます。
   </p>
-  <textarea id="import-text-input" placeholder="ここにペースト..." spellcheck="false" style="width: 100%; height: 40vh; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 14px; border-radius: var(--border-radius); resize: none;"></textarea>
+  <textarea id="input-mitsuyu" placeholder="ここにペースト..." spellcheck="false" style="width: 100%; height: 40vh; background: var(--color-B); color: var(--color-A); border: 1px solid var(--color-A); padding: 10px; font-family: inherit; font-size: 14px; border-radius: var(--border-radius); resize: none;"></textarea>
   <div class="desk-ctrls" style="margin-top:20px;">
     <button onclick="closePanels()">取消(戻る)</button>
-    <button onclick="executeTextImport()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
+    <button onclick="executeMitsuyu()" style="background:var(--color-A); color:var(--color-B);">取り込む</button>
   </div>
 </div>
 
@@ -572,7 +573,7 @@ let lastTapTime = 0;
 let tapTimeout = null; 
 const doubleTapThreshold = 300; 
 
-let tlContainer, btnSend, btnAmu, btnSearch, btnEscape, btnTweet, inputContentNode, inputTagsNode, btnSpaceToggle;
+let tlContainer, btnSend, btnAmu, btnSearch, btnKansei, btnTweet, inputContentNode, inputTagsNode, btnSpaceToggle;
 
 let deskDraggedItem = null;
 let deskPlaceholder = null;
@@ -873,10 +874,10 @@ function updateButtonsState() {
 
     btnSearch.disabled = true; 
 
-    btnEscape.innerText = '全選択';
-    btnEscape.disabled = false;
-    btnEscape.classList.add('active-btn');
-    btnEscape.dataset.action = 'selectAll'; 
+    btnKansei.innerText = '全選択';
+    btnKansei.disabled = false;
+    btnKansei.classList.add('active-btn');
+    btnKansei.dataset.action = 'selectAll'; 
 
   } else {
     btnSend.innerText = '送る'; 
@@ -892,10 +893,10 @@ function updateButtonsState() {
 
     btnSearch.disabled = false; 
 
-    btnEscape.innerText = '管制';
-    btnEscape.disabled = false;
-    btnEscape.classList.remove('active-btn');
-    btnEscape.dataset.action = 'escape'; 
+    btnKansei.innerText = '管制';
+    btnKansei.disabled = false;
+    btnKansei.classList.remove('active-btn');
+    btnKansei.dataset.action = 'kansei'; 
   }
 }
 
@@ -1312,14 +1313,14 @@ window.closeListEditor = function() {
   exitSelectionMode(); 
 }
 
-window.toggleEscapeMenu = function(menuId) {
-  document.querySelectorAll('.escape-submenu').forEach(el => {
+window.toggleKanseiMenu = function(menuId) {
+  document.querySelectorAll('.kansei-submenu').forEach(el => {
     if (el.id !== menuId) el.classList.remove('open');
   });
   document.getElementById(menuId).classList.toggle('open');
 }
 
-window.executeEscape = async function(type) {
+window.executeKansei = async function(type) {
   if (type === 'dasshutsu') { 
     const targetData = data;
     if (!targetData || targetData.length === 0) {
@@ -1407,7 +1408,7 @@ window.executeEscape = async function(type) {
   }
 };
 
-window.escapeAction = function(type, e) {
+window.kanseiAction = function(type, e) {
   if (type === 'import') {
     const file = e.target.files[0]; 
     if(!file) return;
@@ -1610,8 +1611,8 @@ function attachEventListeners() {
     renderTimeline(true);
   });
 
-  btnEscape.addEventListener('click', () => { 
-    if (btnEscape.dataset.action === 'selectAll') {
+  btnKansei.addEventListener('click', () => { 
+    if (btnKansei.dataset.action === 'selectAll') {
       const visibleItems = tlContainer.querySelectorAll('.item');
       visibleItems.forEach(item => {
         if (item.style.display !== 'none') {
@@ -1622,17 +1623,17 @@ function attachEventListeners() {
       });
       updateButtonsState();
     } else {
-      document.getElementById('panel-escape').classList.add('active'); 
+      document.getElementById('panel-kansei').classList.add('active'); 
     }
   });
 
-  document.getElementById('btn-menu').addEventListener('click', () => { 
+  document.getElementById('btn-settei').addEventListener('click', () => { 
     const tankaCount = data.filter(d => d.type !== 'list').length;
     const listCount = data.filter(d => d.type === 'list').length;
     document.getElementById('count-tanka').innerText = tankaCount;
     document.getElementById('count-list').innerText = listCount;
 
-    document.getElementById('panel-menu').classList.add('active'); 
+    document.getElementById('panel-settei').classList.add('active'); 
   });
 
   document.getElementById('btn-fullscreen').addEventListener('click', () => {
@@ -1734,7 +1735,7 @@ function attachEventListeners() {
       previewArea.innerText = data.filter(d => previewSet.has(d.id)).map(d => d.content).join('\n---\n');
 
       cleanupAmuInline();
-      document.getElementById('panel-amu-actions').classList.add('active');
+      document.getElementById('panel-henshushitsu').classList.add('active');
     }
   });
 
@@ -1867,7 +1868,7 @@ function initApp() {
   btnSend = document.getElementById('btn-send');
   btnAmu = document.getElementById('btn-amu');
   btnSearch = document.getElementById('btn-search');
-  btnEscape = document.getElementById('btn-escape');
+  btnKansei = document.getElementById('btn-kansei');
   btnTweet = document.getElementById('btn-tweet');
   inputContentNode = document.getElementById('input-content');
   inputTagsNode = document.getElementById('input-tags');
@@ -1912,14 +1913,14 @@ function initApp() {
   }
 }
 
-window.openTextImportPanel = function() {
+window.openMitsuyuPanel = function() {
   window.closePanels();
-  document.getElementById('import-text-input').value = '';
-  document.getElementById('panel-import-text').classList.add('active');
+  document.getElementById('input-mitsuyu').value = '';
+  document.getElementById('panel-mitsuyu').classList.add('active');
 }
 
-window.executeTextImport = function() {
-  const text = document.getElementById('import-text-input').value;
+window.executeMitsuyu = function() {
+  const text = document.getElementById('input-mitsuyu').value;
   if (!text.trim()) return;
 
   const blocks = text.split(/\n\s*\n/);
