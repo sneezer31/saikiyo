@@ -206,6 +206,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
   overscroll-behavior-y: none;
+  overflow-anchor: none; /* ブラウザのスクロール補正暴走を強制停止 */
 }
 #panel-list-editor::-webkit-scrollbar {
   display: none;
@@ -219,7 +220,7 @@ select.dropdown, input.dropdown { width: 100%; padding: 10px; font-size: 1.1rem;
   border-radius: var(--border-radius);
 }
 #panel-list-editor textarea { resize: none; }
-#list-items { border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); border-radius: var(--border-radius); position: relative; }
+#list-items { border: 1px solid var(--color-A); padding: 5px; margin-bottom: 10px; background: var(--color-B); border-radius: var(--border-radius); position: relative; overflow-anchor: none; }
 
 /* D&D対応リストアイテム */
 .list-item-edit { 
@@ -602,6 +603,7 @@ let deskPointerOffsetY = 0;
 let deskDragTimer = null;
 let deskDragStartX = 0;
 let deskDragStartY = 0;
+let deskOriginalRectLeft = 0;
 let deskIsDragging = false;
 let lastMoveTime = 0;
 
@@ -1107,7 +1109,7 @@ window.openListEditor = function(listId, initialItemIds = []) {
 }
 
 // ------------------------------------------
-// リストドラッグ＆ドロップ制御（自動エッジスクロール対応）
+// リストドラッグ＆ドロップ制御（完全改修版）
 // ------------------------------------------
 function handleListPointerDown(e) {
   if (e.button !== 0 && e.type !== 'touchstart') return;
@@ -1161,6 +1163,7 @@ function startDrag(e) {
   
   const listContainer = document.getElementById('list-items');
   const rect = deskDraggedItem.getBoundingClientRect();
+  deskOriginalRectLeft = rect.left; // X軸ロック用
 
   deskPlaceholder = document.createElement('div');
   deskPlaceholder.className = 'list-item-placeholder';
@@ -1187,17 +1190,33 @@ function startDrag(e) {
   document.addEventListener('pointercancel', handleListPointerUp);
 }
 
-function checkDragIntersection(x, y) {
+function checkDragIntersection() {
+  if (!deskDraggedItem || !deskPlaceholder) return;
+  
+  // X軸固定：指が横に外れても元の真っ直ぐな列をスキャンする
+  const checkX = deskDragStartX;
+  const checkY = deskLastClientY;
+
   const listContainer = document.getElementById('list-items');
-  const elements = document.elementsFromPoint(x, y);
+  const elements = document.elementsFromPoint(checkX, checkY);
   const target = elements.find(el => el.classList && el.classList.contains('list-item-edit') && el.parentNode === listContainer);
 
   if (target && target !== deskPlaceholder && target !== deskDraggedItem) {
     const targetRect = target.getBoundingClientRect();
-    if (y < targetRect.top + (targetRect.height / 2)) {
+    if (checkY < targetRect.top + (targetRect.height / 2)) {
       listContainer.insertBefore(deskPlaceholder, target);
     } else {
       listContainer.insertBefore(deskPlaceholder, target.nextSibling);
+    }
+  } else if (!target) {
+    // リスト枠の上下を突き抜けた場合の強制フォールバック
+    const containerRect = listContainer.getBoundingClientRect();
+    if (checkY > containerRect.bottom) {
+      listContainer.appendChild(deskPlaceholder);
+    } else if (checkY < containerRect.top) {
+      if (listContainer.firstChild) {
+        listContainer.insertBefore(deskPlaceholder, listContainer.firstChild);
+      }
     }
   }
 }
@@ -1209,7 +1228,7 @@ function startAutoScroll() {
   }
   const panel = document.getElementById('panel-list-editor');
   panel.scrollTop += autoScrollSpeed;
-  checkDragIntersection(deskLastClientX, deskLastClientY);
+  checkDragIntersection();
   autoScrollRAF = requestAnimationFrame(startAutoScroll);
 }
 
@@ -1223,18 +1242,25 @@ function handleListPointerMove(e) {
 
   deskLastClientX = e.clientX;
   deskLastClientY = e.clientY;
+  
+  // X軸を固定（指が横にブレても短冊は垂直にしか動かない）
+  deskDraggedItem.style.left = `${deskOriginalRectLeft}px`;
   deskDraggedItem.style.top = `${e.clientY - deskPointerOffsetY}px`;
 
-  const threshold = 80; // 端からの判定エリア
-  if (e.clientY < threshold) {
-    // 上へスクロール (端に近づくほど速くなる、最大8程度に制限して暴走を防ぐ)
-    let ratio = 1 - (e.clientY / threshold);
-    autoScrollSpeed = -(3 + ratio * 5); 
-  } else if (window.innerHeight - e.clientY < threshold) {
-    // 下へスクロール
-    let dist = window.innerHeight - e.clientY;
-    let ratio = 1 - (dist / threshold);
-    autoScrollSpeed = (3 + ratio * 5); 
+  // センサー基準を指ではなく「パネル枠」と「短冊の上下端」に変更
+  const panel = document.getElementById('panel-list-editor');
+  const panelRect = panel.getBoundingClientRect();
+  const dragRect = deskDraggedItem.getBoundingClientRect();
+  const threshold = 60; 
+
+  if (dragRect.top < panelRect.top + threshold) {
+    let dist = Math.max(0, panelRect.top + threshold - dragRect.top);
+    let ratio = Math.min(1, dist / threshold);
+    autoScrollSpeed = -(3 + ratio * 8); 
+  } else if (dragRect.bottom > panelRect.bottom - threshold) {
+    let dist = Math.max(0, dragRect.bottom - (panelRect.bottom - threshold));
+    let ratio = Math.min(1, dist / threshold);
+    autoScrollSpeed = (3 + ratio * 8); 
   } else {
     autoScrollSpeed = 0;
   }
@@ -1243,7 +1269,7 @@ function handleListPointerMove(e) {
     startAutoScroll();
   }
 
-  checkDragIntersection(deskLastClientX, deskLastClientY);
+  checkDragIntersection();
 }
 
 function handleListPointerUp(e) {
