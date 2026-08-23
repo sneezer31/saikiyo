@@ -50,7 +50,7 @@
     display: flex; gap: 10px; padding: 15px; box-sizing: border-box;
     width: 100%; height: 100%;
     scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: none;
-    overflow-anchor: none; /* ★ブラウザのスクロール補正暴走を強制停止 */
+    overflow-anchor: none; /* ブラウザのスクロール補正暴走を強制停止 */
   }
   #sort-area::-webkit-scrollbar { display: none; }
   
@@ -495,28 +495,29 @@
     }
 
     const sortRect = sortArea.getBoundingClientRect();
+    const dragRect = deskDraggedItem.getBoundingClientRect(); // ★指ではなく短冊の端を判定基準にする
     const threshold = 60; 
     
     if (currentDirection === 'vertical') {
-      if (e.clientX < sortRect.left + threshold) {
-        let dist = Math.max(0, e.clientX - sortRect.left);
-        let ratio = 1 - (dist / threshold);
+      if (dragRect.left < sortRect.left + threshold) {
+        let dist = Math.max(0, sortRect.left + threshold - dragRect.left);
+        let ratio = Math.min(1, dist / threshold);
         autoScrollSpeedX = -(3 + ratio * 8); 
-      } else if (e.clientX > sortRect.right - threshold) {
-        let dist = Math.max(0, sortRect.right - e.clientX);
-        let ratio = 1 - (dist / threshold);
+      } else if (dragRect.right > sortRect.right - threshold) {
+        let dist = Math.max(0, dragRect.right - (sortRect.right - threshold));
+        let ratio = Math.min(1, dist / threshold);
         autoScrollSpeedX = (3 + ratio * 8); 
       } else {
         autoScrollSpeedX = 0;
       }
     } else {
-      if (e.clientY < sortRect.top + threshold) {
-        let dist = Math.max(0, e.clientY - sortRect.top);
-        let ratio = 1 - (dist / threshold);
+      if (dragRect.top < sortRect.top + threshold) {
+        let dist = Math.max(0, sortRect.top + threshold - dragRect.top);
+        let ratio = Math.min(1, dist / threshold);
         autoScrollSpeedY = -(3 + ratio * 8); 
-      } else if (e.clientY > sortRect.bottom - threshold) {
-        let dist = Math.max(0, sortRect.bottom - e.clientY);
-        let ratio = 1 - (dist / threshold);
+      } else if (dragRect.bottom > sortRect.bottom - threshold) {
+        let dist = Math.max(0, dragRect.bottom - (sortRect.bottom - threshold));
+        let ratio = Math.min(1, dist / threshold);
         autoScrollSpeedY = (3 + ratio * 8); 
       } else {
         autoScrollSpeedY = 0;
