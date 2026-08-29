@@ -114,23 +114,27 @@
 
   .teaser {
     margin-top: 50px;
-    padding: 20px;
-    background-color: #F5F3ED; /* 少し濃いクリームで領域を区別 */
-    border: 1px solid var(--color-text);
+    padding: 30px 20px;
+    background-color: #F5F3ED; 
+    border: 2px solid var(--color-navy);
     border-radius: 4px;
     text-align: center;
+    box-shadow: 4px 4px 0px var(--color-navy);
   }
 
   .teaser h2 {
-    font-size: 1.1rem;
-    color: var(--color-text);
+    font-size: 1.4rem;
+    color: var(--color-navy);
     margin: 0 0 10px 0;
+    border-bottom: 2px solid var(--color-navy);
+    display: inline-block;
+    padding-bottom: 5px;
   }
 
   .teaser p {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--color-text);
-    margin: 0;
+    margin: 15px 0;
   }
 
   footer {
@@ -141,7 +145,8 @@
     border-top: 1px solid var(--color-text);
     margin-top: auto;
   }
-</style></head>
+</style>
+</head>
 <body>
 
   <header>
@@ -157,7 +162,7 @@
       これらは独立したツールであり、アカウント登録やサーバーとの同期はありません。</p>
     </div>
 
-    <!-- ツール1：画像生成 -->
+    <!-- ツール1：画像生成（客寄せパンダ その1） -->
     <div class="tool-card">
       <div class="tool-title">さいきよ‐たてがき</div>
       <div class="tool-desc">
@@ -168,7 +173,7 @@
       <a href="tanzaku.html" class="btn">画像を作る</a>
     </div>
 
-    <!-- ツール2：連作ジェネレーター -->
+    <!-- ツール2：連作ジェネレーター（客寄せパンダ その2） -->
     <div class="tool-card">
       <div class="tool-title">さいきよ‐れんさく</div>
       <div class="tool-desc">
@@ -177,20 +182,21 @@
       <a href="rensaku.html" class="btn">連作を組む</a>
     </div>
 
-    <!-- ティザー：母艦 -->
+    <!-- メイン：母艦（砦への入り口） -->
     <div class="teaser">
       <h2>さいきよ-母艦（BKSHK）</h2>
       <p>過去作の整理と文脈の保存に特化した<br>
          表現者の砦です。</p>
       
-      <div style="margin: 20px 0;">
+      <a href="index.html" class="btn" style="margin: 20px 0;">基地へ入る</a>
+      
+      <div style="margin: 20px 0; font-size: 0.95rem;">
         <a href="https://sneezer31.github.io/saikiyo/about" target="_blank" rel="noopener noreferrer" style="color: var(--color-navy); font-weight: bold; text-decoration: underline; display: block; margin-bottom: 10px;">▶ 取扱説明書（仕様を読む）</a>
-        <a href="https://x.com/no_shigeki/status/2091796218938888248?s=20" target="_blank" rel="noopener noreferrer" style="color: var(--color-navy); font-weight: bold; text-decoration: underline; display: block;">▶ 運用レポート（推敲編）</a>
+        <a href="https://sneezer31.github.io/saikiyo/report" target="_blank" rel="noopener noreferrer" style="color: var(--color-navy); font-weight: bold; text-decoration: underline; display: block;">▶ 運用レポート（データ管理の儀式）</a>
       </div>
 
-      <p style="font-size: 0.95rem; font-weight: bold; margin-top: 15px; color: #d32f2f;">
-        ※さいきよは現在まだ未公開です。<br>
-        ※現在、第二期テスターを募集中です。
+      <p style="font-size: 0.9rem; font-weight: bold; margin-top: 15px; color: var(--color-text);">
+        ※データの外部送信は一切行われず、すべての記憶はブラウザ内に留まります。
       </p>
     </div>
 
