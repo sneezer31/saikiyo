@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>短歌アプリ「さいきよ」正式リリース</title>
+<style>
+  :root {
+    --text-main: #222222;
+    --text-muted: #666666;
+    --bg-main: #fdfdfd;
+    --bg-code: #f4f4f4;
+    --border-color: #dddddd;
+    --accent-color: #111111;
+  }
+
+  body {
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .saikiyo-document {
+    max-width: 680px;
+    margin: 0 auto;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    line-height: 1.8;
+    padding: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  }
+
+  .saikiyo-document h2 {
+    font-size: 1.4em;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 0.3em;
+    margin-bottom: 1.5em;
+    letter-spacing: 0.05em;
+  }
+
+  .saikiyo-document h3 {
+    font-size: 1.1em;
+    color: var(--accent-color);
+    margin-top: 2em;
+    margin-bottom: 1em;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 10px;
+  }
+
+  .saikiyo-document p {
+    margin-bottom: 1.5em;
+  }
+
+  .saikiyo-document strong {
+    font-weight: bold;
+    color: var(--accent-color);
+  }
+
+  .saikiyo-document ol, .saikiyo-document ul {
+    margin-bottom: 1.5em;
+    padding-left: 1.5em;
+  }
+
+  .saikiyo-document li {
+    margin-bottom: 0.5em;
+  }
+
+  .photo-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    background-color: var(--bg-code);
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 2px;
+  }
+
+  .photo-container img {
+    width: 48%; /* 2列配置のグリッドとして機能させます */
+    height: auto;
+    display: block;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+  }
+
+  /* 画像が1枚だけの場合は中央に配置し、大きくなりすぎないよう制御します */
+  .photo-container img:only-child {
+    width: 60%;
+  }
+
+  .amazon-link {
+    display: block;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: var(--bg-code);
+    border-left: 4px solid #888888;
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+  }
+
+  .amazon-link:hover {
+    background-color: #e9e9e9;
+  }
+
+  .amazon-link span {
+    display: block;
+    color: #007185;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="saikiyo-document">
+  <h2>短歌アプリ「さいきよ」正式リリースとデータ管理の儀式</h2>
+  
+  <p>
+    短歌アプリ「さいきよ」のデータ管理は、以下の手動フローがすべてです。<br>
+    企業がお膳立てしたクラウドの自動同期などという、大衆向けの不完全な安全装置には頼りません。意図しない上書きや消失まで瞬時に共有される欠陥システムに、自分の作品の命綱は預けられないからです。
+  </p>
+
+  <h3>【作業開始時のフロー】</h3>
+  <ol>
+    <li>まず「撤収」する。</li>
+  </ol>
+  
+  <div class="photo-container">
+    <img src="1000000638_2.png" alt="撤収画面">
+  </div>
+
+  <ol start="2">
+    <li>メーラーから最新のバックアップファイルをダウンロードする。</li>
+  </ol>
+  
+  <div class="photo-container">
+    <img src="1000000639_2.png" alt="メール受信箱">
+    <img src="1000000640_2.png" alt="バックアップファイルダウンロード">
+  </div>
+
+  <ol start="3">
+    <li>「回収」で差分を取り込む。</li>
+  </ol>
+  
+  <div class="photo-container">
+    <img src="1000000641_2.png" alt="回収画面">
+    <img src="1000000645.jpg" alt="ダウンロードフォルダ">
+    <img src="1000000642_2.png" alt="ファイル選択">
+    <img src="1000000646_2.png" alt="搬入完了">
+  </div>
+
+  <h3>【作業終了時のフロー】</h3>
+  <ol start="4">
+    <li>作業開始。</li>
+    <li>作業が終わったら「射出」で自分宛にバックアップを送る。</li>
+  </ol>
+  
+  <div class="photo-container">
+    <img src="1000000643_2.png" alt="射出画面">
+  </div>
+
+  <h3>手動管理による完全な自己防衛</h3>
+  <ul>
+    <li>自分宛に射出したメールの送信時刻が<strong>絶対的な著作権の証明</strong>となり、盗作問題からあなたを確実に守ります。</li>
+    <li>データを他社のサーバーに預けないので、サービス終了や突然の有料化などの理不尽が一切ありません。</li>
+  </ul>
+
+  <p>
+    見た目はLINEやXに似ていますが、これはSNSではありません。<br>
+    梅棹忠夫の「京大式カード」をデジタルで再構築した、一事一葉の知的生産ツールです。<br>
+    自分の短歌の純度を本気で守りたい人だけ、この儀式を使ってください。
+  </p>
+
+  <a href="https://www.amazon.co.jp/dp/4004150930/" target="_blank" class="amazon-link">
+    「さいきよ」の設計思想の源流である京大式カードの詳細については、原典をご参照ください。
+    <span>梅棹忠夫『知的生産の技術』（岩波新書）をAmazonで確認する</span>
+  </a>
+</div>
+
+</body>
+</html>
