@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>さいきよ（BKSHK）ポータル</title>
+<style>
+  :root {
+    --color-bg: #FDFBF6;
+    --color-text: #1A1A1A;
+    --color-navy: hsl(204, 60%, 26%);
+    --color-silver: #ffffff;
+    --font-family: sans-serif;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+  }
+
+  header {
+    width: 100%;
+    background-color: var(--color-navy);
+    color: var(--color-silver);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid var(--color-navy);
+    box-sizing: border-box;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-top: 5px;
+    color: var(--color-silver);
+  }
+
+  main {
+    max-width: 600px;
+    width: 100%;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    flex: 1;
+  }
+
+  .statement {
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--color-text);
+  }
+
+  .tool-card {
+    border: 1px solid var(--color-text);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: var(--color-bg);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 0px var(--color-navy);
+  }
+
+  .tool-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--color-text);
+    padding-bottom: 5px;
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    background-color: var(--color-navy);
+    color: var(--color-silver);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    box-sizing: border-box;
+    border: 1px solid var(--color-navy);
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background-color: var(--color-silver);
+    color: var(--color-navy);
+    border: 1px solid var(--color-navy);
+  }
+
+  .teaser {
+    margin-top: 50px;
+    padding: 30px 20px;
+    background-color: #F5F3ED; 
+    border: 2px solid var(--color-navy);
+    border-radius: 4px;
+    text-align: center;
+    box-shadow: 4px 4px 0px var(--color-navy);
+  }
+
+  .teaser h2 {
+    font-size: 1.4rem;
+    color: var(--color-navy);
+    margin: 0 0 10px 0;
+    border-bottom: 2px solid var(--color-navy);
+    display: inline-block;
+    padding-bottom: 5px;
+  }
+
+  .teaser p {
+    font-size: 1rem;
+    color: var(--color-text);
+    margin: 15px 0;
+  }
+
+  footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+    border-top: 1px solid var(--color-text);
+    margin-top: auto;
+  }
+
+  /* フルスクリーン用レイヤー */
+  #fullscreen-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background-color: var(--color-bg);
+  }
+  
+  #btn-close-overlay {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    z-index: 10000;
+    padding: 8px 16px;
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+
+  #btn-close-overlay:hover {
+    opacity: 1;
+  }
+
+  #app-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>さいきよポータル</h1>
+    <div class="subtitle">ようこそ。<br>
+      ここは短歌実作者のための静かな<br>
+      「ひみつきち」です</div>
+  </header>
+
+  <main>
+    <div class="statement">
+      <p>実践的なツールをご用意しました。ご自由にご利用ください。<br>
+      これらは独立したツールであり、アカウント登録やサーバーとの同期はありません。</p>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-title">さいきよ‐たてがき</div>
+      <div class="tool-desc">
+        短歌のテキストを入力し、縦書きの画像（短冊）を簡単に生成します。<br>
+        X（旧Twitter）等への作品放流に最適化されています（縦横比とか）。<br>
+        画像を用意して歌と組み合わせることができます。自由度高めです。
+      </div>
+      <a href="tanzaku.html" class="btn app-launch-btn">画像を作る</a>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-title">さいきよ‐れんさく</div>
+      <div class="tool-desc">
+        複数の短歌を投入し、長押しによるドラッグ＆ドロップで連作の並び順を考えることができます。
+      </div>
+      <a href="rensaku.html" class="btn app-launch-btn">連作を組む</a>
+    </div>
+
+    <div class="teaser">
+      <h2>さいきよ-母艦（BKSHK）</h2>
+      <p>過去作の整理と文脈の保存に特化した<br>
+         表現者の砦です。</p>
+      
+      <a href="index.html" class="btn app-launch-btn" style="margin: 20px 0;">基地へ入る</a>
+      
+      <div style="margin: 20px 0; font-size: 0.95rem; text-align: left; display: inline-block;">
+        <a href="about.html" target="_blank" rel="noopener noreferrer" style="color: var(--color-navy); font-weight: bold; text-decoration: underline; display: block; margin-bottom: 10px;">▶ 取扱説明書（仕様を読む）</a>
+        <a href="report.html" target="_blank" rel="report" style="color: var(--color-navy); font-weight: bold; text-decoration: underline; display: block; margin-bottom: 10px;">▶ 運用レポート（データ管理の儀式）</a>
+        <a href="https://x.com/no_shigeki/status/2091796218938888248" target="_blank" rel="noopener noreferrer" style="color: var(--color-navy); font-weight: bold; text-decoration: underline; display: block;">▶ 運用レポート（推敲編）</a>
+      </div>
+
+      <p style="font-size: 0.9rem; font-weight: bold; margin-top: 15px; color: var(--color-text);">
+        ※データの外部送信は一切行われず、すべての記憶はブラウザ内に留まります。
+      </p>
+    </div>
+
+  </main>
+
+  <footer>
+  © 2026 BKSHK Project. All rights reserved.<br>
+  開発・連絡先: <a href="https://x.com/no_shigeki" target="_blank" rel="noopener noreferrer" style="color: var(--color-navy); text-decoration: underline;">X (@no_shigeki)</a>
+  </footer>
+
+  <!-- フルスクリーン展開用オーバーレイ -->
+  <div id="fullscreen-overlay">
+    <button id="btn-close-overlay">閉じる</button>
+    <iframe id="app-frame" src=""></iframe>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const overlay = document.getElementById('fullscreen-overlay');
+      const frame = document.getElementById('app-frame');
+      const btnClose = document.getElementById('btn-close-overlay');
+
+      // 起動ボタンに全画面化処理をバインド
+      document.querySelectorAll('.app-launch-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          frame.src = btn.getAttribute('href');
+          overlay.style.display = 'block';
+          
+          // フルスクリーンAPIの要求
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen().catch(() => {});
+          }
+        });
+      });
+
+      // 閉じるボタンの処理
+      btnClose.addEventListener('click', () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
+        overlay.style.display = 'none';
+        frame.src = '';
+      });
+    });
+  </script>
+</body>
+</html>
