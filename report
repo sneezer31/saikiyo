@@ -6,128 +6,110 @@
 <title>短歌アプリ「さいきよ」正式リリース</title>
 <style>
   :root {
-    --text-main: #222222;
-    --text-muted: #666666;
-    --bg-main: #fdfdfd;
-    --bg-code: #f4f4f4;
-    --border-color: #dddddd;
-    --accent-color: #111111;
+    --color-A: #111111;
+    --color-B: #FFFFFF;
+    --color-C: #E0E0E0;
+    --font-family: sans-serif;
   }
-
   body {
-    background-color: #f0f0f0;
-    margin: 0;
-    padding: 20px;
-  }
-
-  .saikiyo-document {
-    max-width: 680px;
-    margin: 0 auto;
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    background-color: var(--color-B);
+    color: var(--color-A);
+    font-family: var(--font-family);
     line-height: 1.8;
-    padding: 40px;
-    border: 1px solid var(--border-color);
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px 20px 100px 20px;
+  }
+  h1 {
+    font-size: 1.8rem;
+    border-bottom: 2px solid var(--color-A);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+  }
+  h2 {
+    font-size: 1.4rem;
+    background-color: var(--color-C);
+    padding: 10px 15px;
     border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    margin-top: 40px;
   }
-
-  .saikiyo-document h2 {
-    font-size: 1.4em;
-    border-bottom: 2px solid var(--accent-color);
-    padding-bottom: 0.3em;
-    margin-bottom: 1.5em;
-    letter-spacing: 0.05em;
-  }
-
-  .saikiyo-document h3 {
-    font-size: 1.1em;
-    color: var(--accent-color);
-    margin-top: 2em;
-    margin-bottom: 1em;
-    border-left: 4px solid var(--accent-color);
+  h3 {
+    font-size: 1.2rem;
+    border-left: 4px solid var(--color-A);
     padding-left: 10px;
+    margin-top: 30px;
   }
-
-  .saikiyo-document p {
-    margin-bottom: 1.5em;
+  p, li {
+    font-size: 1.1rem;
   }
-
-  .saikiyo-document strong {
+  ul, ol {
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 10px;
+  }
+  .highlight {
     font-weight: bold;
-    color: var(--accent-color);
+    border-bottom: 1px dashed var(--color-A);
   }
-
-  .saikiyo-document ol, .saikiyo-document ul {
-    margin-bottom: 1.5em;
-    padding-left: 1.5em;
-  }
-
-  .saikiyo-document li {
-    margin-bottom: 0.5em;
-  }
-
   .photo-container {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
-    background-color: var(--bg-code);
+    background-color: #f9f9f9;
+    border: 1px solid var(--color-C);
     padding: 20px;
     margin: 20px 0;
-    border-radius: 2px;
+    border-radius: 4px;
   }
-
   .photo-container img {
-    width: 48%; /* 2列配置のグリッドとして機能させます */
+    width: 48%;
     height: auto;
     display: block;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-C);
     box-sizing: border-box;
   }
-
-  /* 画像が1枚だけの場合は中央に配置し、大きくなりすぎないよう制御します */
   .photo-container img:only-child {
     width: 60%;
   }
-
   .amazon-link {
     display: block;
     margin-top: 40px;
     padding: 20px;
-    background-color: var(--bg-code);
-    border-left: 4px solid #888888;
+    background-color: #f9f9f9;
+    border: 1px solid var(--color-C);
+    border-left: 4px solid var(--color-A);
     text-decoration: none;
-    color: var(--text-main);
-    font-size: 0.9em;
+    color: var(--color-A);
+    font-size: 0.95rem;
+    border-radius: 4px;
     transition: background-color 0.2s;
   }
-
   .amazon-link:hover {
-    background-color: #e9e9e9;
+    background-color: var(--color-C);
   }
-
   .amazon-link span {
     display: block;
-    color: #007185;
+    color: var(--color-A);
     font-weight: bold;
     margin-top: 5px;
+    text-decoration: underline;
   }
 </style>
 </head>
 <body>
-
-<div class="saikiyo-document">
-  <h2>短歌アプリ「さいきよ」正式リリースとデータ管理の儀式</h2>
+<div class="container">
+  <h1>短歌アプリ「さいきよ」正式リリースとデータ管理の儀式</h1>
   
-  <p>
-    短歌アプリ「さいきよ」のデータ管理は、以下の手動フローがすべてです。<br>
-    企業がお膳立てしたクラウドの自動同期などという、大衆向けの不完全な安全装置には頼りません。意図しない上書きや消失まで瞬時に共有される欠陥システムに、自分の作品の命綱は預けられないからです。
-  </p>
+  <p>短歌アプリ「さいきよ」のデータ管理は、以下の手動フローがすべてです。<br>
+  企業がお膳立てしたクラウドの自動同期などという、大衆向けの不完全な安全装置には頼りません。意図しない上書きや消失まで瞬時に共有される欠陥システムに、自分の作品の命綱は預けられないからです。</p>
 
-  <h3>【作業開始時のフロー】</h3>
+  <h2>【作業開始時のフロー】</h2>
   <ol>
     <li>まず「撤収」する。</li>
   </ol>
@@ -156,7 +138,7 @@
     <img src="1000000646_2.png" alt="搬入完了">
   </div>
 
-  <h3>【作業終了時のフロー】</h3>
+  <h2>【作業終了時のフロー】</h2>
   <ol start="4">
     <li>作業開始。</li>
     <li>作業が終わったら「射出」で自分宛にバックアップを送る。</li>
@@ -166,23 +148,20 @@
     <img src="1000000643_2.png" alt="射出画面">
   </div>
 
-  <h3>手動管理による完全な自己防衛</h3>
+  <h2>手動管理による完全な自己防衛</h2>
   <ul>
-    <li>自分宛に射出したメールの送信時刻が<strong>絶対的な著作権の証明</strong>となり、盗作問題からあなたを確実に守ります。</li>
+    <li>自分宛に射出したメールの送信時刻が<span class="highlight">絶対的な著作権の証明</span>となり、盗作問題からあなたを確実に守ります。</li>
     <li>データを他社のサーバーに預けないので、サービス終了や突然の有料化などの理不尽が一切ありません。</li>
   </ul>
 
-  <p>
-    見た目はLINEやXに似ていますが、これはSNSではありません。<br>
-    梅棹忠夫の「京大式カード」をデジタルで再構築した、一事一葉の知的生産ツールです。<br>
-    自分の短歌の純度を本気で守りたい人だけ、この儀式を使ってください。
-  </p>
+  <p>見た目はLINEやXに似ていますが、これはSNSではありません。<br>
+  梅棹忠夫の「京大式カード」をデジタルで再構築した、一事一葉の知的生産ツールです。<br>
+  自分の短歌の純度を本気で守りたい人だけ、この儀式を使ってください。</p>
 
   <a href="https://www.amazon.co.jp/dp/4004150930/" target="_blank" class="amazon-link">
     「さいきよ」の設計思想の源流である京大式カードの詳細については、原典をご参照ください。
     <span>梅棹忠夫『知的生産の技術』（岩波新書）をAmazonで確認する</span>
   </a>
 </div>
-
 </body>
 </html>
