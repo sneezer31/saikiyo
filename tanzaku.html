@@ -87,13 +87,12 @@
   }
   
   select, input[type="file"], input[type="number"], input[type="range"] {
-  width: 100%; /* ←この1行を追加して強制的に枠内に収める */
-  padding: 8px; font-size: 1rem; font-family: inherit;
-  background: var(--bg-color); color: var(--text-color);
-  border: 1px solid var(--text-color); cursor: pointer;
-  border-radius: 4px; box-sizing: border-box;
-}
-
+    width: 100%;
+    padding: 8px; font-size: 1rem; font-family: inherit;
+    background: var(--bg-color); color: var(--text-color);
+    border: 1px solid var(--text-color); cursor: pointer;
+    border-radius: 4px; box-sizing: border-box;
+  }
 
   input[type="range"] { padding: 0; border: none; height: 38px; }
   input[type="color"] {
@@ -173,6 +172,14 @@
         </select>
       </div>
       <div class="control-group">
+        <label>文字の背景帯</label>
+        <select id="bg-ribbon-select">
+          <option value="none">なし</option>
+          <option value="white">白帯 (半透明)</option>
+          <option value="black">黒帯 (半透明)</option>
+        </select>
+      </div>
+      <div class="control-group">
         <label>文字色</label>
         <input type="color" id="color-text" value="#111111">
       </div>
@@ -200,6 +207,7 @@
   const fontsizeInput = document.getElementById('fontsize-input');
   const spacingInput = document.getElementById('spacing-input');
   const strokeSelect = document.getElementById('stroke-select');
+  const bgRibbonSelect = document.getElementById('bg-ribbon-select');
   const colorText = document.getElementById('color-text');
   const colorBg = document.getElementById('color-bg');
   const bgImageInput = document.getElementById('bg-image-input');
@@ -239,6 +247,7 @@
       fontSize: fontsizeInput.value,
       spacing: spacingInput.value,
       stroke: strokeSelect.value,
+      bgRibbon: bgRibbonSelect.value,
       colorText: colorText.value,
       colorBg: colorBg.value,
       bgImage: uploadedBgImage,
@@ -267,6 +276,7 @@
     fontsizeInput.value = state.fontSize;
     spacingInput.value = state.spacing;
     strokeSelect.value = state.stroke;
+    if (state.bgRibbon) bgRibbonSelect.value = state.bgRibbon;
     colorText.value = state.colorText;
     colorBg.value = state.colorBg;
     uploadedBgImage = state.bgImage;
@@ -322,14 +332,13 @@
     const direction = getRadioValue('direction');
     const ratio = getRadioValue('ratio');
 
-    // 透過処理のため、常に全体を一度クリア
     ctx.clearRect(0, 0, width, height);
 
-    ctx.save(); // クリッピング用に状態を保存
+    ctx.save();
     if (ratio === 'circle') {
       ctx.beginPath();
       ctx.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, Math.PI * 2);
-      ctx.clip(); // 円形に切り抜き（これ以降の描画は円の中のみに限定される）
+      ctx.clip();
     }
 
     ctx.fillStyle = colorBg.value;
@@ -353,13 +362,16 @@
     const spacingRatio = parseFloat(spacingInput.value) || 1.8;
     
     ctx.font = `500 ${fontSize}px ${fontSelect.value}`;
-    ctx.fillStyle = colorText.value;
     
     const strokeMode = strokeSelect.value;
     if (strokeMode !== 'none') {
       ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
       ctx.lineWidth = 6; ctx.lineJoin = 'round';
     }
+
+    const ribbonMode = bgRibbonSelect.value;
+    const marginX = fontSize * 0.8;
+    const marginY = fontSize * 1.2;
 
     if (direction === 'vertical') {
       ctx.textBaseline = 'top';
@@ -380,6 +392,22 @@
 
       const blockHeight = maxChars * charStepY;
       const startY = Math.max(50, (height - blockHeight) / 2);
+      
+      if (ribbonMode !== 'none') {
+        let totalWidth = blockWidthOffset + fontSize;
+        let rectX = (width - totalWidth) / 2 - marginX;
+        let rectY = startY - marginY;
+        let rectW = totalWidth + marginX * 2;
+        let rectH = blockHeight + marginY * 2;
+
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = ribbonMode === 'white' ? '#FFFFFF' : '#000000';
+        ctx.fillRect(rectX, rectY, rectW, rectH);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = colorText.value;
       let currentX = (width + blockWidthOffset + fontSize) / 2 - fontSize / 2;
 
       for (let i = 0; i < lines.length; i++) {
@@ -422,6 +450,21 @@
       let currentY = Math.max(50, (height - blockHeight) / 2);
       const startX = (width - maxLineWidth) / 2;
 
+      if (ribbonMode !== 'none') {
+        let actualBlockHeight = lines.length > 0 ? (lines.length - 1) * lineStepY + fontSize : 0;
+        let rectX = startX - marginX;
+        let rectY = currentY - marginY;
+        let rectW = maxLineWidth + marginX * 2;
+        let rectH = actualBlockHeight + marginY * 2;
+
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = ribbonMode === 'white' ? '#FFFFFF' : '#000000';
+        ctx.fillRect(rectX, rectY, rectW, rectH);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = colorText.value;
       for (const line of lines) {
         if (strokeMode !== 'none') ctx.strokeText(line, startX, currentY);
         ctx.fillText(line, startX, currentY);
@@ -429,8 +472,7 @@
       }
     }
 
-    ctx.restore(); // クリッピング解除（テキストも円の外にはみ出した分は見えなくなる）
-    
+    ctx.restore();
     previewImg.src = canvas.toDataURL('image/png');
   }
 
