@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>さいきよ‐たてがき</title>
+<title>さいきよ 画像化</title>
 <style>
   :root {
     --bg-color: #FFFFFF;
@@ -22,6 +22,17 @@
     width: 100%; max-width: 600px;
     display: flex; flex-direction: column; gap: 15px;
   }
+
+  .primary-controls {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 15px; background: #f8f8f8; border: 1px solid var(--text-color);
+    border-radius: 8px; margin-bottom: 5px;
+  }
+  .radio-group {
+    display: flex; gap: 15px; font-weight: bold; flex-wrap: wrap;
+  }
+  .radio-group label { cursor: pointer; }
+
   textarea {
     width: 100%; height: 120px;
     padding: 12px; font-size: 16px; font-family: inherit;
@@ -34,6 +45,423 @@
     padding: 14px; font-size: 1.1rem; font-weight: bold;
     background: var(--bg-color); color: var(--text-color);
     border: 1px solid var(--text-color); cursor: pointer; width: 100%;
+    border-radius: 4px;
+  }
+  button:hover:not(:disabled) { opacity: 0.7; }
+  button:disabled { opacity: 0.3; cursor: not-allowed; }
+  
+  #btn-preview, #generate-btn {
+    border: 2px solid var(--text-color);
+  }
+
+  .action-btns {
+    display: flex; gap: 10px; margin-top: 5px;
+  }
+  #btn-preview { flex: 2; }
+  #btn-undo, #btn-redo { flex: 1; font-size: 1rem; }
+  
+  #preview-img {
+    max-width: 100%; height: auto;
+    border: 1px solid var(--text-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: #FFF;
+    margin-bottom: 10px;
+    display: block;
+  }
+  #canvas { display: none; }
+
+  .settings-panel {
+    display: flex; flex-direction: column; gap: 15px;
+    padding: 15px; border: 1px dashed var(--text-color);
+    border-radius: 8px; margin-bottom: 10px;
+  }
+  .preset-btns { display: flex; gap: 10px; }
+  
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
+  
+  @media (max-width: 600px) {
+    .controls { grid-template-columns: 1fr; }
+    .action-btns button { padding: 12px 5px; font-size: 0.9rem; }
+    #btn-preview { font-size: 1.05rem; white-space: nowrap; }
+  }
+  
+  select, input[type="file"], input[type="number"], input[type="range"] {
+    padding: 8px; font-size: 1rem; font-family: inherit;
+    background: var(--bg-color); color: var(--text-color);
+    border: 1px solid var(--text-color); cursor: pointer;
+    border-radius: 4px; box-sizing: border-box;
+  }
+
+  input[type="range"] { padding: 0; border: none; height: 38px; }
+  input[type="color"] {
+    width: 100%; height: 44px; padding: 0; border: 1px solid var(--text-color);
+    border-radius: 4px; cursor: pointer; background-color: var(--bg-color);
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+  #generate-btn { margin-top: 10px; padding: 18px; font-size: 1.2rem; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+  <h2>さいきよ 画像化</h2>
+
+  <div class="primary-controls">
+    <div class="radio-group">
+      <span>文字方向：</span>
+      <label><input type="radio" name="direction" value="vertical" checked> 縦書き</label>
+      <label><input type="radio" name="direction" value="horizontal"> 横書き</label>
+    </div>
+    <div class="radio-group">
+      <span>キャンバス：</span>
+      <label><input type="radio" name="ratio" value="portrait" checked> 縦長 (4:5)</label>
+      <label><input type="radio" name="ratio" value="square"> 正方形 (1:1)</label>
+      <label><input type="radio" name="ratio" value="landscape"> 横長 (16:9)</label>
+    </div>
+  </div>
+
+  <textarea id="text-input" placeholder="ここに短歌を入力してください（改行はそのまま反映されます）"></textarea>
+
+  <div class="action-btns">
+    <button type="button" id="btn-undo" disabled>← 戻る</button>
+    <button type="button" id="btn-preview">プレビュー更新</button>
+    <button type="button" id="btn-redo" disabled>進む →</button>
+  </div>
+
+  <img id="preview-img" alt="プレビュー画像">
+  <canvas id="canvas"></canvas>
+
+  <div class="settings-panel">
+    <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: -5px;">デザイン設定</div>
+    <div class="preset-btns">
+      <button type="button" onclick="setPreset('monochrome')">白黒</button>
+      <button type="button" onclick="setPreset('silver')">銀鼠</button>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>書体</label>
+        <select id="font-select">
+          <option value="'Shippori Mincho', serif">明朝体 (Shippori Mincho)</option>
+          <option value="'Zen Kaku Gothic New', sans-serif">ゴシック体 (Zen Kaku)</option>
+          <option value="'Zen Kurenaido', sans-serif">手書き風 (Zen Kurenaido)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>文字サイズ (px)</label>
+        <input type="number" id="fontsize-input" value="36" step="1" min="10">
+      </div>
+      <div class="control-group">
+        <label>行間 (倍率)</label>
+        <input type="number" id="spacing-input" value="1.8" step="0.1" min="1.0">
+      </div>
+      <div class="control-group">
+        <label>文字の縁取り</label>
+        <select id="stroke-select">
+          <option value="none">なし</option>
+          <option value="white">白縁</option>
+          <option value="gray">灰色縁</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>文字色</label>
+        <input type="color" id="color-text" value="#111111">
+      </div>
+      <div class="control-group">
+        <label>背景色</label>
+        <input type="color" id="color-bg" value="#FFFFFF">
+      </div>
+      <div class="control-group">
+        <label>背景画像</label>
+        <input type="file" id="bg-image-input" accept="image/*">
+      </div>
+      <div class="control-group">
+        <label>画像の濃さ</label>
+        <input type="range" id="bg-opacity-input" min="0.1" max="1" step="0.05" value="1">
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="generate-btn">決定（画像を保存）</button>
+</div>
+
+<script>
+  const textInput = document.getElementById('text-input');
+  const fontSelect = document.getElementById('font-select');
+  const fontsizeInput = document.getElementById('fontsize-input');
+  const spacingInput = document.getElementById('spacing-input');
+  const strokeSelect = document.getElementById('stroke-select');
+  const colorText = document.getElementById('color-text');
+  const colorBg = document.getElementById('color-bg');
+  const bgImageInput = document.getElementById('bg-image-input');
+  const bgOpacityInput = document.getElementById('bg-opacity-input');
+  
+  const radioDirections = document.querySelectorAll('input[name="direction"]');
+  const radioRatios = document.querySelectorAll('input[name="ratio"]');
+  
+  const btnPreview = document.getElementById('btn-preview');
+  const btnUndo = document.getElementById('btn-undo');
+  const btnRedo = document.getElementById('btn-redo');
+  const generateBtn = document.getElementById('generate-btn');
+  
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const previewImg = document.getElementById('preview-img');
+
+  let uploadedBgImage = null;
+  let stateHistory = [];
+  let historyIndex = -1;
+
+  function getRadioValue(name) {
+    return document.querySelector(`input[name="${name}"]:checked`).value;
+  }
+
+  function setRadioValue(name, value) {
+    const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (radio) radio.checked = true;
+  }
+
+  function captureCurrentState() {
+    return {
+      direction: getRadioValue('direction'),
+      ratio: getRadioValue('ratio'),
+      text: textInput.value,
+      font: fontSelect.value,
+      fontSize: fontsizeInput.value,
+      spacing: spacingInput.value,
+      stroke: strokeSelect.value,
+      colorText: colorText.value,
+      colorBg: colorBg.value,
+      bgImage: uploadedBgImage,
+      bgOpacity: bgOpacityInput.value
+    };
+  }
+
+  function saveState() {
+    const currentState = captureCurrentState();
+    if (historyIndex < stateHistory.length - 1) {
+      stateHistory = stateHistory.slice(0, historyIndex + 1);
+    }
+    stateHistory.push(currentState);
+    historyIndex++;
+    updateHistoryButtons();
+  }
+
+  function restoreState(index) {
+    if (index < 0 || index >= stateHistory.length) return;
+    const state = stateHistory[index];
+    
+    setRadioValue('direction', state.direction);
+    setRadioValue('ratio', state.ratio);
+    textInput.value = state.text;
+    fontSelect.value = state.font;
+    fontsizeInput.value = state.fontSize;
+    spacingInput.value = state.spacing;
+    strokeSelect.value = state.stroke;
+    colorText.value = state.colorText;
+    colorBg.value = state.colorBg;
+    uploadedBgImage = state.bgImage;
+    if (state.bgOpacity !== undefined) bgOpacityInput.value = state.bgOpacity;
+    
+    historyIndex = index;
+    updateHistoryButtons();
+    drawCanvas();
+  }
+
+  function updateHistoryButtons() {
+    btnUndo.disabled = historyIndex <= 0;
+    btnRedo.disabled = historyIndex >= stateHistory.length - 1;
+  }
+
+  bgImageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => { uploadedBgImage = img; };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      uploadedBgImage = null;
+    }
+  });
+
+  function setPreset(type) {
+    if (type === 'monochrome') {
+      colorText.value = '#111111'; colorBg.value = '#FFFFFF';
+    } else if (type === 'silver') {
+      colorText.value = '#333333'; colorBg.value = '#F5F5F0';
+    }
+    uploadedBgImage = null;
+    bgImageInput.value = '';
+    bgOpacityInput.value = '1';
+  }
+
+  function applyCanvasRatio() {
+    const ratio = getRadioValue('ratio');
+    if (ratio === 'portrait') { canvas.width = 1080; canvas.height = 1350; }
+    else if (ratio === 'square') { canvas.width = 1080; canvas.height = 1080; }
+    else if (ratio === 'landscape') { canvas.width = 1200; canvas.height = 675; }
+  }
+
+  function drawCanvas() {
+    applyCanvasRatio();
+    const width = canvas.width;
+    const height = canvas.height;
+    const direction = getRadioValue('direction');
+
+    ctx.fillStyle = colorBg.value;
+    ctx.fillRect(0, 0, width, height);
+
+    if (uploadedBgImage) {
+      ctx.save();
+      ctx.globalAlpha = parseFloat(bgOpacityInput.value);
+      const hRatio = width / uploadedBgImage.width;
+      const vRatio = height / uploadedBgImage.height;
+      const ratio = Math.max(hRatio, vRatio);
+      const centerShiftX = (width - uploadedBgImage.width * ratio) / 2;
+      const centerShiftY = (height - uploadedBgImage.height * ratio) / 2;
+      ctx.drawImage(uploadedBgImage, 0, 0, uploadedBgImage.width, uploadedBgImage.height, centerShiftX, centerShiftY, uploadedBgImage.width * ratio, uploadedBgImage.height * ratio);
+      ctx.restore();
+    }
+
+    const rawText = textInput.value;
+    const lines = rawText.split('\n');
+    const fontSize = parseFloat(fontsizeInput.value) || 36;
+    const spacingRatio = parseFloat(spacingInput.value) || 1.8;
+    
+    ctx.font = `500 ${fontSize}px ${fontSelect.value}`;
+    ctx.fillStyle = colorText.value;
+    
+    const strokeMode = strokeSelect.value;
+    if (strokeMode !== 'none') {
+      ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
+      ctx.lineWidth = 6; ctx.lineJoin = 'round';
+    }
+
+    if (direction === 'vertical') {
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      const charStepY = fontSize * 1.15;
+      const lineStepX = fontSize * spacingRatio;
+      
+      let maxChars = 0;
+      let blockWidthOffset = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i] === "") blockWidthOffset += lineStepX * 0.5;
+        else {
+          if (i !== 0) blockWidthOffset += lineStepX;
+          if (lines[i].length > maxChars) maxChars = lines[i].length;
+        }
+      }
+
+      const blockHeight = maxChars * charStepY;
+      const startY = Math.max(50, (height - blockHeight) / 2);
+      let currentX = (width + blockWidthOffset + fontSize) / 2 - fontSize / 2;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === "") { currentX -= lineStepX * 0.5; continue; }
+        let currentY = startY;
+
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          let drawChar = char;
+          
+          // 縦書き用約物の補正（鍵括弧・丸括弧を個別にマッピング）
+          if (char === '「') drawChar = '﹁';
+          else if (char === '」') drawChar = '﹂';
+          else if (char === '『') drawChar = '﹃';
+          else if (char === '』') drawChar = '﹄';
+          else if (char === '（') drawChar = '︵';
+          else if (char === '）') drawChar = '︶';
+          else if (char === 'ー' || char === '―') drawChar = '｜';
+          else if (char === '、') drawChar = '︑';
+          else if (char === '。') drawChar = '︒';
+
+          if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX, currentY);
+          ctx.fillText(drawChar, currentX, currentY);
+          currentY += charStepY;
+        }
+        currentX -= lineStepX;
+      }
+    } else {
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      const lineStepY = fontSize * spacingRatio;
+      
+      let maxLineWidth = 0;
+      for (const line of lines) {
+        const metrics = ctx.measureText(line);
+        if(metrics.width > maxLineWidth) maxLineWidth = metrics.width;
+      }
+
+      const blockHeight = lines.length * lineStepY;
+      let currentY = Math.max(50, (height - blockHeight) / 2);
+      const startX = (width - maxLineWidth) / 2;
+
+      for (const line of lines) {
+        if (strokeMode !== 'none') ctx.strokeText(line, startX, currentY);
+        ctx.fillText(line, startX, currentY);
+        currentY += lineStepY;
+      }
+    }
+    
+    previewImg.src = canvas.toDataURL('image/png');
+  }
+
+  btnPreview.addEventListener('click', () => { saveState(); drawCanvas(); });
+  btnUndo.addEventListener('click', () => restoreState(historyIndex - 1));
+  btnRedo.addEventListener('click', () => restoreState(historyIndex + 1));
+
+  radioDirections.forEach(r => r.addEventListener('change', drawCanvas));
+  radioRatios.forEach(r => r.addEventListener('change', drawCanvas));
+
+  generateBtn.addEventListener('click', () => {
+    saveState();
+    drawCanvas();
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+      alert("【iPhoneをご利用の方へ】\n保存ボタンの代わりに、上の画像を長押しして「写真に追加」または「画像を保存」を選んでください。");
+      return;
+    }
+
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const filename = `tanka_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
+
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    link.click();
+  });
+
+  window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    const initialText = params.get('text');
+    if (initialText) textInput.value = initialText;
+
+    document.fonts.ready.then(() => {
+      setTimeout(() => {
+        saveState();
+        drawCanvas();
+      }, 200);
+    });
+  });
+</script>
+
+</body>
+</html>
     border-radius: 4px;
   }
   button:hover:not(:disabled) { opacity: 0.7; }
