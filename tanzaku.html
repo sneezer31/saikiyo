@@ -64,7 +64,7 @@
     max-width: 100%; height: auto;
     border: 1px solid var(--text-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    background: #FFF;
+    background: transparent;
     margin-bottom: 10px;
     display: block;
   }
@@ -123,6 +123,7 @@
       <label><input type="radio" name="ratio" value="portrait" checked> 縦長 (4:5)</label>
       <label><input type="radio" name="ratio" value="square"> 正方形 (1:1)</label>
       <label><input type="radio" name="ratio" value="landscape"> 横長 (16:9)</label>
+      <label><input type="radio" name="ratio" value="circle"> 円形 (透過)</label>
     </div>
   </div>
 
@@ -308,7 +309,7 @@
   function applyCanvasRatio() {
     const ratio = getRadioValue('ratio');
     if (ratio === 'portrait') { canvas.width = 1080; canvas.height = 1350; }
-    else if (ratio === 'square') { canvas.width = 1080; canvas.height = 1080; }
+    else if (ratio === 'square' || ratio === 'circle') { canvas.width = 1080; canvas.height = 1080; }
     else if (ratio === 'landscape') { canvas.width = 1200; canvas.height = 675; }
   }
 
@@ -317,6 +318,17 @@
     const width = canvas.width;
     const height = canvas.height;
     const direction = getRadioValue('direction');
+    const ratio = getRadioValue('ratio');
+
+    // 透過処理のため、常に全体を一度クリア
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.save(); // クリッピング用に状態を保存
+    if (ratio === 'circle') {
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, Math.PI * 2);
+      ctx.clip(); // 円形に切り抜き（これ以降の描画は円の中のみに限定される）
+    }
 
     ctx.fillStyle = colorBg.value;
     ctx.fillRect(0, 0, width, height);
@@ -326,10 +338,10 @@
       ctx.globalAlpha = parseFloat(bgOpacityInput.value);
       const hRatio = width / uploadedBgImage.width;
       const vRatio = height / uploadedBgImage.height;
-      const ratio = Math.max(hRatio, vRatio);
-      const centerShiftX = (width - uploadedBgImage.width * ratio) / 2;
-      const centerShiftY = (height - uploadedBgImage.height * ratio) / 2;
-      ctx.drawImage(uploadedBgImage, 0, 0, uploadedBgImage.width, uploadedBgImage.height, centerShiftX, centerShiftY, uploadedBgImage.width * ratio, uploadedBgImage.height * ratio);
+      const imgRatio = Math.max(hRatio, vRatio);
+      const centerShiftX = (width - uploadedBgImage.width * imgRatio) / 2;
+      const centerShiftY = (height - uploadedBgImage.height * imgRatio) / 2;
+      ctx.drawImage(uploadedBgImage, 0, 0, uploadedBgImage.width, uploadedBgImage.height, centerShiftX, centerShiftY, uploadedBgImage.width * imgRatio, uploadedBgImage.height * imgRatio);
       ctx.restore();
     }
 
@@ -377,7 +389,6 @@
           const char = line[j];
           let drawChar = char;
           
-          // 縦書き用約物の補正（鍵括弧・丸括弧を個別にマッピング）
           if (char === '「') drawChar = '﹁';
           else if (char === '」') drawChar = '﹂';
           else if (char === '『') drawChar = '﹃';
@@ -415,6 +426,8 @@
         currentY += lineStepY;
       }
     }
+
+    ctx.restore(); // クリッピング解除（テキストも円の外にはみ出した分は見えなくなる）
     
     previewImg.src = canvas.toDataURL('image/png');
   }
