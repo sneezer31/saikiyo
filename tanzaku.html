@@ -87,11 +87,13 @@
   }
   
   select, input[type="file"], input[type="number"], input[type="range"] {
-    padding: 8px; font-size: 1rem; font-family: inherit;
-    background: var(--bg-color); color: var(--text-color);
-    border: 1px solid var(--text-color); cursor: pointer;
-    border-radius: 4px; box-sizing: border-box;
-  }
+  width: 100%; /* ←この1行を追加して強制的に枠内に収める */
+  padding: 8px; font-size: 1rem; font-family: inherit;
+  background: var(--bg-color); color: var(--text-color);
+  border: 1px solid var(--text-color); cursor: pointer;
+  border-radius: 4px; box-sizing: border-box;
+}
+
 
   input[type="range"] { padding: 0; border: none; height: 38px; }
   input[type="color"] {
