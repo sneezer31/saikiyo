@@ -440,6 +440,7 @@
           let drawChar = char;
           let offsetX = 0;
           let offsetY = 0;
+          let isRotated = false;
           
           if (char === '「') drawChar = '﹁';
           else if (char === '」') drawChar = '﹂';
@@ -447,16 +448,27 @@
           else if (char === '』') drawChar = '﹄';
           else if (char === '（') drawChar = '︵';
           else if (char === '）') drawChar = '︶';
-          else if (char === 'ー' || char === '―') drawChar = '｜';
           else if (char === '、') drawChar = '︑';
           else if (char === '。') drawChar = '︒';
+          else if (char === 'ー' || char === '―') {
+            isRotated = true;
+          }
           else if ('ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ'.includes(char)) {
             offsetX = fontSize * 0.15;
             offsetY = -fontSize * 0.15;
           }
 
-          if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
-          ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
+          if (isRotated) {
+            ctx.save();
+            ctx.translate(currentX, currentY + fontSize / 2);
+            ctx.rotate(90 * Math.PI / 180);
+            if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, -fontSize / 2);
+            ctx.fillText(drawChar, 0, -fontSize / 2);
+            ctx.restore();
+          } else {
+            if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
+            ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
+          }
           currentY += charStepY;
         }
         currentX -= lineStepX;
