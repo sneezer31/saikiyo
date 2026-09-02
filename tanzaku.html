@@ -175,9 +175,13 @@
         <label>文字の背景帯</label>
         <select id="bg-ribbon-select">
           <option value="none">なし</option>
-          <option value="white">白帯 (半透明)</option>
-          <option value="black">黒帯 (半透明)</option>
+          <option value="white">白帯</option>
+          <option value="black">黒帯</option>
         </select>
+      </div>
+      <div class="control-group" id="ribbon-opacity-group">
+        <label>帯の濃さ</label>
+        <input type="range" id="ribbon-opacity-input" min="0" max="100" value="55" step="1">
       </div>
       <div class="control-group">
         <label>文字色</label>
@@ -208,6 +212,8 @@
   const spacingInput = document.getElementById('spacing-input');
   const strokeSelect = document.getElementById('stroke-select');
   const bgRibbonSelect = document.getElementById('bg-ribbon-select');
+  const ribbonOpacityInput = document.getElementById('ribbon-opacity-input');
+  const ribbonOpacityGroup = document.getElementById('ribbon-opacity-group');
   const colorText = document.getElementById('color-text');
   const colorBg = document.getElementById('color-bg');
   const bgImageInput = document.getElementById('bg-image-input');
@@ -238,6 +244,16 @@
     if (radio) radio.checked = true;
   }
 
+  function updateRibbonOpacityState() {
+    if (bgRibbonSelect.value === 'none') {
+      ribbonOpacityInput.disabled = true;
+      ribbonOpacityGroup.style.opacity = '0.4';
+    } else {
+      ribbonOpacityInput.disabled = false;
+      ribbonOpacityGroup.style.opacity = '1.0';
+    }
+  }
+
   function captureCurrentState() {
     return {
       direction: getRadioValue('direction'),
@@ -248,6 +264,7 @@
       spacing: spacingInput.value,
       stroke: strokeSelect.value,
       bgRibbon: bgRibbonSelect.value,
+      ribbonOpacity: ribbonOpacityInput.value,
       colorText: colorText.value,
       colorBg: colorBg.value,
       bgImage: uploadedBgImage,
@@ -277,12 +294,14 @@
     spacingInput.value = state.spacing;
     strokeSelect.value = state.stroke;
     if (state.bgRibbon) bgRibbonSelect.value = state.bgRibbon;
+    if (state.ribbonOpacity !== undefined) ribbonOpacityInput.value = state.ribbonOpacity;
     colorText.value = state.colorText;
     colorBg.value = state.colorBg;
     uploadedBgImage = state.bgImage;
     if (state.bgOpacity !== undefined) bgOpacityInput.value = state.bgOpacity;
     
     historyIndex = index;
+    updateRibbonOpacityState();
     updateHistoryButtons();
     drawCanvas();
   }
@@ -370,6 +389,7 @@
     }
 
     const ribbonMode = bgRibbonSelect.value;
+    const ribbonAlpha = (parseFloat(ribbonOpacityInput.value) || 55) / 100;
     const marginX = fontSize * 0.8;
     const marginY = fontSize * 1.2;
 
@@ -401,7 +421,7 @@
         let rectH = blockHeight + marginY * 2;
 
         ctx.save();
-        ctx.globalAlpha = 0.55;
+        ctx.globalAlpha = ribbonAlpha;
         ctx.fillStyle = ribbonMode === 'white' ? '#FFFFFF' : '#000000';
         ctx.fillRect(rectX, rectY, rectW, rectH);
         ctx.restore();
@@ -458,7 +478,7 @@
         let rectH = actualBlockHeight + marginY * 2;
 
         ctx.save();
-        ctx.globalAlpha = 0.55;
+        ctx.globalAlpha = ribbonAlpha;
         ctx.fillStyle = ribbonMode === 'white' ? '#FFFFFF' : '#000000';
         ctx.fillRect(rectX, rectY, rectW, rectH);
         ctx.restore();
@@ -475,6 +495,12 @@
     ctx.restore();
     previewImg.src = canvas.toDataURL('image/png');
   }
+
+  bgRibbonSelect.addEventListener('change', () => {
+    updateRibbonOpacityState();
+    drawCanvas();
+  });
+  ribbonOpacityInput.addEventListener('input', drawCanvas);
 
   btnPreview.addEventListener('click', () => { saveState(); drawCanvas(); });
   btnUndo.addEventListener('click', () => restoreState(historyIndex - 1));
@@ -507,6 +533,8 @@
     const params = new URLSearchParams(window.location.search);
     const initialText = params.get('text');
     if (initialText) textInput.value = initialText;
+
+    updateRibbonOpacityState();
 
     document.fonts.ready.then(() => {
       setTimeout(() => {
