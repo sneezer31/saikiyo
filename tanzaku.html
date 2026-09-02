@@ -438,6 +438,8 @@
         for (let j = 0; j < line.length; j++) {
           const char = line[j];
           let drawChar = char;
+          let offsetX = 0;
+          let offsetY = 0;
           
           if (char === '「') drawChar = '﹁';
           else if (char === '」') drawChar = '﹂';
@@ -448,9 +450,13 @@
           else if (char === 'ー' || char === '―') drawChar = '｜';
           else if (char === '、') drawChar = '︑';
           else if (char === '。') drawChar = '︒';
+          else if ('ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ'.includes(char)) {
+            offsetX = fontSize * 0.15;
+            offsetY = -fontSize * 0.15;
+          }
 
-          if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX, currentY);
-          ctx.fillText(drawChar, currentX, currentY);
+          if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
+          ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
           currentY += charStepY;
         }
         currentX -= lineStepX;
