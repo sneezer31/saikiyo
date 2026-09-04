@@ -106,8 +106,8 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Kurenaido&family=Zen+Old+Mincho:wght@500;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;700&family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Kurenaido&family=Zen+Old+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
 <body>
 
 <div class="container">
@@ -156,7 +156,6 @@
   <option value="'Zen Kaku Gothic New', sans-serif">ゴシック体 (Zen Kaku)</option>
   <option value="'Zen Kurenaido', sans-serif">手書き風 (Zen Kurenaido)</option>
 </select>
-
       </div>
       <div class="control-group">
         <label>文字サイズ (px)</label>
@@ -383,7 +382,8 @@
     const fontSize = parseFloat(fontsizeInput.value) || 36;
     const spacingRatio = parseFloat(spacingInput.value) || 1.8;
     
-    ctx.font = `500 ${fontSize}px ${fontSelect.value}`;
+    // 【修正】Safariの合成斜体暴発を防ぐため、ウェイトを400に固定
+    ctx.font = `400 ${fontSize}px ${fontSelect.value}`;
     
     const strokeMode = strokeSelect.value;
     if (strokeMode !== 'none') {
@@ -444,7 +444,37 @@
           let offsetX = 0;
           let offsetY = 0;
           let isRotated = false;
-          
+
+          // 【追加】連続する ？！ ！？ ！！ ？？ を検知して手動で縦中横処理
+          let isPair = false;
+          let nextChar = line[j+1];
+          if (('！'.includes(char) || '？'.includes(char) || char === '!' || char === '?') && nextChar) {
+             if ('！'.includes(nextChar) || '？'.includes(nextChar) || nextChar === '!' || nextChar === '?') {
+                 isPair = true;
+             }
+          }
+
+          if (isPair) {
+             ctx.save();
+             const halfFontSize = fontSize * 0.7;
+             ctx.font = `400 ${halfFontSize}px ${fontSelect.value}`;
+             
+             let leftX = currentX + fontSize * 0.05;
+             let pairY = currentY + fontSize * 0.15;
+             if (strokeMode !== 'none') ctx.strokeText(char, leftX, pairY);
+             ctx.fillText(char, leftX, pairY);
+             
+             let rightX = currentX + fontSize * 0.55;
+             if (strokeMode !== 'none') ctx.strokeText(nextChar, rightX, pairY);
+             ctx.fillText(nextChar, rightX, pairY);
+             
+             ctx.restore();
+             
+             currentY += charStepY;
+             j++;
+             continue;
+          }
+
           if (char === '「') drawChar = '﹁';
           else if (char === '」') drawChar = '﹂';
           else if (char === '『') drawChar = '﹃';
@@ -460,19 +490,20 @@
             offsetX = fontSize * 0.15;
             offsetY = -fontSize * 0.15;
           }
+          else if ('！？!?'.includes(char)) {
+            offsetX = fontSize * 0.15;
+            offsetY = fontSize * 0.05;
+          }
 
           if (isRotated) {
             ctx.save();
             ctx.translate(currentX, currentY + fontSize / 2);
             ctx.rotate(90 * Math.PI / 180);
-            ctx.textBaseline = 'middle'; // 回転時のみ、文字の基準を「完全な中央」へ書き換え
-            
-            // X, Y共に0地点（translateで移動した中心点）に描画させる
-            if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, 0);
-            ctx.fillText(drawChar, 0, 0);
+            const rotY = -fontSize * 0.58; 
+            if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, rotY);
+            ctx.fillText(drawChar, 0, rotY);
             ctx.restore();
-          }
- else {
+          } else {
             if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
             ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
           }
@@ -527,73 +558,8 @@
   });
   ribbonOpacityInput.addEventListener('input', drawCanvas);
 
-    btnPreview.addEventListener('click', () => {
+  // 【修正】非同期フォントロード完了後に描画を走らせる
+  btnPreview.addEventListener('click', () => {
     saveState();
-    
-    // 現在選択されているフォントとサイズを取得
     const fontSize = parseFloat(fontsizeInput.value) || 36;
-    const fontString = `500 ${fontSize}px ${fontSelect.value}`;
-    
-    // フォントデータの物理的なロード完了を待機してから描画関数をキックする
-    document.fonts.load(fontString).then(() => {
-      drawCanvas();
-    });
-  });
-
-  btnUndo.addEventListener('click', () => restoreState(historyIndex - 1));
-  btnRedo.addEventListener('click', () => restoreState(historyIndex + 1));
-
-  radioDirections.forEach(r => r.addEventListener('change', drawCanvas));
-  radioRatios.forEach(r => r.addEventListener('change', drawCanvas));
-
-  generateBtn.addEventListener('click', () => {
-    saveState();
-    drawCanvas();
-    const dataUrl = canvas.toDataURL('image/png');
-    
-    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-      alert("【iPhoneをご利用の方へ】\n保存ボタンの代わりに、上の画像を長押しして「写真に追加」または「画像を保存」を選んでください。");
-      return;
-    }
-
-    const d = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    const filename = `tanka_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
-
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = dataUrl;
-    link.click();
-  });
-
-    // BFCache（戻るボタン等での遷移）対策を組み込んだライフサイクル管理
-  window.addEventListener('pageshow', (event) => {
-    // 2回目以降（キャッシュからの復帰時）の強制再描画プロセス
-    if (event.persisted) {
-      document.fonts.ready.then(() => {
-        setTimeout(() => {
-          drawCanvas(); // Canvasが揮発しているため、拗音オフセットを含めて再構築
-        }, 50); // Safariのレンダリング遅延に対するフェイルセーフ
-      });
-      return;
-    }
-
-    // 初回アクセス時の通常プロセス
-    const params = new URLSearchParams(window.location.search);
-    const initialText = params.get('text');
-    if (initialText) textInput.value = initialText;
-
-    updateRibbonOpacityState();
-
-    document.fonts.ready.then(() => {
-      setTimeout(() => {
-        if (stateHistory.length === 0) saveState();
-        drawCanvas();
-      }, 200);
-    });
-  });
-
-</script>
-
-</body>
-</html>
+    co
