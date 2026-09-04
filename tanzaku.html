@@ -562,4 +562,61 @@
   btnPreview.addEventListener('click', () => {
     saveState();
     const fontSize = parseFloat(fontsizeInput.value) || 36;
-    co
+    const fontString = `400 ${fontSize}px ${fontSelect.value}`; 
+    document.fonts.load(fontString).then(() => {
+      drawCanvas();
+    });
+  });
+
+  btnUndo.addEventListener('click', () => restoreState(historyIndex - 1));
+  btnRedo.addEventListener('click', () => restoreState(historyIndex + 1));
+
+  radioDirections.forEach(r => r.addEventListener('change', drawCanvas));
+  radioRatios.forEach(r => r.addEventListener('change', drawCanvas));
+
+  generateBtn.addEventListener('click', () => {
+    saveState();
+    drawCanvas();
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+      alert("【iPhoneをご利用の方へ】\n保存ボタンの代わりに、上の画像を長押しして「写真に追加」または「画像を保存」を選んでください。");
+      return;
+    }
+
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const filename = `tanka_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
+
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    link.click();
+  });
+
+  // 【修正】BFCache対策（loadではなくpageshowを使用）
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      document.fonts.ready.then(() => {
+        setTimeout(() => { drawCanvas(); }, 50);
+      });
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const initialText = params.get('text');
+    if (initialText) textInput.value = initialText;
+
+    updateRibbonOpacityState();
+
+    document.fonts.ready.then(() => {
+      setTimeout(() => {
+        if (stateHistory.length === 0) saveState();
+        drawCanvas();
+      }, 200);
+    });
+  });
+</script>
+
+</body>
+</html>
