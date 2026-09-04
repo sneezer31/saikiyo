@@ -465,10 +465,14 @@
             ctx.save();
             ctx.translate(currentX, currentY + fontSize / 2);
             ctx.rotate(90 * Math.PI / 180);
-            if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, -fontSize / 2);
-            ctx.fillText(drawChar, 0, -fontSize / 2);
+            ctx.textBaseline = 'middle'; // 回転時のみ、文字の基準を「完全な中央」へ書き換え
+            
+            // X, Y共に0地点（translateで移動した中心点）に描画させる
+            if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, 0);
+            ctx.fillText(drawChar, 0, 0);
             ctx.restore();
-          } else {
+          }
+ else {
             if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
             ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
           }
