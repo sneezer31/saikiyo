@@ -550,7 +550,19 @@
     link.click();
   });
 
-  window.addEventListener('load', () => {
+    // BFCache（戻るボタン等での遷移）対策を組み込んだライフサイクル管理
+  window.addEventListener('pageshow', (event) => {
+    // 2回目以降（キャッシュからの復帰時）の強制再描画プロセス
+    if (event.persisted) {
+      document.fonts.ready.then(() => {
+        setTimeout(() => {
+          drawCanvas(); // Canvasが揮発しているため、拗音オフセットを含めて再構築
+        }, 50); // Safariのレンダリング遅延に対するフェイルセーフ
+      });
+      return;
+    }
+
+    // 初回アクセス時の通常プロセス
     const params = new URLSearchParams(window.location.search);
     const initialText = params.get('text');
     if (initialText) textInput.value = initialText;
@@ -559,11 +571,12 @@
 
     document.fonts.ready.then(() => {
       setTimeout(() => {
-        saveState();
+        if (stateHistory.length === 0) saveState();
         drawCanvas();
       }, 200);
     });
   });
+
 </script>
 
 </body>
