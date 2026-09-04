@@ -523,7 +523,19 @@
   });
   ribbonOpacityInput.addEventListener('input', drawCanvas);
 
-  btnPreview.addEventListener('click', () => { saveState(); drawCanvas(); });
+    btnPreview.addEventListener('click', () => {
+    saveState();
+    
+    // 現在選択されているフォントとサイズを取得
+    const fontSize = parseFloat(fontsizeInput.value) || 36;
+    const fontString = `500 ${fontSize}px ${fontSelect.value}`;
+    
+    // フォントデータの物理的なロード完了を待機してから描画関数をキックする
+    document.fonts.load(fontString).then(() => {
+      drawCanvas();
+    });
+  });
+
   btnUndo.addEventListener('click', () => restoreState(historyIndex - 1));
   btnRedo.addEventListener('click', () => restoreState(historyIndex + 1));
 
