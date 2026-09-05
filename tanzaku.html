@@ -380,6 +380,7 @@
     const fontSize = parseFloat(fontsizeInput.value) || 36;
     const spacingRatio = parseFloat(spacingInput.value) || 1.8;
     
+    // 常に normal 400 を指定し、Safariの勝手な斜体化を防止
     ctx.font = `normal 400 ${fontSize}px ${fontSelect.value}`;
     
     const strokeMode = strokeSelect.value;
@@ -462,10 +463,7 @@
             ctx.save();
             ctx.translate(currentX, currentY + fontSize / 2);
             ctx.rotate(90 * Math.PI / 180);
-            
-            // ★ここを触ります
-            const rotY = -fontSize * 0.5; 
-
+            const rotY = -fontSize * 0.5; // 回転時のズレ補正を幾何学理論値の0.5へ固定
             if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, rotY);
             ctx.fillText(drawChar, 0, rotY);
             ctx.restore();
@@ -559,6 +557,7 @@
     link.click();
   });
 
+  // 初回アクセス時の標準起動プロセス
   window.addEventListener('load', () => {
     const params = new URLSearchParams(window.location.search);
     const initialText = params.get('text');
@@ -574,6 +573,7 @@
     });
   });
 
+  // BFCache復帰時専用の再描画プロセス
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
       document.fonts.ready.then(() => {
