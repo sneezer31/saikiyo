@@ -382,8 +382,8 @@
     const fontSize = parseFloat(fontsizeInput.value) || 36;
     const spacingRatio = parseFloat(spacingInput.value) || 1.8;
     
-    // 【修正】Safariの合成斜体暴発を防ぐため、ウェイトを400に固定
-    ctx.font = `400 ${fontSize}px ${fontSelect.value}`;
+    // Safariの合成斜体を封殺する normal 400 指定
+    ctx.font = `normal 400 ${fontSize}px ${fontSelect.value}`;
     
     const strokeMode = strokeSelect.value;
     if (strokeMode !== 'none') {
@@ -445,7 +445,6 @@
           let offsetY = 0;
           let isRotated = false;
 
-          // 【追加】連続する ？！ ！？ ！！ ？？ を検知して手動で縦中横処理
           let isPair = false;
           let nextChar = line[j+1];
           if (('！'.includes(char) || '？'.includes(char) || char === '!' || char === '?') && nextChar) {
@@ -457,14 +456,17 @@
           if (isPair) {
              ctx.save();
              const halfFontSize = fontSize * 0.7;
-             ctx.font = `400 ${halfFontSize}px ${fontSelect.value}`;
+             // 縦中横の合字生成時もSafariの暴走を防止
+             ctx.font = `normal 400 ${halfFontSize}px ${fontSelect.value}`;
              
-             let leftX = currentX + fontSize * 0.05;
+             // textAlign='center' に合わせた正しい左右オフセット
+             let leftX = currentX - fontSize * 0.25;
+             let rightX = currentX + fontSize * 0.25;
              let pairY = currentY + fontSize * 0.15;
+             
              if (strokeMode !== 'none') ctx.strokeText(char, leftX, pairY);
              ctx.fillText(char, leftX, pairY);
              
-             let rightX = currentX + fontSize * 0.55;
              if (strokeMode !== 'none') ctx.strokeText(nextChar, rightX, pairY);
              ctx.fillText(nextChar, rightX, pairY);
              
@@ -558,11 +560,10 @@
   });
   ribbonOpacityInput.addEventListener('input', drawCanvas);
 
-  // 【修正】非同期フォントロード完了後に描画を走らせる
   btnPreview.addEventListener('click', () => {
     saveState();
     const fontSize = parseFloat(fontsizeInput.value) || 36;
-    const fontString = `400 ${fontSize}px ${fontSelect.value}`; 
+    const fontString = `normal 400 ${fontSize}px ${fontSelect.value}`; 
     document.fonts.load(fontString).then(() => {
       drawCanvas();
     });
@@ -594,15 +595,8 @@
     link.click();
   });
 
-  // 【修正】BFCache対策（loadではなくpageshowを使用）
-  window.addEventListener('pageshow', (event) => {
-    if (event.persisted) {
-      document.fonts.ready.then(() => {
-        setTimeout(() => { drawCanvas(); }, 50);
-      });
-      return;
-    }
-
+  // 初回アクセス時の標準起動プロセス
+  window.addEventListener('load', () => {
     const params = new URLSearchParams(window.location.search);
     const initialText = params.get('text');
     if (initialText) textInput.value = initialText;
@@ -615,6 +609,15 @@
         drawCanvas();
       }, 200);
     });
+  });
+
+  // BFCache復帰時専用の再描画プロセス
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      document.fonts.ready.then(() => {
+        setTimeout(() => { drawCanvas(); }, 50);
+      });
+    }
   });
 </script>
 
