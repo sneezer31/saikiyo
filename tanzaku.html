@@ -463,7 +463,7 @@
             ctx.translate(currentX, currentY + fontSize / 2);
             ctx.rotate(90 * Math.PI / 180);
             
-            // 【微調整エリア】長音符がわずかに上（右）に寄る場合の補正値（例: -0.55 を -0.58 や -0.60 にすると下に下がります）
+            // ★ここを触ります
             const rotY = -fontSize * 0.58; 
 
             if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, rotY);
