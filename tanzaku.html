@@ -379,7 +379,11 @@
       ctx.restore();
     }
 
-    const rawText = textInput.value;
+    // 【修正箇所】半角記号（括弧、ハイフン）をCanvas描画前に全角へサニタイズ
+    const rawText = textInput.value
+      .replace(/\(/g, '（')
+      .replace(/\)/g, '）')
+      .replace(/-/g, 'ー');
     const lines = rawText.split('\n');
     const fontSize = parseFloat(fontsizeInput.value) || 36;
     const spacingRatio = parseFloat(spacingInput.value) || 1.8;
@@ -472,10 +476,10 @@
             let adjustUpDown = 0;
 
             if (isSafari) {
-              // Safari専用補正：左上にズレる現象に対し、右と下へ引き戻す
-              const rotCoef = 0.55; 
+              // Safari専用補正（テスター画像の解析に基づく再照準）
+              const rotCoef = 0.75; // 数値を引き上げ、右へ強く押し込む
               adjustLeftRight = -fontSize * rotCoef;
-              adjustUpDown = fontSize * 0.1; 
+              adjustUpDown = fontSize * 0.25; // 正の数で「下」へ補正
             } else {
               // Chrome等：船長が確定させた完璧な座標（絶対に動かさない）
               const rotCoef = 0.5;
