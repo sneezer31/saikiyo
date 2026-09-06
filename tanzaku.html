@@ -475,18 +475,18 @@
             let adjustLeftRight = 0;
             let adjustUpDown = 0;
 
-            if (isSafari) {
-              // Safari専用補正（テスター画像の解析に基づく再照準）
-              const rotCoef = 0.75; // 数値を引き上げ、右へ強く押し込む
-              adjustLeftRight = -fontSize * rotCoef;
-              adjustUpDown = fontSize * 0.25; // 正の数で「下」へ補正
+　　　　　　　if (isSafari) {
+              // 左上への18px（0.5em）のズレを絶対値で相殺
+              adjustLeftRight = -fontSize * 1.0; // Chrome設定(-0.5)からさらに18px右へ
+              adjustUpDown = fontSize * 0.5; // 18px下へ沈める
             } else {
-              // Chrome等：船長が確定させた完璧な座標（絶対に動かさない）
+              // Chrome等：完璧な座標（絶対に動かさない）
               const rotCoef = 0.5;
               adjustLeftRight = -fontSize * rotCoef;
               adjustUpDown = 0;
             }
-
+            
+            
             if (strokeMode !== 'none') ctx.strokeText(drawChar, adjustUpDown, adjustLeftRight);
             ctx.fillText(drawChar, adjustUpDown, adjustLeftRight);
             ctx.restore();
