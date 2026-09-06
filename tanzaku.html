@@ -382,7 +382,7 @@ function drawCanvas() {
       .replace(/-/g, 'ー')
       .replace(/…/g, '︙')
       .replace(/‥/g, '︰')
-      .replace(/〜/g, '〰');
+     .replace(/[〜～]/g, '〰');
       
     const lines = rawText.split('\n');
     const fontSize = parseFloat(fontsizeInput.value) || 36;
