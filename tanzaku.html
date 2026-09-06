@@ -375,7 +375,7 @@
       ctx.restore();
     }
 
-    // テキストデータの正規化パッチ
+    // テキストデータの正規化（半角記号の全角変換および三点リーダーの縦書き置換）
     const rawText = textInput.value
       .replace(/\(/g, '（')
       .replace(/\)/g, '）')
@@ -400,8 +400,6 @@
     const marginY = fontSize * 1.2;
 
     if (direction === 'vertical') {
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'center';
       const charStepY = fontSize * 1.15;
       const lineStepX = fontSize * spacingRatio;
       
@@ -446,7 +444,6 @@
           let drawChar = char;
           let offsetX = 0;
           let offsetY = 0;
-          let isRotated = false;
           
           if (char === '「') drawChar = '﹁';
           else if (char === '」') drawChar = '﹂';
@@ -456,34 +453,54 @@
           else if (char === '）') drawChar = '︶';
           else if (char === '、') drawChar = '︑';
           else if (char === '。') drawChar = '︒';
-          else if (char === 'ー' || char === '―') {
-            isRotated = true;
-          }
           else if ('ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ'.includes(char)) {
             offsetX = fontSize * 0.15;
             offsetY = -fontSize * 0.15;
           }
 
-          if (isRotated) {
+          // 【完全解決版】伸ばし棒の回転処理を破棄し、数理的絶対中央を通る「図形の直線」として描画
+          if (char === 'ー' || char === '―') {
+            const lineLength = fontSize * 0.65; // 線の長さ（フォントの65%）
+            const lineThickness = Math.max(2, fontSize * 0.08); // 線の太さ
+            
+            const centerX = currentX;
+            const lineStartY = currentY + (fontSize - lineLength) / 2;
+            const lineEndY = lineStartY + lineLength;
+
             ctx.save();
-            ctx.translate(currentX, currentY + fontSize / 2);
-            ctx.rotate(90 * Math.PI / 180);
-
-            // 外部AIの解析に基づくクロスブラウザ対応アルゴリズム
-            ctx.textBaseline = 'alphabetic';
-            ctx.textAlign = 'center';
-
-            // 実際のインク領域のピクセル境界を測定し、動的オフセットを算出
-            const metrics = ctx.measureText(drawChar);
-            const dynamicOffsetY = (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
-
-            if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, dynamicOffsetY);
-            ctx.fillText(drawChar, 0, dynamicOffsetY);
+            ctx.beginPath();
+            ctx.moveTo(centerX, lineStartY);
+            ctx.lineTo(centerX, lineEndY);
+            ctx.lineCap = 'round'; // 端を丸めてフォントの筆致になじませる
+            
+            // 縁取り
+            if (strokeMode !== 'none') {
+              ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
+              ctx.lineWidth = lineThickness + 6;
+              ctx.stroke();
+            }
+            
+            // 本体色
+            ctx.strokeStyle = colorText.value;
+            ctx.lineWidth = lineThickness;
+            ctx.stroke();
             ctx.restore();
-          } else {
-            if (strokeMode !== 'none') ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
-            ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
+            
+            currentY += charStepY;
+            continue; // 直線の描画を終え、次の文字へ
           }
+
+          // 通常文字および置換済み記号の描画（すべて直立状態のまま描画）
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'center';
+          if (strokeMode !== 'none') {
+            ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
+            ctx.lineWidth = 6;
+            ctx.lineJoin = 'round';
+            ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
+          }
+          ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
+          
           currentY += charStepY;
         }
         currentX -= lineStepX;
