@@ -466,10 +466,13 @@
             ctx.save();
             ctx.translate(currentX, currentY + fontSize / 2);
             ctx.rotate(90 * Math.PI / 180);
-            
-            // 【プランA稼働】Safariなら0.55、Chrome/その他なら0.5を自動選択
-            const rotCoef = isSafari ? 0.55 : 0.5;
-            const rotY = -fontSize * rotCoef; 
+
+            // 【修正版】回転後の世界における、左右・上下の独立座標コントロール
+const rotCoef = isSafari ? 0.55 : 0.5;
+             
+// 回転しているため、Y軸が「左右」、X軸が「上下」の移動になる
+const adjustLeftRight = -fontSize * rotCoef; // 左右調整（右にズレるなら、rotCoefの数値を増やすか、ここを微調整）
+const adjustUpDown = 0; // 上下調整（文字が上や下にズレる場合は、ここを -fontSize * 0.1 などで調整）
             
             if (strokeMode !== 'none') ctx.strokeText(drawChar, 0, rotY);
             ctx.fillText(drawChar, 0, rotY);
