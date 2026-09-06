@@ -21,7 +21,6 @@
     width: 100%; max-width: 600px;
     display: flex; flex-direction: column; gap: 15px;
   }
-
   .primary-controls {
     display: flex; flex-direction: column; gap: 10px;
     padding: 15px; background: #f8f8f8; border: 1px solid var(--text-color);
@@ -29,7 +28,6 @@
   }
   .radio-group { display: flex; gap: 15px; font-weight: bold; flex-wrap: wrap; }
   .radio-group label { cursor: pointer; }
-
   textarea {
     width: 100%; height: 120px;
     padding: 12px; font-size: 16px; font-family: inherit;
@@ -37,7 +35,6 @@
     background: var(--bg-color); color: var(--text-color);
     resize: vertical;
   }
-  
   button {
     padding: 14px; font-size: 1.1rem; font-weight: bold;
     background: var(--bg-color); color: var(--text-color);
@@ -46,14 +43,10 @@
   }
   button:hover:not(:disabled) { opacity: 0.7; }
   button:disabled { opacity: 0.3; cursor: not-allowed; }
-  
   #btn-preview, #generate-btn { border: 2px solid var(--text-color); }
-
   .action-btns { display: flex; gap: 10px; margin-top: 5px; }
   #btn-preview { flex: 2; }
   #btn-undo, #btn-redo { flex: 1; font-size: 1rem; }
-  
-  /* プレビュー表示用 */
   #preview-img {
     max-width: 100%; height: auto;
     border: 1px solid var(--text-color);
@@ -61,51 +54,21 @@
     background: transparent;
     margin-bottom: 10px;
     display: block;
-    min-height: 300px;
-    object-fit: contain;
   }
-
-  /* 画像化専用の隠しステージ（画面外） */
-  #capture-stage {
-    position: absolute; left: -9999px; top: 0;
-  }
-  #export-frame {
-    position: relative; overflow: hidden;
-    transform-origin: top left;
-  }
-  #export-bg-img {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover; display: none;
-  }
-  #export-bg-color {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  }
-  #export-ribbon {
-    position: absolute; /* Flexboxのバグを回避するため絶対配置 */
-    box-sizing: border-box;
-  }
-  #export-text {
-    white-space: pre-wrap;
-    /* Webフォントの縦書きタイポグラフィを強制 */
-    font-feature-settings: "vhal", "vkrn";
-  }
-
+  #canvas { display: none; }
   .settings-panel {
     display: flex; flex-direction: column; gap: 15px;
     padding: 15px; border: 1px dashed var(--text-color);
     border-radius: 8px; margin-bottom: 10px;
   }
   .preset-btns { display: flex; gap: 10px; }
-  
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
-  
   @media (max-width: 600px) {
     .controls { grid-template-columns: 1fr; }
     .action-btns button { padding: 12px 5px; font-size: 0.9rem; }
     #btn-preview { font-size: 1.05rem; white-space: nowrap; }
   }
-  
   select, input[type="file"], input[type="number"], input[type="range"] {
     width: 100%; padding: 8px; font-size: 1rem; font-family: inherit;
     background: var(--bg-color); color: var(--text-color);
@@ -124,14 +87,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Kurenaido&family=Zen+Old+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
-<!-- html2canvas: 最新安定版 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
 <div class="container">
   <h2>さいきよ 画像化</h2>
-
   <div class="primary-controls">
     <div class="radio-group">
       <span>文字方向：</span>
@@ -146,35 +106,20 @@
       <label><input type="radio" name="ratio" value="circle"> 円形 (透過)</label>
     </div>
   </div>
-
   <textarea id="text-input" placeholder="ここに短歌を入力してください"></textarea>
-
   <div class="action-btns">
     <button type="button" id="btn-undo" disabled>← 戻る</button>
     <button type="button" id="btn-preview">プレビュー更新</button>
     <button type="button" id="btn-redo" disabled>進む →</button>
   </div>
-
-  <img id="preview-img" alt="プレビュー画像がここに生成されます">
-
-  <!-- 裏側での完全制御用DOM -->
-  <div id="capture-stage">
-    <div id="export-frame">
-      <div id="export-bg-color"></div>
-      <img id="export-bg-img" alt="">
-      <div id="export-ribbon">
-        <div id="export-text"></div>
-      </div>
-    </div>
-  </div>
-
+  <img id="preview-img" alt="プレビュー画像">
+  <canvas id="canvas"></canvas>
   <div class="settings-panel">
     <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: -5px;">デザイン設定</div>
     <div class="preset-btns">
       <button type="button" onclick="setPreset('monochrome')">白黒</button>
       <button type="button" onclick="setPreset('silver')">銀鼠</button>
     </div>
-
     <div class="controls">
       <div class="control-group">
         <label>書体</label>
@@ -230,7 +175,6 @@
       </div>
     </div>
   </div>
-
   <button type="button" id="generate-btn">決定（画像を保存）</button>
 </div>
 
@@ -248,15 +192,21 @@
   const bgImageInput = document.getElementById('bg-image-input');
   const bgOpacityInput = document.getElementById('bg-opacity-input');
   
+  const radioDirections = document.querySelectorAll('input[name="direction"]');
+  const radioRatios = document.querySelectorAll('input[name="ratio"]');
+  
   const btnPreview = document.getElementById('btn-preview');
   const btnUndo = document.getElementById('btn-undo');
   const btnRedo = document.getElementById('btn-redo');
   const generateBtn = document.getElementById('generate-btn');
+  
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const previewImg = document.getElementById('preview-img');
 
-  let uploadedBgImageSrc = null;
+  let uploadedBgImage = null;
   let stateHistory = [];
   let historyIndex = -1;
-  let isRendering = false;
 
   function getRadioValue(name) { return document.querySelector(`input[name="${name}"]:checked`).value; }
   function setRadioValue(name, value) {
@@ -276,27 +226,16 @@
 
   function captureCurrentState() {
     return {
-      direction: getRadioValue('direction'),
-      ratio: getRadioValue('ratio'),
-      text: textInput.value,
-      font: fontSelect.value,
-      fontSize: fontsizeInput.value,
-      spacing: spacingInput.value,
-      stroke: strokeSelect.value,
-      bgRibbon: bgRibbonSelect.value,
-      ribbonOpacity: ribbonOpacityInput.value,
-      colorText: colorText.value,
-      colorBg: colorBg.value,
-      bgImageSrc: uploadedBgImageSrc,
-      bgOpacity: bgOpacityInput.value
+      direction: getRadioValue('direction'), ratio: getRadioValue('ratio'), text: textInput.value,
+      font: fontSelect.value, fontSize: fontsizeInput.value, spacing: spacingInput.value,
+      stroke: strokeSelect.value, bgRibbon: bgRibbonSelect.value, ribbonOpacity: ribbonOpacityInput.value,
+      colorText: colorText.value, colorBg: colorBg.value, bgImage: uploadedBgImage, bgOpacity: bgOpacityInput.value
     };
   }
 
   function saveState() {
     const currentState = captureCurrentState();
-    if (historyIndex < stateHistory.length - 1) {
-      stateHistory = stateHistory.slice(0, historyIndex + 1);
-    }
+    if (historyIndex < stateHistory.length - 1) stateHistory = stateHistory.slice(0, historyIndex + 1);
     stateHistory.push(currentState);
     historyIndex++;
     updateHistoryButtons();
@@ -305,24 +244,13 @@
   function restoreState(index) {
     if (index < 0 || index >= stateHistory.length) return;
     const state = stateHistory[index];
-    setRadioValue('direction', state.direction);
-    setRadioValue('ratio', state.ratio);
-    textInput.value = state.text;
-    fontSelect.value = state.font;
-    fontsizeInput.value = state.fontSize;
-    spacingInput.value = state.spacing;
-    strokeSelect.value = state.stroke;
-    if (state.bgRibbon) bgRibbonSelect.value = state.bgRibbon;
+    setRadioValue('direction', state.direction); setRadioValue('ratio', state.ratio); textInput.value = state.text;
+    fontSelect.value = state.font; fontsizeInput.value = state.fontSize; spacingInput.value = state.spacing;
+    strokeSelect.value = state.stroke; if (state.bgRibbon) bgRibbonSelect.value = state.bgRibbon;
     if (state.ribbonOpacity !== undefined) ribbonOpacityInput.value = state.ribbonOpacity;
-    colorText.value = state.colorText;
-    colorBg.value = state.colorBg;
-    uploadedBgImageSrc = state.bgImageSrc;
+    colorText.value = state.colorText; colorBg.value = state.colorBg; uploadedBgImage = state.bgImage;
     if (state.bgOpacity !== undefined) bgOpacityInput.value = state.bgOpacity;
-    
-    historyIndex = index;
-    updateRibbonOpacityState();
-    updateHistoryButtons();
-    renderPreview();
+    historyIndex = index; updateRibbonOpacityState(); updateHistoryButtons(); drawCanvas();
   }
 
   function updateHistoryButtons() {
@@ -334,151 +262,238 @@
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => { uploadedBgImageSrc = event.target.result; };
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => { uploadedBgImage = img; };
+        img.src = event.target.result;
+      };
       reader.readAsDataURL(file);
-    } else {
-      uploadedBgImageSrc = null;
-    }
+    } else { uploadedBgImage = null; }
   });
 
   function setPreset(type) {
     if (type === 'monochrome') { colorText.value = '#111111'; colorBg.value = '#FFFFFF'; }
     else if (type === 'silver') { colorText.value = '#333333'; colorBg.value = '#F5F5F0'; }
-    uploadedBgImageSrc = null; bgImageInput.value = ''; bgOpacityInput.value = '1';
+    uploadedBgImage = null; bgImageInput.value = ''; bgOpacityInput.value = '1';
   }
 
-  // ライブラリのバグを回避する絶対座標ビルド処理
-  async function buildRenderStage() {
-    const frame = document.getElementById('export-frame');
-    const textDiv = document.getElementById('export-text');
-    const ribbon = document.getElementById('export-ribbon');
-    const bgDiv = document.getElementById('export-bg-color');
-    const bgImg = document.getElementById('export-bg-img');
-
+  function applyCanvasRatio() {
     const ratio = getRadioValue('ratio');
-    let fw = 1080, fh = 1350;
-    if (ratio === 'square' || ratio === 'circle') { fw = 1080; fh = 1080; }
-    else if (ratio === 'landscape') { fw = 1200; fh = 675; }
-    
-    frame.style.width = `${fw}px`;
-    frame.style.height = `${fh}px`;
-    frame.style.borderRadius = ratio === 'circle' ? '50%' : '0';
+    if (ratio === 'portrait') { canvas.width = 1080; canvas.height = 1350; }
+    else if (ratio === 'square' || ratio === 'circle') { canvas.width = 1080; canvas.height = 1080; }
+    else if (ratio === 'landscape') { canvas.width = 1200; canvas.height = 675; }
+  }
 
-    bgDiv.style.backgroundColor = colorBg.value;
-    if (uploadedBgImageSrc) {
-      bgImg.src = uploadedBgImageSrc;
-      bgImg.style.display = 'block';
-      bgImg.style.opacity = bgOpacityInput.value;
-    } else {
-      bgImg.style.display = 'none';
-    }
-
-    // 破壊的な置換を廃止し、純粋なテキストを流し込む
-    textDiv.textContent = textInput.value;
-    
-    const fontSize = parseFloat(fontsizeInput.value) || 36;
-    textDiv.style.fontFamily = fontSelect.value;
-    textDiv.style.fontSize = `${fontSize}px`;
-    textDiv.style.lineHeight = parseFloat(spacingInput.value) || 1.8;
-    textDiv.style.color = colorText.value;
-    
+  function drawCanvas() {
+    applyCanvasRatio();
+    const width = canvas.width;
+    const height = canvas.height;
     const direction = getRadioValue('direction');
-    textDiv.style.writingMode = direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb';
-    textDiv.style.textOrientation = 'mixed';
+    const ratio = getRadioValue('ratio');
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
     
-    // 縁取り
+    if (ratio === 'circle') {
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, Math.PI * 2);
+      ctx.clip();
+    }
+
+    ctx.fillStyle = colorBg.value;
+    ctx.fillRect(0, 0, width, height);
+
+    if (uploadedBgImage) {
+      ctx.save();
+      ctx.globalAlpha = parseFloat(bgOpacityInput.value);
+      const hRatio = width / uploadedBgImage.width;
+      const vRatio = height / uploadedBgImage.height;
+      const imgRatio = Math.max(hRatio, vRatio);
+      const centerShiftX = (width - uploadedBgImage.width * imgRatio) / 2;
+      const centerShiftY = (height - uploadedBgImage.height * imgRatio) / 2;
+      ctx.drawImage(uploadedBgImage, 0, 0, uploadedBgImage.width, uploadedBgImage.height, centerShiftX, centerShiftY, uploadedBgImage.width * imgRatio, uploadedBgImage.height * imgRatio);
+      ctx.restore();
+    }
+
+    // 絵文字置換を全廃。半角括弧と三点リーダーのみ正規化
+    const rawText = textInput.value
+      .replace(/\(/g, '（')
+      .replace(/\)/g, '）')
+      .replace(/…/g, '︙');
+      
+    const lines = rawText.split('\n');
+    const fontSize = parseFloat(fontsizeInput.value) || 36;
+    const spacingRatio = parseFloat(spacingInput.value) || 1.8;
+    
+    ctx.font = `normal 400 ${fontSize}px ${fontSelect.value}`;
     const strokeMode = strokeSelect.value;
-    if (strokeMode !== 'none') {
-      const c = strokeMode === 'white' ? '#FFFFFF' : '#888888';
-      textDiv.style.textShadow = `-3px -3px 0 ${c}, 3px -3px 0 ${c}, -3px 3px 0 ${c}, 3px 3px 0 ${c}, -3px 0 0 ${c}, 3px 0 0 ${c}, 0 -3px 0 ${c}, 0 3px 0 ${c}`;
-    } else {
-      textDiv.style.textShadow = 'none';
-    }
-
-    // リボン背景
-    const rMode = bgRibbonSelect.value;
-    if (rMode !== 'none') {
-      const rAlpha = (parseFloat(ribbonOpacityInput.value) || 55) / 100;
-      ribbon.style.backgroundColor = rMode === 'white' ? `rgba(255, 255, 255, ${rAlpha})` : `rgba(0, 0, 0, ${rAlpha})`;
-      ribbon.style.padding = `${fontSize * 1.2}px ${fontSize * 0.8}px`;
-    } else {
-      ribbon.style.backgroundColor = 'transparent';
-      ribbon.style.padding = '0';
-    }
-
-    // DOMの再計算を待機
-    await new Promise(resolve => requestAnimationFrame(resolve));
-
-    // ライブラリの中央揃えバグを回避するため、JavaScriptで寸法を計測し絶対座標で中央へピン留めする
-    const rw = ribbon.offsetWidth;
-    const rh = ribbon.offsetHeight;
-    ribbon.style.left = `${(fw - rw) / 2}px`;
-    ribbon.style.top = `${(fh - rh) / 2}px`;
-
-    return frame;
-  }
-
-  async function renderPreview() {
-    if (isRendering) return;
-    isRendering = true;
-    const prevText = btnPreview.textContent;
-    btnPreview.textContent = '生成中...';
     
-    await document.fonts.ready;
-    const frame = await buildRenderStage();
+    const ribbonMode = bgRibbonSelect.value;
+    const ribbonAlpha = (parseFloat(ribbonOpacityInput.value) || 55) / 100;
+    const marginX = fontSize * 0.8;
+    const marginY = fontSize * 1.2;
 
-    try {
-      const canvas = await html2canvas(frame, {
-        scale: 1,
-        backgroundColor: null,
-        useCORS: true,
-        logging: false
-      });
-      document.getElementById('preview-img').src = canvas.toDataURL('image/png');
-    } catch (e) {
-      console.error("レンダリングエラー:", e);
+    if (direction === 'vertical') {
+      const charStepY = fontSize * 1.15;
+      const lineStepX = fontSize * spacingRatio;
+      
+      let maxChars = 0; let blockWidthOffset = 0;
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i] === "") blockWidthOffset += lineStepX * 0.5;
+        else {
+          if (i !== 0) blockWidthOffset += lineStepX;
+          if (lines[i].length > maxChars) maxChars = lines[i].length;
+        }
+      }
+
+      const blockHeight = maxChars * charStepY;
+      const startY = Math.max(50, (height - blockHeight) / 2);
+      
+      if (ribbonMode !== 'none') {
+        let totalWidth = blockWidthOffset + fontSize;
+        let rectX = (width - totalWidth) / 2 - marginX;
+        let rectY = startY - marginY;
+        let rectW = totalWidth + marginX * 2;
+        let rectH = blockHeight + marginY * 2;
+        ctx.save(); ctx.globalAlpha = ribbonAlpha;
+        ctx.fillStyle = ribbonMode === 'white' ? '#FFFFFF' : '#000000';
+        ctx.fillRect(rectX, rectY, rectW, rectH);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = colorText.value;
+      let currentX = (width + blockWidthOffset + fontSize) / 2 - fontSize / 2;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === "") { currentX -= lineStepX * 0.5; continue; }
+        let currentY = startY;
+
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          let drawChar = char; let offsetX = 0; let offsetY = 0;
+          
+          if (char === '「') drawChar = '﹁'; else if (char === '」') drawChar = '﹂';
+          else if (char === '『') drawChar = '﹃'; else if (char === '』') drawChar = '﹄';
+          else if (char === '（') drawChar = '︵'; else if (char === '）') drawChar = '︶';
+          else if (char === '、') drawChar = '︑'; else if (char === '。') drawChar = '︒';
+          else if ('ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ'.includes(char)) {
+            offsetX = fontSize * 0.15; offsetY = -fontSize * 0.15;
+          }
+
+          // 長音符と波ダッシュのみベクターパスで直接描画（絵文字バグ完全回避）
+          if (char === 'ー' || char === '―' || char === '〜' || char === '～') {
+            const isWave = (char === '〜' || char === '～');
+            const symLength = fontSize * 0.65;
+            const symThick = Math.max(2, fontSize * 0.08);
+            const symStartY = currentY + (fontSize - symLength) / 2;
+            const symEndY = symStartY + symLength;
+
+            ctx.save();
+            ctx.beginPath();
+            
+            if (isWave) {
+              const amp = fontSize * 0.15;
+              ctx.moveTo(currentX, symStartY);
+              ctx.bezierCurveTo(currentX + amp, symStartY + symLength * 0.25, currentX - amp, symStartY + symLength * 0.75, currentX, symEndY);
+            } else {
+              ctx.moveTo(currentX, symStartY);
+              ctx.lineTo(currentX, symEndY);
+            }
+            
+            ctx.lineCap = 'round';
+            if (strokeMode !== 'none') {
+              ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
+              ctx.lineWidth = symThick + 6;
+              ctx.stroke();
+            }
+            ctx.strokeStyle = colorText.value;
+            ctx.lineWidth = symThick;
+            ctx.stroke();
+            ctx.restore();
+            
+            currentY += charStepY;
+            continue;
+          }
+
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'center';
+          if (strokeMode !== 'none') {
+            ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
+            ctx.lineWidth = 6; ctx.lineJoin = 'round';
+            ctx.strokeText(drawChar, currentX + offsetX, currentY + offsetY);
+          }
+          ctx.fillText(drawChar, currentX + offsetX, currentY + offsetY);
+          currentY += charStepY;
+        }
+        currentX -= lineStepX;
+      }
+    } else {
+      ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+      const lineStepY = fontSize * spacingRatio;
+      let maxLineWidth = 0;
+      for (const line of lines) {
+        const metrics = ctx.measureText(line);
+        if(metrics.width > maxLineWidth) maxLineWidth = metrics.width;
+      }
+      const blockHeight = lines.length * lineStepY;
+      let currentY = Math.max(50, (height - blockHeight) / 2);
+      const startX = (width - maxLineWidth) / 2;
+
+      if (ribbonMode !== 'none') {
+        let actualBlockHeight = lines.length > 0 ? (lines.length - 1) * lineStepY + fontSize : 0;
+        let rectX = startX - marginX; let rectY = currentY - marginY;
+        let rectW = maxLineWidth + marginX * 2; let rectH = actualBlockHeight + marginY * 2;
+        ctx.save(); ctx.globalAlpha = ribbonAlpha;
+        ctx.fillStyle = ribbonMode === 'white' ? '#FFFFFF' : '#000000';
+        ctx.fillRect(rectX, rectY, rectW, rectH); ctx.restore();
+      }
+
+      ctx.fillStyle = colorText.value;
+      for (const line of lines) {
+        if (strokeMode !== 'none') ctx.strokeText(line, startX, currentY);
+        ctx.fillText(line, startX, currentY);
+        currentY += lineStepY;
+      }
     }
 
-    btnPreview.textContent = prevText;
-    isRendering = false;
+    ctx.restore();
+    previewImg.src = canvas.toDataURL('image/png');
   }
 
+  bgRibbonSelect.addEventListener('change', () => { updateRibbonOpacityState(); drawCanvas(); });
+  ribbonOpacityInput.addEventListener('input', drawCanvas);
   btnPreview.addEventListener('click', () => {
     saveState();
-    renderPreview();
+    const fontSize = parseFloat(fontsizeInput.value) || 36;
+    document.fonts.load(`normal 400 ${fontSize}px ${fontSelect.value}`).then(() => drawCanvas());
   });
-
   btnUndo.addEventListener('click', () => restoreState(historyIndex - 1));
   btnRedo.addEventListener('click', () => restoreState(historyIndex + 1));
-  bgRibbonSelect.addEventListener('change', updateRibbonOpacityState);
+  radioDirections.forEach(r => r.addEventListener('change', drawCanvas));
+  radioRatios.forEach(r => r.addEventListener('change', drawCanvas));
 
-  generateBtn.addEventListener('click', async () => {
-    saveState();
-    const frame = await buildRenderStage();
-    const canvas = await html2canvas(frame, { scale: 1, backgroundColor: null, useCORS: true });
+  generateBtn.addEventListener('click', () => {
+    saveState(); drawCanvas();
     const dataUrl = canvas.toDataURL('image/png');
-    
     if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-      const newWin = window.open();
-      newWin.document.write(`<img src="${dataUrl}" style="width:100%;"><p>長押しして「画像を保存」を選んでください。</p>`);
+      alert("【iPhoneをご利用の方へ】\n長押しして画像を保存してください。");
       return;
     }
-    const d = new Date();
-    const pad = n => String(n).padStart(2, '0');
+    const d = new Date(); const pad = n => String(n).padStart(2, '0');
     const link = document.createElement('a');
     link.download = `tanka_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
-    link.href = dataUrl;
-    link.click();
+    link.href = dataUrl; link.click();
   });
 
   window.addEventListener('load', () => {
     updateRibbonOpacityState();
     document.fonts.ready.then(() => {
-      setTimeout(() => {
-        if (stateHistory.length === 0) saveState();
-        renderPreview();
-      }, 300);
+      setTimeout(() => { if (stateHistory.length === 0) saveState(); drawCanvas(); }, 200);
     });
+  });
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) document.fonts.ready.then(() => setTimeout(() => drawCanvas(), 50));
   });
 </script>
 
