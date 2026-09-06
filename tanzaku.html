@@ -467,12 +467,22 @@
             ctx.translate(currentX, currentY + fontSize / 2);
             ctx.rotate(90 * Math.PI / 180);
 
-            // 【完全修正版】Y軸(左右)・X軸(上下)の座標
-            // ※右へズレすぎるという報告に対し、数値を下げて左へ引き戻す設定 (0.5 -> 0.35)
-            const rotCoef = isSafari ? 0.4 : 0.35;
-            const adjustLeftRight = -fontSize * rotCoef;
-            const adjustUpDown = 0;
-            
+            // 【完全分離版】船長の記録に基づく正確な座標指定
+            let adjustLeftRight = 0;
+            let adjustUpDown = 0;
+
+            if (isSafari) {
+              // Safari専用補正：左上にズレる現象に対し、右と下へ引き戻す
+              const rotCoef = 0.55; 
+              adjustLeftRight = -fontSize * rotCoef;
+              adjustUpDown = fontSize * 0.1; 
+            } else {
+              // Chrome等：船長が確定させた完璧な座標（絶対に動かさない）
+              const rotCoef = 0.5;
+              adjustLeftRight = -fontSize * rotCoef;
+              adjustUpDown = 0;
+            }
+
             if (strokeMode !== 'none') ctx.strokeText(drawChar, adjustUpDown, adjustLeftRight);
             ctx.fillText(drawChar, adjustUpDown, adjustLeftRight);
             ctx.restore();
