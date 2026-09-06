@@ -344,7 +344,7 @@
     else if (ratio === 'landscape') { canvas.width = 1200; canvas.height = 675; }
   }
 
-  function drawCanvas() {
+function drawCanvas() {
     applyCanvasRatio();
     const width = canvas.width;
     const height = canvas.height;
@@ -375,12 +375,14 @@
       ctx.restore();
     }
 
-    // テキストデータの正規化（半角記号の全角変換および三点リーダーの縦書き置換）
+    // テキストデータの正規化（半角記号の全角変換および横長記号の縦書き置換）
     const rawText = textInput.value
       .replace(/\(/g, '（')
       .replace(/\)/g, '）')
       .replace(/-/g, 'ー')
-      .replace(/…/g, '︙');
+      .replace(/…/g, '︙')
+      .replace(/‥/g, '︰')
+      .replace(/〜/g, '〰');
       
     const lines = rawText.split('\n');
     const fontSize = parseFloat(fontsizeInput.value) || 36;
@@ -460,8 +462,8 @@
 
           // 【完全解決版】伸ばし棒の回転処理を破棄し、数理的絶対中央を通る「図形の直線」として描画
           if (char === 'ー' || char === '―') {
-            const lineLength = fontSize * 0.65; // 線の長さ（フォントの65%）
-            const lineThickness = Math.max(2, fontSize * 0.08); // 線の太さ
+            const lineLength = fontSize * 0.65;
+            const lineThickness = Math.max(2, fontSize * 0.08);
             
             const centerX = currentX;
             const lineStartY = currentY + (fontSize - lineLength) / 2;
@@ -471,26 +473,24 @@
             ctx.beginPath();
             ctx.moveTo(centerX, lineStartY);
             ctx.lineTo(centerX, lineEndY);
-            ctx.lineCap = 'round'; // 端を丸めてフォントの筆致になじませる
+            ctx.lineCap = 'round';
             
-            // 縁取り
             if (strokeMode !== 'none') {
               ctx.strokeStyle = strokeMode === 'white' ? '#FFFFFF' : '#888888';
               ctx.lineWidth = lineThickness + 6;
               ctx.stroke();
             }
             
-            // 本体色
             ctx.strokeStyle = colorText.value;
             ctx.lineWidth = lineThickness;
             ctx.stroke();
             ctx.restore();
             
             currentY += charStepY;
-            continue; // 直線の描画を終え、次の文字へ
+            continue;
           }
 
-          // 通常文字および置換済み記号の描画（すべて直立状態のまま描画）
+          // 通常文字および置換済み記号の描画
           ctx.textBaseline = 'top';
           ctx.textAlign = 'center';
           if (strokeMode !== 'none') {
@@ -545,7 +545,6 @@
     ctx.restore();
     previewImg.src = canvas.toDataURL('image/png');
   }
-
   bgRibbonSelect.addEventListener('change', () => {
     updateRibbonOpacityState();
     drawCanvas();
