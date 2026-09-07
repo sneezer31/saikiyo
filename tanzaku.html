@@ -495,6 +495,85 @@
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) document.fonts.ready.then(() => setTimeout(() => drawCanvas(), 50));
   });
+/**
+ * 記号画像 自動抽出・正規化モジュール（ユーザー向けDL機能版）
+ */
+function extractAndDownloadSymbol() {
+  const img = AppState.uploadedBgImage;
+  if (!img) {
+    alert("まずは「背景画像」から、切り抜きたい画像を読み込んでください。");
+    return;
+  }
+
+  // 1. オリジナル画像をCanvasに描画
+  const cvs = document.createElement('canvas');
+  cvs.width = img.width; cvs.height = img.height;
+  const ctx = cvs.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  // 2. ピクセルデータの取得と解析
+  const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+  const data = imgData.data;
+  let minX = cvs.width, minY = cvs.height, maxX = 0, maxY = 0;
+  let found = false;
+
+  for (let y = 0; y < cvs.height; y++) {
+    for (let x = 0; x < cvs.width; x++) {
+      const i = (y * cvs.width + x) * 4;
+      const r = data[i], g = data[i+1], b = data[i+2];
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+      
+      // 輝度が低い（暗い）ピクセルを抽出し、純黒へ変換
+      if (luminance < 100) {
+        data[i] = 0; data[i+1] = 0; data[i+2] = 0; // RGBを黒に
+        data[i+3] = 255; // 不透明度100%
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+        found = true;
+      } else {
+        // 白背景・ノイズは完全透過
+        data[i+3] = 0;
+      }
+    }
+  }
+
+  if (!found) {
+    alert("抽出できる濃い文字や線が見つかりませんでした。");
+    return;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+
+  // 3. 限界座標による自動クロップ
+  const cropW = maxX - minX + 1;
+  const cropH = maxY - minY + 1;
+  const cropCvs = document.createElement('canvas');
+  cropCvs.width = cropW; cropCvs.height = cropH;
+  const cropCtx = cropCvs.getContext('2d');
+  cropCtx.drawImage(cvs, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+  // 4. 画像のダウンロード処理
+  const dataUrl = cropCvs.toDataURL('image/png');
+  
+  if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+    // iPhoneの場合は別タブで画像を開き、長押し保存を促す
+    const newWin = window.open();
+    newWin.document.write('<p>長押しして画像を保存してください</p><img src="' + dataUrl + '" style="border:1px solid #ccc; max-width:100%;">');
+  } else {
+    // PC等の場合は直接ダウンロード
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const filename = `parts_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    link.click();
+  }
+}
+
+// ボタンへのイベント紐付け（initEvents関数の下など、スクリプトの末尾でOKです）
+document.getElementById('btn-extract').addEventListener('click', extractAndDownloadSymbol);
+  
 </script>
 
 </body>
